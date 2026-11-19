@@ -14,7 +14,7 @@
 :root{
   --bg:#eef1f5;--panel:#fff;--line:#dde2e9;--line2:#c6cdd8;
   --ink:#1c2430;--ink2:#566172;--ink3:#8792a2;
-  --safe:#2f62b0;--xi:#c0392b;--u:#2471a3;--ok:#23824a;--warn:#d35400;--slate:#3b4758;
+  --safe:#2f62b0;--xi:#c0392b;--u:#2471a3;--ctrl:#f2a00a;--unctrl:#111;--slate:#3b4758;
   --xi-soft:#fdf5f3;--xi-line:#f0cfc8;--u-soft:#f2f7fc;--u-line:#c6dbef;
   --ui:'Source Sans 3',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --math:KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif;
@@ -135,8 +135,8 @@ input[type=range]:disabled{opacity:.35}
 #v1d .modes{display:flex;flex-direction:column;border:1px solid var(--line2);border-radius:10px;overflow:hidden;background:#fff}
 #v1d .modes .btn{border:0;border-radius:0;border-bottom:1px solid var(--line);text-align:left;padding:8px 12px;color:var(--ink2)}
 #v1d .modes .btn:last-child{border-bottom:0}
-#v1d .modes .btn-green{background:var(--ok);color:#fff}
-#v1d .modes .btn-orange{background:var(--warn);color:#fff}
+#v1d .modes .btn-ctrl{background:var(--ctrl);color:var(--ink)}
+#v1d .modes .btn-unctrl{background:var(--unctrl);color:#fff}
 #v1d .modes .btn-blue{background:var(--safe);color:#fff}
 #v1d .modes .btn-slate{background:var(--slate);color:#fff}
 #v1d .mob-q-toggle{display:flex;align-items:center;gap:6px;margin-bottom:6px}
@@ -534,7 +534,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="mob-header">Partial control method</div>
       <div class="mob-body">
         <div class="modes mb">
-          <button id="d1-btnCtrlIter" class="btn btn-green">Controlled orbits</button>
+          <button id="d1-btnCtrlIter" class="btn btn-ctrl">Controlled orbits</button>
           <button id="d1-btnIter" class="btn btn-inactive">Uncontrolled orbits</button>
           <button id="d1-btnSafe" class="btn btn-inactive">Explore the safe set</button>
           <button id="d1-btnCheck" class="btn btn-inactive">Check the safe set</button>
@@ -680,11 +680,11 @@ body.guide-push #guide{box-shadow:none}
               <button id="d2-x10Btn" class="btn">×10</button>
             </div>
             <div class="mob-orbit-row">
-              <button id="d2-ctrlOrbitBtn" class="btn"><i class="dot" style="background:#dc2828"></i>Controlled</button>
-              <button id="d2-unctrlOrbitBtn" class="btn"><i class="dot" style="background:#d35400"></i>Uncontrolled</button>
+              <button id="d2-ctrlOrbitBtn" class="btn"><i class="dot" style="background:var(--ctrl)"></i>Controlled</button>
+              <button id="d2-unctrlOrbitBtn" class="btn"><i class="dot" style="background:var(--unctrl)"></i>Uncontrolled</button>
             </div>
             <div class="mob-orbit-row">
-              <button id="d2-saddleBtn" class="btn"><i class="dot sq" style="background:#222"></i>Chaotic saddle</button>
+              <button id="d2-saddleBtn" class="btn"><i class="dot sq" style="background:#129650"></i>Chaotic saddle</button>
               <button id="d2-clearOrbitBtn" class="btn">Clear</button>
             </div>
             <div class="mob-orbit-row">
@@ -754,8 +754,8 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:#1fb455"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
-        <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:#000"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
+        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--ctrl)"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
+        <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
       </div>
       <p class="t3-note">Safe sets only. Safety functions are not shown in 3D: a function of three variables cannot be drawn as a surface.</p>
     </div>
@@ -837,6 +837,7 @@ body.guide-push #guide{box-shadow:none}
 const PC=(()=>{
   const KATEX_JS="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js";
   const THREE_URL="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
+  const CTRL="#f2a00a",UNCTRL="#111";       // controlled and uncontrolled orbits in every view (--ctrl and --unctrl in the styles)
   const MF="KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
   const routes={"1d":"v1d","2d":"v2d","3d":"v3d","poincare":"v3d"};
   const mods={},inited={},scripts={};
@@ -949,7 +950,7 @@ const PC=(()=>{
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else setTimeout(boot,0);
 
-  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,loadScript,redraw,refreshGuide,MF,THREE_URL,isMobile:()=>mq.matches,active:()=>cur};
+  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,loadScript,redraw,refreshGuide,MF,THREE_URL,CTRL,UNCTRL,isMobile:()=>mq.matches,active:()=>cur};
 })();
 </script>
 <script>
@@ -1151,11 +1152,11 @@ ctx.closePath();ctx.fill();}
 function drawIterations(){const r=drawMain();if(!r)return;const{tx,ty}=r,ctx=mainCtx,{xmap:xm,ymap:ym,xmin:xn,xmax:xx,ax:{c:cv}}=S;
 let x0v=S.x0;const xB=[],yV=[],yD=[];
 for(let i=0;i<30;i++){const y=interp1(xm,ym,x0v),yd=y+(2*Math.random()-1)*S.dist;xB.push(x0v);yV.push(y);yD.push(yd);if(yd<xn||yd>xx||y===x0v)break;x0v=yd;}
-ctx.fillStyle="#d35400";ctx.beginPath();ctx.arc(tx(S.x0),ty(cv),5,0,2*Math.PI);ctx.fill();
-ctx.strokeStyle="#d35400";ctx.lineWidth=0.6;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
+ctx.fillStyle=PC.UNCTRL;ctx.beginPath();ctx.arc(tx(S.x0),ty(cv),5,0,2*Math.PI);ctx.fill();
+ctx.strokeStyle=PC.UNCTRL;ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
 for(let k=0;k<xB.length;k++){const sh=.1,e=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 ctx.strokeStyle="#c0392b";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e),ty(yD[k]));ctx.stroke();
-ctx.strokeStyle="#d35400";ctx.beginPath();ctx.moveTo(tx(xB[k]+e),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
+ctx.strokeStyle=PC.UNCTRL;ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(tx(xB[k]+e),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
 if(k<xB.length-1){ctx.beginPath();ctx.moveTo(tx(yD[k]),ty(yD[k]));ctx.lineTo(tx(xB[k+1]),ty(yV[k+1]));ctx.stroke();}}}
 
 function applyStrat(sx,yd){const ds=sx.map(s=>Math.abs(s-yd));
@@ -1176,7 +1177,7 @@ const xb=S.x0,yC=interp1(ssX,ssY,S.x0),dn=S.dist*S._checkRand,yd=yC+dn;
 let xN;if(needsCtrl(yd))xN=applyStrat(safex,yd);else xN=yd;
 if(S._advanceCheck){S.x0=xN;$("x0input").value=sig(xN,4);$("x0slider").value=xN;S._advanceCheck=false;S._checkRand=2*Math.random()-1;}
 ctx.setLineDash([3,3]);ctx.strokeStyle="#999";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(tx(xb),ty(cv));ctx.lineTo(tx(xb),ty(yC));ctx.lineTo(tx(yC),ty(yC));ctx.lineTo(tx(yC),ty(cv));ctx.stroke();ctx.setLineDash([]);
-ctx.fillStyle="#2a9a2a";ctx.beginPath();ctx.arc(tx(xb),ty(cv),5,0,2*Math.PI);ctx.fill();
+ctx.fillStyle=PC.CTRL;ctx.beginPath();ctx.arc(tx(xb),ty(cv),5,0,2*Math.PI);ctx.fill();
 const h1=.18*(dv-cv)+cv,h2=.11*(dv-cv)+cv,h3=.04*(dv-cv)+cv;
 const alf=r.W>600?18:13,alsf=r.W>600?12:9;
 drawArrow(ctx,tx(xb),ty(h1),tx(yC),ty(h1),"#333",2.5);
@@ -1268,11 +1269,11 @@ mainCtx.fillStyle="#c0392b";mainCtx.font="bold italic "+noSafeFs+"px 'Source San
 // Phase space panel
 const rp=drawMain($("tsPhaseCanvas"));
 if(rp){const{tx:txp,ty:typ}=rp,ctxp=mainCtx,cvp=S.ax.c;
-ctxp.fillStyle="#d35400";ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.PI);ctxp.fill();
-ctxp.strokeStyle="#d35400";ctxp.lineWidth=0.5;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
+ctxp.fillStyle=PC.UNCTRL;ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.PI);ctxp.fill();
+ctxp.strokeStyle=PC.UNCTRL;ctxp.lineWidth=0.8;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
 for(let k=0;k<xB.length-1;k++){const sh=.1,e=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 ctxp.strokeStyle="#c0392b";ctxp.lineWidth=.4;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e),typ(yD[k]));ctxp.stroke();
-ctxp.strokeStyle="#d35400";ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
+ctxp.strokeStyle=PC.UNCTRL;ctxp.lineWidth=0.8;ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
 ctxp.beginPath();ctxp.moveTo(txp(yD[k]),typ(yD[k]));ctxp.lineTo(txp(xB[k+1]),typ(yV[k+1]));ctxp.stroke();}
 const noSafeFs2=rp.W>300?14:10;
 ctxp.fillStyle="#c0392b";ctxp.font="bold italic "+noSafeFs2+"px 'Source Sans 3',sans-serif";ctxp.fillText("No safe set",rp.P.l+10,rp.H*.15);}
@@ -1281,25 +1282,25 @@ const distH=yV.map((y,i)=>Math.abs(yD[i]-y));
 const ctrlH=yV.map(()=>0);
 const sharedMax=Math.max(S.dist,S.ctrl)*1.2+0.001;
 const actualN=xB.length;
-drawTS($("tsCanvas1"),yD.slice(0,actualN),"#d35400","Time series (uncontrolled)",undefined,undefined,undefined,undefined,actualN);
+drawTS($("tsCanvas1"),yD.slice(0,actualN),PC.UNCTRL,"Time series (uncontrolled)",undefined,undefined,undefined,undefined,actualN);
 drawTS($("tsCanvas2"),[0,...distH.slice(0,actualN)],"#c0392b","Disturbance",S.dist,"rgba(192,57,43,.45)",0,sharedMax,actualN,"\u03be");
 drawTS($("tsCanvas3"),[0,...ctrlH.slice(0,actualN)],"#2471a3","Control",S.ctrl,"rgba(36,113,163,.45)",0,sharedMax,actualN,"u");
-drawScatter($("tsScatterCanvas"),xB,yD.slice(0,actualN),actualN,"#d35400");
+drawScatter($("tsScatterCanvas"),xB,yD.slice(0,actualN),actualN,PC.UNCTRL);
 }return;}
 const ssX=ss.map(p=>p.x),ssY=ss.map(p=>p.y),nI=S.numIter;let xC=S.x0;
 const xB=[],yV=[],yD=[],xV=[];
 for(let i=0;i<nI;i++){const xb=xC,yc=interp1(ssX,ssY,xC),dn=S.dist*(2*Math.random()-1),yd=yc+dn;
 if(needsCtrl(yd))xC=applyStrat(safex,yd);else xC=yd;xB.push(xb);yV.push(yc);yD.push(yd);xV.push(xC);}
 if(!S.showTS){const r=drawMain();if(!r)return;const{tx,ty}=r,ctx=mainCtx,cv=S.ax.c;
-const lw1=nI>300?0.3:0.6,lw2=nI>300?0.2:0.4;
-ctx.fillStyle="#2a9a2a";ctx.beginPath();ctx.arc(tx(xB[0]),ty(cv),5,0,2*Math.PI);ctx.fill();
-ctx.strokeStyle="#2a9a2a";ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
+const lw1=nI>300?0.5:0.8,lw2=nI>300?0.2:0.4;
+ctx.fillStyle=PC.CTRL;ctx.beginPath();ctx.arc(tx(xB[0]),ty(cv),5,0,2*Math.PI);ctx.fill();
+ctx.strokeStyle=PC.CTRL;ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
 const sh=.1;for(let k=0;k<nI-1;k++){const e1=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 const e2=yD[k]>=yV[k+1]?-Math.abs(xV[k]-yD[k])*sh:Math.abs(xV[k]-yD[k])*sh;
 ctx.strokeStyle="#c0392b";ctx.lineWidth=lw2;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e1),ty(yD[k]));ctx.stroke();
-ctx.strokeStyle="#2a9a2a";ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[k]+e1),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
+ctx.strokeStyle=PC.CTRL;ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[k]+e1),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
 ctx.strokeStyle="#2471a3";ctx.beginPath();ctx.moveTo(tx(yD[k]),ty(yD[k]));ctx.lineTo(tx(xV[k]),ty(yD[k]+e2));ctx.stroke();
-ctx.strokeStyle="#2a9a2a";ctx.beginPath();ctx.moveTo(tx(xV[k]),ty(yD[k]+e2));ctx.lineTo(tx(xV[k]),ty(yV[k+1]));ctx.stroke();}}
+ctx.strokeStyle=PC.CTRL;ctx.beginPath();ctx.moveTo(tx(xV[k]),ty(yD[k]+e2));ctx.lineTo(tx(xV[k]),ty(yV[k+1]));ctx.stroke();}}
 else{
 // Compute data
 const distH=yV.map((y,i)=>Math.abs(yD[i]-y));
@@ -1312,15 +1313,15 @@ const sharedMax=Math.max(S.dist,S.ctrl)*1.2+0.001;
 // Draw phase space in side panel
 const rp=drawMain($("tsPhaseCanvas"));
 if(rp){const{tx:txp,ty:typ}=rp,ctxp=mainCtx,cvp=S.ax.c;
-const lw1p=nI>300?0.3:0.7,lw2p=nI>300?0.2:0.5;
-ctxp.fillStyle="#2a9a2a";ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.PI);ctxp.fill();
-ctxp.strokeStyle="#2a9a2a";ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
+const lw1p=nI>300?0.5:0.8,lw2p=nI>300?0.2:0.5;
+ctxp.fillStyle=PC.CTRL;ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.PI);ctxp.fill();
+ctxp.strokeStyle=PC.CTRL;ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
 const sh=.1;for(let k=0;k<nI-1;k++){const e1=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 const e2=yD[k]>=yV[k+1]?-Math.abs(xV[k]-yD[k])*sh:Math.abs(xV[k]-yD[k])*sh;
 ctxp.strokeStyle="#c0392b";ctxp.lineWidth=lw2p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e1),typ(yD[k]));ctxp.stroke();
-ctxp.strokeStyle="#2a9a2a";ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e1),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
+ctxp.strokeStyle=PC.CTRL;ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e1),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
 ctxp.strokeStyle="#2471a3";ctxp.beginPath();ctxp.moveTo(txp(yD[k]),typ(yD[k]));ctxp.lineTo(txp(xV[k]),typ(yD[k]+e2));ctxp.stroke();
-ctxp.strokeStyle="#2a9a2a";ctxp.beginPath();ctxp.moveTo(txp(xV[k]),typ(yD[k]+e2));ctxp.lineTo(txp(xV[k]),typ(yV[k+1]));ctxp.stroke();}}
+ctxp.strokeStyle=PC.CTRL;ctxp.beginPath();ctxp.moveTo(txp(xV[k]),typ(yD[k]+e2));ctxp.lineTo(txp(xV[k]),typ(yV[k+1]));ctxp.stroke();}}
 // Build orbit array: nI+1 points from x₀ to xₙᵢ
 const orbitTS=[xB[0]];for(let i=0;i<nI;i++)orbitTS.push(xV[i]);
 // Draw TS panels — compute shared y range for TS1 including yV, yD, xV
@@ -1344,13 +1345,13 @@ ctx1.fillText("0",P1.l,h1-P1.b+14);ctx1.fillText(String(nI),w1-P1.r-ctx1.measure
 // Vertical grid lines for ≤20 iterations
 if(nI<=20){ctx1.strokeStyle="rgba(0,0,0,.18)";ctx1.lineWidth=0.5;
 for(let i=1;i<=nI;i++){ctx1.beginPath();ctx1.moveTo(txf1(i),P1.t);ctx1.lineTo(txf1(i),h1-P1.b);ctx1.stroke();}}
-const lw=nI<=20?(w1>500?1.5:1):(w1>500?0.6:0.3);const dotR=nI<=20?(w1>500?2.5:1.5):(w1>500?1.2:0.7);
+const lw=nI<=20?(w1>500?1.5:1):(w1>500?1:0.7);const dotR=nI<=20?(w1>500?2.5:1.5):(w1>500?1.2:0.7);
 const tilt=nI<=20?(w1>500?3:2):0;
 for(let i=0;i<nI;i++){
 const xc=txf1(i+1);
 const xStart=i===0?txf1(0):txf1(i)+tilt;
 // Green diagonal: from previous xₙ₊₁ position → (i+1-tilt, f(xₙ))
-ctx1.strokeStyle="#2a9a2a";ctx1.lineWidth=lw;ctx1.beginPath();
+ctx1.strokeStyle=PC.CTRL;ctx1.lineWidth=lw;ctx1.beginPath();
 ctx1.moveTo(xStart,tyf1(orbitTS[i]));ctx1.lineTo(xc-tilt,tyf1(yV[i]));ctx1.stroke();
 // Red tilted: f(xₙ) → f(xₙ)+ξₙ
 ctx1.strokeStyle="#c0392b";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
@@ -1360,13 +1361,13 @@ ctx1.strokeStyle="#2471a3";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
 ctx1.moveTo(xc,tyf1(yD[i]));ctx1.lineTo(xc+tilt,tyf1(xV[i]));ctx1.stroke();
 }
 // Green dots at all orbit points (adjusted for tilt)
-ctx1.fillStyle="#2a9a2a";
+ctx1.fillStyle=PC.CTRL;
 ctx1.beginPath();ctx1.arc(txf1(0),tyf1(orbitTS[0]),dotR,0,2*Math.PI);ctx1.fill();
 for(let i=1;i<=nI;i++){ctx1.beginPath();ctx1.arc(txf1(i)+tilt,tyf1(orbitTS[i]),dotR,0,2*Math.PI);ctx1.fill();}
 // Label
-ctx1.fillStyle="#2a9a2a";ctx1.font="600 "+(w1>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx1.fillText("Time series",w1-P1.r-ctx1.measureText("Time series").width,14);
+ctx1.fillStyle="#1c2430";ctx1.font="600 "+(w1>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx1.fillText("Time series",w1-P1.r-ctx1.measureText("Time series").width,14);
 } else {
-drawTS($("tsCanvas1"),orbitTS,"#2a9a2a","Time series",undefined,undefined,ts1min-ts1mg,ts1max+ts1mg,nI);
+drawTS($("tsCanvas1"),orbitTS,PC.CTRL,"Time series",undefined,undefined,ts1min-ts1mg,ts1max+ts1mg,nI);
 }
 drawTS($("tsCanvas2"),[0,...distH],"#c0392b","Disturbance",S.dist,"rgba(192,57,43,.45)",0,sharedMax,nI,"\u03be");
 drawTS($("tsCanvas3"),[0,...ctrlH],"#2471a3","Control",S.ctrl,"rgba(36,113,163,.45)",0,sharedMax,nI,"u");
@@ -1427,7 +1428,7 @@ ctx.fillText("Q",qx-ctx.measureText("Q").width/2,qy);}}
 ctx.lineCap="butt";}
 // Scatter points (xₙ, xₙ₊₁)
 const dotR=nPts<=20?(w>500?3:2):(nPts<=300?(w>500?1.5:1):(w>500?1:0.7));
-col=col||"#2a9a2a";ctx.fillStyle=col;
+col=col||PC.CTRL;ctx.fillStyle=col;
 for(let i=0;i<Math.min(nPts,xn.length,xn1.length);i++){
 ctx.beginPath();ctx.arc(tx(xn[i]),ty(xn1[i]),dotR,0,2*Math.PI);ctx.fill();}
 // Ticks
@@ -1462,7 +1463,7 @@ else{ctx.font="bold 13px "+PC.MF;ctx.fillText(mns(sig(ref,3)),P.l+4,tyf(ref)-4);
 ctx.fillStyle=col;
 if(data.length<=300&&ref===undefined){
 // Time series: connected line for ≤300 iterations
-ctx.strokeStyle=col;ctx.lineWidth=w>500?0.6:0.3;ctx.beginPath();
+ctx.strokeStyle=col;ctx.lineWidth=(col===PC.CTRL||col===PC.UNCTRL)?(w>500?1:0.7):(w>500?0.6:0.3);ctx.beginPath();
 for(let i=0;i<data.length;i++){if(i===0)ctx.moveTo(txf(i),tyf(data[i]));else ctx.lineTo(txf(i),tyf(data[i]));}ctx.stroke();
 const dotR=w>500?1.2:0.7;for(let i=0;i<data.length;i++){ctx.beginPath();ctx.arc(txf(i),tyf(data[i]),dotR,0,2*Math.PI);ctx.fill();}
 } else if(data.length<=300&&ref!==undefined){
@@ -1473,7 +1474,7 @@ for(let i=0;i<data.length;i++){ctx.fillRect(txf(i)-bw/2,tyf(data[i]),bw,tyf(0)-t
 const dr=data.length<600?1:0.7;
 for(let i=0;i<data.length;i++){ctx.beginPath();ctx.arc(txf(i),tyf(data[i]),dr,0,2*Math.PI);ctx.fill();}
 } else {for(let i=0;i<data.length;i++)ctx.fillRect(txf(i),tyf(data[i]),1,1);}
-ctx.fillStyle=col;ctx.font="600 "+(w>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx.fillText(lbl,w-P.r-ctx.measureText(lbl).width,14);}
+ctx.fillStyle=col===PC.CTRL?"#1c2430":col;ctx.font="600 "+(w>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx.fillText(lbl,w-P.r-ctx.measureText(lbl).width,14);}
 
 let _raf=0;
 function redraw(){if(S.mode==="safety"){S.ax=compAx(S.xmap,S.ymap,S.xmap.length,S.xmin,S.xmax);drawSafety();return;}recompute();if(S.mode==="safeset")drawMain();else if(S.mode==="iterations")drawIterations();
@@ -1494,7 +1495,7 @@ if(typeof syncMobQ==='function')syncMobQ();
 $("x0input").value=sig(S.x0,4);$("x0slider").min=S.xmin;$("x0slider").max=S.xmax;$("x0slider").step=(S.xmax-S.xmin)/500;$("x0slider").value=S.x0;
 $("numIter").value=S.numIter;$("paramAval").textContent=sig(S.paramA,3);$("paramBval").textContent=sig(S.paramB,3);
 const ms={safeset:"btnSafe",iterations:"btnIter",controlled_activate:"btnCheck",controlled_iterates:"btnCtrlIter",safety:"btnSafety"};
-const cs={safeset:"btn-blue",iterations:"btn-orange",controlled_activate:"btn-blue",controlled_iterates:"btn-green",safety:"btn-slate"};
+const cs={safeset:"btn-blue",iterations:"btn-unctrl",controlled_activate:"btn-blue",controlled_iterates:"btn-ctrl",safety:"btn-slate"};
 for(const[m,id]of Object.entries(ms))$(id).className="btn "+(S.mode===m?cs[m]:"btn-inactive");
 $("iterSection").style.display=(S.mode==="safeset"||(S.mode==="safety"&&!PC.isMobile()))?"none":"block";
 $("x0Wrap").style.display=(S.mode==="safeset"||S.mode==="safety")?"none":"flex";
@@ -2694,14 +2695,14 @@ function drawSafeSet(){
     const _i0=S._hideTransient?Math.floor(o.x.length/2):0;
     if(!_noLines){
     // Arrows connecting points
-    ctx.strokeStyle="rgba(211,84,0,.5)";ctx.lineWidth=Math.min(6,1.6*zoomF);
+    ctx.strokeStyle="rgba(0,0,0,.6)";ctx.lineWidth=Math.min(6,1.6*zoomF);
     for(let i=_i0;i<o.x.length-1;i++){
       const x1=tx(o.x[i]),y1=ty(o.y[i]),x2=tx(o.x[i+1]),y2=ty(o.y[i+1]);
       ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
       const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
       if(len>4){
         const ux=dx/len,uy=dy/len,hs=Math.min(5,len*.3);
-        ctx.fillStyle="rgba(211,84,0,.7)";ctx.beginPath();
+        ctx.fillStyle="rgba(0,0,0,.8)";ctx.beginPath();
         ctx.moveTo(x2,y2);
         ctx.lineTo(x2-hs*ux+hs*.4*uy,y2-hs*uy-hs*.4*ux);
         ctx.lineTo(x2-hs*ux-hs*.4*uy,y2-hs*uy+hs*.4*ux);
@@ -2712,12 +2713,12 @@ function drawSafeSet(){
     if(o.escaped&&o.x.length>0){
       const lx=o.x[o.x.length-1],ly=o.y[o.y.length-1];
       const x1=tx(lx),y1=ty(ly),x2=tx(o.escX),y2=ty(o.escY);
-      ctx.strokeStyle="rgba(211,84,0,.5)";ctx.lineWidth=1.6;
+      ctx.strokeStyle="rgba(0,0,0,.6)";ctx.lineWidth=1.6;
       ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();
       const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
       if(len>4){
         const ux=dx/len,uy=dy/len,hs=Math.min(5,len*.3);
-        ctx.fillStyle="rgba(211,84,0,.7)";ctx.beginPath();
+        ctx.fillStyle="rgba(0,0,0,.8)";ctx.beginPath();
         ctx.moveTo(x2,y2);
         ctx.lineTo(x2-hs*ux+hs*.4*uy,y2-hs*uy-hs*.4*ux);
         ctx.lineTo(x2-hs*ux-hs*.4*uy,y2-hs*uy+hs*.4*ux);
@@ -2726,7 +2727,7 @@ function drawSafeSet(){
     }
     }
     // Dots
-    ctx.fillStyle="rgba(211,84,0,.8)";
+    ctx.fillStyle=PC.UNCTRL;
     for(let i=_i0;i<o.x.length;i++){ctx.beginPath();ctx.arc(tx(o.x[i]),ty(o.y[i]),r,0,2*Math.PI);ctx.fill();}
     if(!S._hideTransient){ctx.fillStyle="#555";ctx.beginPath();ctx.arc(tx(o.x[0]),ty(o.y[0]),Math.min(8,4*zoomF),0,2*Math.PI);ctx.fill();}
   }
@@ -2734,13 +2735,13 @@ function drawSafeSet(){
     const o=S.orbits.ctrl;
     const r=Math.min(8,(o.x.length>500?1.8:N>300?2.5:3.5)*zoomF);
     const _i0=S._hideTransient?Math.floor(o.x.length/2):0;
-    ctx.fillStyle="rgba(220,40,40,.8)";
+    ctx.fillStyle=PC.CTRL;
     for(let i=_i0;i<o.x.length;i++){ctx.beginPath();ctx.arc(tx(o.x[i]),ty(o.y[i]),r,0,2*Math.PI);ctx.fill();}
     if(!S._hideTransient){ctx.fillStyle="#999";ctx.beginPath();ctx.arc(tx(o.x[0]),ty(o.y[0]),Math.min(8,4*zoomF),0,2*Math.PI);ctx.fill();}
   }
   // Chaotic saddle (on top of orbits)
   if(S.saddle){
-    ctx.fillStyle="rgba(0,0,0,.7)";
+    ctx.fillStyle="rgba(18,150,80,.95)";              // green: black is the uncontrolled orbit
     const basesr=w>600?1.8:1.2;
     const sr=Math.min(6,Math.max(basesr,basesr*zoomF));
     for(let i=0;i<S.saddle.length;i+=2){
@@ -3889,7 +3890,7 @@ function guide2d(){
 <p>where <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> is a disturbance nobody chooses and <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span> is the control, applied knowing <span data-tex="f(q_n)+\\xi_n">f(q) + ξ</span>. Both are bounded in Euclidean norm.</p>`;
   const viewS=`<h3>What the plot shows: safe set</h3>
 <p>The blue points are the safe set: the points of <span data-tex="Q">Q</span> whose orbit can be kept in <span data-tex="Q">Q</span> forever with <span data-tex="|u_n|\\le u_0">|u| ≤ u₀</span>, whatever the disturbance does. The red and blue discs in the corner show the size of <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span> at the scale of the plot.</p>
-<p><b>Controlled</b> draws an orbit kept in the safe set (red). <b>Uncontrolled</b> draws an orbit with the same kind of disturbance and no control (orange), which escapes. <b>Chaotic saddle</b> draws the set where orbits of the map without disturbance stay (black).</p>
+<p><b>Controlled</b> draws an orbit kept in the safe set (amber). <b>Uncontrolled</b> draws an orbit with the same kind of disturbance and no control (black), which escapes. <b>Chaotic saddle</b> draws the set where orbits of the map without disturbance stay (green).</p>
 <p><b>Zoom.</b> Drag a rectangle, turn the wheel or pinch. <b>Back</b> and <b>Full view</b> appear at the bottom of the plot once you zoom; a double click also returns to the full view.</p>`;
   const viewU=`<h3>What the plot shows: safety function</h3>
 <p>The surface is <span data-tex="U(x,y)">U(x, y)</span>: for each point of <span data-tex="Q">Q</span>, the smallest control bound that keeps its orbit in <span data-tex="Q">Q</span> forever. The vertical scale is logarithmic and the colour repeats the height, so the valleys are the points that are easiest to keep.</p>
@@ -4504,7 +4505,7 @@ function loadControlledTrajectory(){
     const nPts=new DataView(buf).getUint32(0,true);
     const coords=new Float32Array(buf,4,nPts*3);
     clearGroup(layers.traj);
-    ptsToLine(coords,layers.traj,0x1fb455,0.95);       // green, as the controlled orbits of the 1D maps
+    ptsToLine(coords,layers.traj,PC.CTRL,0.95);
     trajIdx=idx;vis.traj=true;applyVis();
   }).catch(err=>{
     console.warn('Trajectory '+idx+' could not be loaded:',err);
@@ -4535,7 +4536,7 @@ function computeUncontrolled(){
     sx+=rad*sin*Math.cos(ang);sy+=rad*sin*Math.sin(ang);sz+=rad*cos;
     pts.push(sx,sy,sz);
   }
-  ptsToLine(pts,layers.unctrl,0x000000,0.55);
+  ptsToLine(pts,layers.unctrl,PC.UNCTRL,0.7);
   vis.unctrl=true;applyVis();
 }
 function recomputeU(){seed=Date.now()%2147483647;computeUncontrolled();}
@@ -4831,7 +4832,7 @@ if(cPts){
 var nCtrl=cPts.length/6;
 function toSX(v){return m+(v+3)/6*pW;}
 function toSY(v){return m+(3-v)/6*pH;}
-cx.fillStyle='#dc2626';
+cx.fillStyle=PC.CTRL;
 for(var i=0;i<nCtrl;i++){
 var sx1=toSX(cPts[i*6+4]),sy1=toSY(cPts[i*6+5]);
 cx.beginPath();cx.arc(sx1,sy1,1.2,0,2*Math.PI);cx.fill();
@@ -4898,7 +4899,7 @@ for(var i=0;i<N;i+=st)for(var j=0;j<N;j+=st){
 if(!sBmp[i*N+j])continue;var p=pr(xV[j],yV[i],ZS,c);if(p[2])cx.fillRect(p[0]-.8,p[1]-.8,1.6,1.6);}}
 
 // Trajectory — skip clipped vertices, restart path after gaps
-cx.strokeStyle='rgba(30,41,59,.55)';cx.lineWidth=0.8;
+cx.strokeStyle=PC.CTRL;cx.lineWidth=0.9;
 for(var s=0;s<fTraj.length;s++){
 var seg=fTraj[s],nP=seg.length/3;if(nP<2)continue;
 cx.beginPath();var pen=false;
