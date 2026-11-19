@@ -754,7 +754,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:#1e293b"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
+        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:#1fb455"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:#000"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
       </div>
       <p class="t3-note">Safe sets only. Safety functions are not shown in 3D: a function of three variables cannot be drawn as a surface.</p>
@@ -4090,11 +4090,22 @@ let trajLoading=false,trajIdx=-1,trajBad=new Set(),seed=Date.now()%2147483647,fi
 const vis={safe:true,asym:true,traj:false,unctrl:false};
 
 // ------------------------------ panel ------------------------------
+// Pairs (xi0, u0) offered at each control interval, counted from the largest. With a long interval the
+// safe sets of the smallest bounds are too thin to be resolved and drawn well, so they are not offered.
+const XU_COUNT={mccann:{'100':4,'150':3}};
+function fillXU(mapKey){
+  const cfg=MAP_CONFIG[mapKey],sel=$('selXU'),prev=sel.value;
+  const opts=cfg.xuOptions.slice(0,(XU_COUNT[mapKey]||{})[$('selDt').value]||cfg.xuOptions.length);
+  sel.innerHTML='';
+  opts.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;sel.appendChild(opt);});
+  // keep the pair in use; if it is not offered at this interval, take the smallest one that is
+  sel.value=!prev?opts[0].value:opts.some(o=>o.value===prev)?prev:opts[opts.length-1].value;
+}
 function populate(mapKey){
-  const cfg=MAP_CONFIG[mapKey],selDt=$('selDt'),selXU=$('selXU');
-  selDt.innerHTML='';selXU.innerHTML='';
+  const cfg=MAP_CONFIG[mapKey],selDt=$('selDt');
+  selDt.innerHTML='';$('selXU').innerHTML='';
   cfg.dtOptions.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;selDt.appendChild(opt);});
-  cfg.xuOptions.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;selXU.appendChild(opt);});
+  fillXU(mapKey);
 }
 function panelInfo(mapKey){
   const cfg=MAP_CONFIG[mapKey],m=META[mapKey];
@@ -4342,7 +4353,7 @@ function clearGroup(g){
 function ptsToLine(arr,group,color,opacity){
   const v=[],zOff=cur.zOff;
   for(let i=0;i<arr.length;i+=3)v.push(new THREE.Vector3(arr[i],arr[i+1],arr[i+2]+zOff));
-  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(v),new THREE.LineBasicMaterial({color:color,transparent:true,opacity:opacity})));
+  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(v),new THREE.LineBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),transparent:true,opacity:opacity})));
 }
 
 // ------------------------------ load and build ------------------------------
@@ -4493,7 +4504,7 @@ function loadControlledTrajectory(){
     const nPts=new DataView(buf).getUint32(0,true);
     const coords=new Float32Array(buf,4,nPts*3);
     clearGroup(layers.traj);
-    ptsToLine(coords,layers.traj,0x1e293b,0.55);
+    ptsToLine(coords,layers.traj,0x1fb455,0.95);       // green, as the controlled orbits of the 1D maps
     trajIdx=idx;vis.traj=true;applyVis();
   }).catch(err=>{
     console.warn('Trajectory '+idx+' could not be loaded:',err);
@@ -4582,7 +4593,7 @@ PC.register("3d",{
   init(){
     populate(currentMap);panelInfo(currentMap);applyVis();
     $('selMap').addEventListener('change',onMapChange);
-    $('selDt').addEventListener('change',onParamChange);
+    $('selDt').addEventListener('change',()=>{fillXU(currentMap);onParamChange();});
     $('selXU').addEventListener('change',onParamChange);
     $('bSafe').addEventListener('click',()=>tog('safe'));
     $('bAsym').addEventListener('click',()=>tog('asym'));
