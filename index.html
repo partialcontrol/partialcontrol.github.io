@@ -449,7 +449,9 @@ input[type=range]:disabled{opacity:.35}
 #v2d .surf-lab{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #v2d .surf-lab .sl{position:absolute;left:0;top:0;font:15px var(--math);color:var(--ink2);white-space:nowrap}
 #v2d .surf-lab .xn,#v2d .surf-lab .yn,#v2d .surf-lab .zn{font-size:19px;color:var(--ink)}
-#v2d .canvas-wrap .surf-bar{left:auto;right:10px;top:50%;transform:translateY(-56%);pointer-events:none}
+#v2d .canvas-wrap .surf-bar{left:auto;right:10px;top:50%;transform:translateY(-56%);pointer-events:none;border-radius:8px;
+  background:rgba(255,255,255,.92);box-shadow:0 0 0 1px var(--line)}
+#v2d .surf.top .surf-bar{right:22px}
 #v2d .surf-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:82%;padding:8px 18px;border-radius:20px;
   background:rgba(255,255,255,.95);box-shadow:0 0 0 1px var(--line),0 2px 8px rgba(28,36,48,.08);font-size:15px;color:var(--ink2);text-align:center}
 
@@ -2564,16 +2566,16 @@ function drawSafeSet(){
   ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
   if(w<8||h<8)return;
   updateTitle();
-  if(S.view==="U"){surfSync();ensureU();uStatus();return;}     // the surface replaces this plot
   const big=w>560,MF=PC.MF,mt=PC.mtext;
   const P={l:big?62:46,r:14,t:Math.max(big?26:20,$("plotTitle").offsetHeight)+(big?12:8),b:big?44:36};
+  const pw=w-P.l-P.r,ph=h-P.t-P.b;
+  S._plot={P,pw,ph,w,h};                                   // the surface seen from above uses the same rectangle
+  if(S.view==="U"){surfSync();ensureU();uStatus();return;}     // the surface replaces this plot
   const vxi=S.vxi,vxf=S.vxf,vyi=S.vyi,vyf=S.vyf;
   const{xi,xf,yi,yf}=S;
   const N=S._drawN||S.N;
-  const pw=w-P.l-P.r,ph=h-P.t-P.b;
   const tx=v=>P.l+(v-vxi)/(vxf-vxi)*pw;
   const ty=v=>P.t+(1-(v-vyi)/(vyf-vyi))*ph;
-  S._plot={P,pw,ph,w,h};
 
   // editable limits of Q sit on the axes
   const qw=big?44:38,st=(id,l,t)=>{const s=$(id).style;s.left=l+"px";s.top=t+"px";};
@@ -3529,10 +3531,13 @@ function u2dSafety(Nx,Ny,imgX,imgY,inQ,dx,dy,xi0,corners,onProgress){
 // ---------------------------------------------------------------------------
 //  The safety function as a surface: height and colour are log10 U(x,y). A translucent plane marks u0,
 //  so the part of the surface below it is the safe set. Drawn with three.js, only when something changes.
+//  The projection is parallel, as in a MATLAB surf plot, and the base has the proportions of the Safe set
+//  plot: seen from above the surface falls exactly on that plot.
 // ---------------------------------------------------------------------------
 const SF={state:"idle",R:null,scene:null,cam:null,root:null,mesh:null,grid:null,plane:null,edge:null,
-  data:null,box:null,tgt:null,az:-1.02,el:0.6,dist:230,raf:0,labels:[],xoff:0};
+  data:null,box:null,tgt:null,az:-1.25,el:0.5,hh:60,asp:1,mode:"home",shape:"",raf:0,labels:[]};
 const SF_ZH=46;                                         // height of the box; its longer side is 100
+const SF_D=1500;                                        // distance of the camera (parallel projection: it does not change the size)
 const SF_MAP=[[62,38,168],[72,82,244],[46,135,247],[18,177,214],[55,200,151],[171,199,57],[254,195,56],[250,220,42],[249,251,21]];
 function sfColor(t){
   t=t<0?0:t>1?1:t;const n=SF_MAP.length-1,i=Math.min(n-1,Math.floor(t*n)),f=t*n-i,a=SF_MAP[i],b=SF_MAP[i+1];
@@ -3551,7 +3556,7 @@ function sfInit(){
   SF.R.setPixelRatio(Math.min(window.devicePixelRatio||1,2));SF.R.setClearColor(0xffffff,1);
   $("surfGl").appendChild(SF.R.domElement);
   SF.scene=new THREE.Scene();
-  SF.cam=new THREE.PerspectiveCamera(30,1,1,3000);SF.scene.add(SF.cam);
+  SF.cam=new THREE.OrthographicCamera(-1,1,1,-1,1,4000);SF.scene.add(SF.cam);
   SF.scene.add(new THREE.AmbientLight(0xffffff,0.78));
   const sun=new THREE.DirectionalLight(0xffffff,0.34);sun.position.set(-0.6,0.8,1);SF.cam.add(sun);   // moves with the view
   SF.root=new THREE.Group();SF.scene.add(SF.root);
@@ -3561,24 +3566,31 @@ function sfInit(){
 function sfResize(){
   if(SF.state!=="ready")return;
   const h=$("surfGl"),w=h.clientWidth,ht=h.clientHeight;if(w<8||ht<8)return;
-  // the picture is drawn a little to the left, which leaves room for the colour bar
-  SF.xoff=PC.isMobile()?30:46;
-  SF.R.setSize(w,ht);SF.cam.aspect=w/ht;SF.cam.setViewOffset(w,ht,SF.xoff,0,w,ht);
-  if(SF.box){if(!SF.fitted||SF.atHome)sfHome();SF.fitted=true;}
-  sfBar();sfDraw();
+  SF.R.setSize(w,ht);SF.asp=w/ht;
+  sfShape();sfRefit();sfBar();sfDraw();
 }
+// The base takes the proportions of the Safe set plot. Returns true when the plot has changed.
+function sfShape(){
+  const p=S._plot;if(!p||!SF.box)return false;
+  const key=[p.P.l,p.P.t,p.pw,p.ph,p.w,p.h].join();if(key===SF.shape)return false;
+  SF.shape=key;const a=p.pw/p.ph,b=SF.box;b.hx=a>=1?50:50*a;b.hy=a>=1?50/a:50;
+  SF.root.scale.set(b.hx/50,b.hy/50,1);return true;
+}
+function sfRefit(){if(!SF.box)return;if(SF.mode==="home")sfHome();else if(SF.mode==="top")sfTop();}
+function sfMode(m){if(m===SF.mode)return;SF.mode=m;$("surf").classList.toggle("top",m==="top");sfBar();}
 // keep the picture in step with the state: new data, a moved u0, or a computation in progress
 function surfSync(){
   if(SF.state!=="ready"||S.view!=="U")return;
   const U=S.U,cur=U&&U.done&&U.key===uKey();
   if(cur&&SF.data!==U)sfBuild(U);
+  if(sfShape())sfRefit();
   sfMsg(cur?"":SF.mesh?"Updating":"Computing the safety function");
   $("surf").classList.toggle("stale",!cur&&!!SF.mesh);
   sfPlane();sfBar();sfDraw();
 }
 function sfClear(o){if(!o)return;SF.root.remove(o);o.traverse(c=>{if(c.geometry)c.geometry.dispose();if(c.material)c.material.dispose();});}
 function sfBuild(U){
-  SF.data=U;const old=SF.box;
+  SF.data=U;
   const N=U.N,maxM=PC.isMobile()?200:320,s=Math.max(1,Math.ceil((N-1)/maxM)),hs=s>>1;
   const nx=Math.floor((N-1)/s)+1,ny=nx,val=new Float32Array(nx*ny),tiny=Math.sqrt(U.dx*U.dy)/4;
   let lo=Infinity,hi=0;
@@ -3590,12 +3602,13 @@ function sfBuild(U){
     if(m<tiny)m=tiny;val[J*nx+I]=m;if(m<lo)lo=m;if(m>hi)hi=m;}
   if(!(hi>0)){lo=tiny;hi=1;}
   let zlo=Math.log10(lo),zhi=Math.log10(hi);if(zhi-zlo<0.3){const c=(zlo+zhi)/2;zlo=c-0.15;zhi=c+0.15;}
-  const Lx=(N-1)*U.dx,Ly=(N-1)*U.dy,k=100/Math.max(Lx,Ly),hx=Lx*k/2,hy=Ly*k/2;
-  SF.box={hx,hy,zlo,zhi,x0:U.xi,y0:U.yi,Lx,Ly,k,umin:U.umin};
+  // built on a base of 100 x 100; sfShape then stretches it to the proportions of the plot
+  const Lx=(N-1)*U.dx,Ly=(N-1)*U.dy,hx=50,hy=50;
+  SF.box={hx,hy,zlo,zhi,x0:U.xi,y0:U.yi,Lx,Ly,umin:U.umin};
   const Z=v=>(Math.log10(v)-zlo)/(zhi-zlo)*SF_ZH;SF.Z=Z;
   const pos=new Float32Array(nx*ny*3),col=new Float32Array(nx*ny*3);
   for(let J=0,p=0;J<ny;J++)for(let I=0;I<nx;I++,p++){const v=val[p],z=v===v?Z(v):0,c=sfColor(z/SF_ZH);
-    pos[p*3]=-hx+I*s*U.dx*k;pos[p*3+1]=-hy+J*s*U.dy*k;pos[p*3+2]=z;col[p*3]=c[0]/255;col[p*3+1]=c[1]/255;col[p*3+2]=c[2]/255;}
+    pos[p*3]=-hx+100*I*s/(N-1);pos[p*3+1]=-hy+100*J*s/(N-1);pos[p*3+2]=z;col[p*3]=c[0]/255;col[p*3+1]=c[1]/255;col[p*3+2]=c[2]/255;}
   const idx=new Uint32Array((nx-1)*(ny-1)*6);let n=0;
   for(let J=0;J<ny-1;J++)for(let I=0;I<nx-1;I++){const a=J*nx+I,b=a+1,c=a+nx,d=c+1;
     if(val[a]!==val[a]||val[b]!==val[b]||val[c]!==val[c]||val[d]!==val[d])continue;      // outside Q
@@ -3617,8 +3630,8 @@ function sfBuild(U){
   SF.plane.add(new THREE.Mesh(new THREE.PlaneGeometry(2*hx,2*hy),new THREE.MeshBasicMaterial({color:0x2471a3,transparent:true,opacity:0.22,side:THREE.DoubleSide,depthWrite:false})));
   SF.plane.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-hx,-hy],[hx,-hy],[hx,hy],[-hx,hy]].map(p=>new THREE.Vector3(p[0],p[1],0))),new THREE.LineBasicMaterial({color:0x2471a3})));
   sfLabelsBuild();
-  // frame the box the first time and whenever its shape changes (another map or another Q)
-  if($("surfGl").clientWidth>8&&(!SF.fitted||!old||Math.abs(old.hx-hx)>1e-6||Math.abs(old.hy-hy)>1e-6)){sfHome();SF.fitted=true;}
+  SF.shape="";sfShape();
+  if(!SF.fitted&&$("surfGl").clientWidth>8){sfHome();SF.fitted=true;}     // later results keep the view chosen by the user
 }
 // ticks of a logarithmic axis: decades, with 2 and 5 when there are few
 function sfTicks(zlo,zhi){
@@ -3639,7 +3652,8 @@ function sfLabelsBuild(){
   const b=SF.box,add=(kind,text,tex)=>{const el=document.createElement("span");el.className="sl "+kind;
     if(tex)PC.setTex(el,tex,text);else el.textContent=text;host.appendChild(el);const o={el,kind};SF.labels.push(o);return o;};
   const tk=v=>String(+v.toPrecision(3)).replace("-","−");
-  [0,0.5,1].forEach(f=>{add("x",tk(b.x0+f*b.Lx)).f=f;add("y",tk(b.y0+f*b.Ly)).f=f;});
+  // the quarter marks are only shown from above, where they are the ticks of the Safe set plot
+  [0,0.25,0.5,0.75,1].forEach(f=>{for(const k of["x","y"]){const q=f===0.25||f===0.75,o=add(k,tk(sig(k==="x"?b.x0+f*b.Lx:b.y0+f*b.Ly,q?2:3)));o.f=f;o.q=q;}});
   add("xn","x","x").f=0.76;add("yn","y","y").f=0.76;
   SF.ticks.forEach(v=>{add("z",sfFmt(v)).v=v;});
   add("zn","U","U");
@@ -3648,29 +3662,39 @@ function sfLabels(){
   if(!SF.box||!SF.labels.length)return;
   const b=SF.box,cam=SF.cam,w=$("surfGl").clientWidth,h=$("surfGl").clientHeight,v=new THREE.Vector3();
   const scr=(x,y,z)=>{v.set(x,y,z).project(cam);return[(v.x+1)/2*w,(1-v.y)/2*h];};
+  const pl=S._plot,top=SF.mode==="top"&&pl,big=pl&&pl.w>560;
   // x and y labels run along the edges of the base nearest to the viewer; the vertical axis sits on the corner seen leftmost
-  const top=SF.el>1.45,sy=top||cam.position.y<SF.tgt.y?-1:1,sx=top||cam.position.x<SF.tgt.x?-1:1;
-  // seen from above, the labels go at the height of the top of the box, which is what the eye sees as its edge
-  const zb=top?SF_ZH:0;let zc=null,zx=Infinity;
+  const flat=SF.el>1.45,sy=flat||cam.position.y<SF.tgt.y?-1:1,sx=flat||cam.position.x<SF.tgt.x?-1:1;
+  let zc=null,zx=Infinity;
   [[-1,-1],[1,-1],[1,1],[-1,1]].forEach(c=>{const p=scr(c[0]*b.hx,c[1]*b.hy,SF_ZH/2);if(p[0]<zx){zx=p[0];zc=c;}});
-  SF.labels.forEach(o=>{let p,show=true;
-    if(o.kind==="x")p=scr(-b.hx+o.f*2*b.hx,sy*(b.hy+7),zb);
-    else if(o.kind==="xn")p=scr(-b.hx+o.f*2*b.hx,sy*(b.hy+15),zb);
-    else if(o.kind==="y")p=scr(sx*(b.hx+7),-b.hy+o.f*2*b.hy,zb);
-    else if(o.kind==="yn")p=scr(sx*(b.hx+15),-b.hy+o.f*2*b.hy,zb);
-    else if(o.kind==="z"){p=scr(zc[0]*b.hx,zc[1]*b.hy,SF.Z(o.v));show=!top;}
-    else{p=scr(zc[0]*b.hx,zc[1]*b.hy,SF_ZH+5);show=!top;}
+  const mid="translate(-50%,-50%)",left="translate(calc(-100% - 8px),-50%)";
+  SF.labels.forEach(o=>{let p,show=true,tr=mid;
+    if(top){                                             // the places of the labels of the Safe set plot
+      if(o.kind==="x"){p=scr(-b.hx+o.f*2*b.hx,-b.hy,0);p[1]+=big?15:12;}
+      else if(o.kind==="xn"){p=scr(0,-b.hy,0);p[1]+=big?32:27;}
+      else if(o.kind==="y"){p=scr(-b.hx,-b.hy+o.f*2*b.hy,0);tr=left;}
+      else if(o.kind==="yn"){p=scr(-b.hx,0,0);p[0]-=big?47:36;tr=mid+" rotate(-90deg)";}
+      else{p=[0,0];show=false;}
+    }
+    else if(o.kind==="x"){p=scr(-b.hx+o.f*2*b.hx,sy*(b.hy+7),0);show=!o.q;}
+    else if(o.kind==="xn"){p=scr(-b.hx+o.f*2*b.hx,sy*(b.hy+15),0);}
+    else if(o.kind==="y"){p=scr(sx*(b.hx+7),-b.hy+o.f*2*b.hy,0);show=!o.q;}
+    else if(o.kind==="yn"){p=scr(sx*(b.hx+15),-b.hy+o.f*2*b.hy,0);}
+    else if(o.kind==="z"){p=scr(zc[0]*b.hx,zc[1]*b.hy,SF.Z(o.v));show=!flat;tr=left;}
+    else{p=scr(zc[0]*b.hx,zc[1]*b.hy,SF_ZH+5);show=!flat;}
     o.el.style.display=show?"":"none";
-    o.el.style.transform="translate("+p[0].toFixed(1)+"px,"+p[1].toFixed(1)+"px) "+(o.kind==="z"?"translate(calc(-100% - 8px),-50%)":"translate(-50%,-50%)");});
+    o.el.style.transform="translate("+p[0].toFixed(1)+"px,"+p[1].toFixed(1)+"px) "+tr;});
 }
 // colour bar with the same scale as the surface, and the marks of xi0, u0 and min U
 function sfBar(){
   const cv=$("surfBar"),b=SF.box;if(!b||SF.state!=="ready"){cv.style.visibility="hidden";return;}
   cv.style.visibility="";
-  const big=!PC.isMobile(),W=big?96:74,H=big?208:140,dpr=Math.min(window.devicePixelRatio||1,2);
+  // from above the bar goes to the corner, where the Safe set plot has its legend
+  const tp=SF.mode==="top"&&S._plot;cv.style.top=tp?(S._plot.P.t+8)+"px":"";cv.style.transform=tp?"none":"";
+  const big=!PC.isMobile(),W=big?96:74,H=big?216:147,dpr=Math.min(window.devicePixelRatio||1,2);
   if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";}
   const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
-  const bw=big?14:11,bx=(W-bw)/2+(big?6:4),by=big?30:24,bh=H-by-(big?12:10),fs=big?14:11,halo="rgba(255,255,255,.92)";
+  const bw=big?14:11,bx=(W-bw)/2+(big?6:4),by=big?30:24,bh=H-by-(big?20:17),fs=big?14:11,halo="rgba(255,255,255,.92)";
   for(let y=0;y<bh;y++){const k=sfColor(1-y/(bh-1));c.fillStyle="rgb("+(k[0]|0)+","+(k[1]|0)+","+(k[2]|0)+")";c.fillRect(bx,by+y,bw,1.5);}
   c.strokeStyle="#aab4c2";c.lineWidth=1;c.strokeRect(bx-.5,by-.5,bw+1,bh+1);
   c.fillStyle="#1c2430";c.textAlign="left";c.textBaseline="alphabetic";PC.mtext(c,bx-(big?20:15),by-(big?11:8),big?17:13,["i:U","g:0.1","r:(","i:x","r:,","i: y","r:)"],halo);
@@ -3689,47 +3713,47 @@ function sfBar(){
 // ----- view -----
 function sfCam(){
   const ce=Math.cos(SF.el),se=Math.sin(SF.el),ca=Math.cos(SF.az),sa=Math.sin(SF.az),c=SF.cam;
-  c.position.set(SF.tgt.x+SF.dist*ce*ca,SF.tgt.y+SF.dist*ce*sa,SF.tgt.z+SF.dist*se);
-  c.up.set(-se*ca,-se*sa,ce);c.lookAt(SF.tgt);c.updateMatrixWorld(true);
+  c.left=-SF.hh*SF.asp;c.right=SF.hh*SF.asp;c.top=SF.hh;c.bottom=-SF.hh;c.updateProjectionMatrix();
+  c.position.set(SF.tgt.x+SF_D*ce*ca,SF.tgt.y+SF_D*ce*sa,SF.tgt.z+SF_D*se);
+  c.up.set(-se*ca,-se*sa,ce);c.lookAt(SF.tgt);c.updateMatrixWorld(true);c.matrixWorldInverse.copy(c.matrixWorld).invert();
 }
 function sfDraw(){
   if(SF.state!=="ready"||SF.raf)return;
   SF.raf=requestAnimationFrame(()=>{SF.raf=0;if(S.view!=="U")return;sfCam();SF.R.render(SF.scene,SF.cam);sfLabels();});
 }
-// Frame the box and the labels around it for the current direction: centre them in the free part of the
-// picture (below the title, above the buttons, left of the colour bar) and come as close as they allow.
-function sfFrame(){
-  const b=SF.box||{hx:50,hy:50},pts=[],v=new THREE.Vector3(),top=SF.el>1.45,cam=SF.cam;
-  for(const sx of[-1,1])for(const sy of[-1,1]){pts.push([sx*(b.hx+(top?2:19)),sy*(b.hy+(top?2:19)),0]);pts.push([sx*(b.hx+(top?19:2)),sy*(b.hy+(top?19:2)),SF_ZH+(top?0:7)]);}
+// Place the box for the current direction. From above, its base goes exactly on the axes of the Safe set plot.
+// Otherwise the box and its labels are centred in the free part of the picture (below the title, above the
+// buttons, left of the colour bar) and drawn as large as it allows.
+function sfFrame(top){
+  const b=SF.box||{hx:50,hy:50},pts=[],v=new THREE.Vector3(),cam=SF.cam,pl=S._plot;
   const w=$("surfGl").clientWidth||1,h=$("surfGl").clientHeight||1;
-  const x0=-0.97,x1=1-(PC.isMobile()?64:100)/w*2,y0=-1+50/h*2,y1=1-($("plotTitle").offsetHeight+8)/h*2;
-  const box=()=>{sfCam();cam.matrixWorldInverse.copy(cam.matrixWorld).invert();
-    let a=[1e9,-1e9,1e9,-1e9];for(const p of pts){v.set(p[0],p[1],p[2]).project(cam);if(v.z>1)return null;
-      if(v.x<a[0])a[0]=v.x;if(v.x>a[1])a[1]=v.x;if(v.y<a[2])a[2]=v.y;if(v.y>a[3])a[3]=v.y;}return a;};
-  SF.dist=600;
-  for(let it=0;it<4;it++){
-    const a=box();if(!a)break;
-    // move the target so that the box sits in the middle of the free area, then scale the distance to fill it
-    const hh=SF.dist*Math.tan(cam.fov*Math.PI/360),hw=hh*cam.aspect,[r,u]=sfAxes();
-    SF.tgt.addScaledVector(r,((a[0]+a[1])-(x0+x1))/2*hw).addScaledVector(u,((a[2]+a[3])-(y0+y1))/2*hh);
-    SF.dist*=Math.max((a[1]-a[0])/(x1-x0),(a[3]-a[2])/(y1-y0));
+  let x0=-0.97,x1=1-(PC.isMobile()?64:100)/w*2,y0=-1+50/h*2,y1=1-($("plotTitle").offsetHeight+8)/h*2;
+  if(top&&pl){
+    for(const sx of[-1,1])for(const sy of[-1,1])pts.push([sx*b.hx,sy*b.hy,0]);
+    x0=pl.P.l/w*2-1;x1=(pl.P.l+pl.pw)/w*2-1;y1=1-pl.P.t/h*2;y0=1-(pl.P.t+pl.ph)/h*2;
+  }else for(const sx of[-1,1])for(const sy of[-1,1]){pts.push([sx*(b.hx+19),sy*(b.hy+19),0]);pts.push([sx*(b.hx+2),sy*(b.hy+2),SF_ZH+7]);}
+  for(let it=0;it<2;it++){
+    sfCam();const a=[1e9,-1e9,1e9,-1e9];
+    for(const p of pts){v.set(p[0],p[1],p[2]).project(cam);if(v.x<a[0])a[0]=v.x;if(v.x>a[1])a[1]=v.x;if(v.y<a[2])a[2]=v.y;if(v.y>a[3])a[3]=v.y;}
+    const[r,u]=sfAxes();
+    SF.tgt.addScaledVector(r,((a[0]+a[1])-(x0+x1))/2*SF.hh*SF.asp).addScaledVector(u,((a[2]+a[3])-(y0+y1))/2*SF.hh);
+    SF.hh*=Math.max((a[1]-a[0])/(x1-x0),(a[3]-a[2])/(y1-y0));
   }
 }
-function sfHome(){SF.az=-1.02;SF.el=0.6;SF.tgt.set(0,0,SF_ZH*0.4);sfFrame();SF.atHome=true;sfDraw();}
-function sfTop(){SF.az=-Math.PI/2;SF.el=Math.PI/2;SF.tgt.set(0,0,SF_ZH);sfFrame();SF.atHome=false;sfDraw();}
+function sfHome(){SF.az=-1.25;SF.el=0.5;SF.tgt.set(0,0,SF_ZH*0.4);sfFrame(false);sfMode("home");sfDraw();}
+function sfTop(){SF.az=-Math.PI/2;SF.el=Math.PI/2;SF.tgt.set(0,0,0);sfFrame(true);sfMode("top");sfDraw();}
 function sfAxes(){const r=new THREE.Vector3(),u=new THREE.Vector3();r.setFromMatrixColumn(SF.cam.matrixWorld,0);u.setFromMatrixColumn(SF.cam.matrixWorld,1);return[r,u];}
 function sfPan(dx,dy){                                  // the point under the pointer follows it
-  const k=2*SF.dist*Math.tan(SF.cam.fov*Math.PI/360)/(SF.R.domElement.clientHeight||1),[r,u]=sfAxes();
-  SF.tgt.addScaledVector(r,-dx*k).addScaledVector(u,dy*k);SF.atHome=false;
+  const k=2*SF.hh/(SF.R.domElement.clientHeight||1),[r,u]=sfAxes();
+  SF.tgt.addScaledVector(r,-dx*k).addScaledVector(u,dy*k);sfMode("free");
 }
-function sfZoom(cx,cy,nd){                              // towards the point under the pointer
-  nd=Math.max(12,Math.min(900,nd));const s=nd/SF.dist;if(s===1)return;
-  const rc=SF.R.domElement.getBoundingClientRect(),nx=((cx-rc.left+SF.xoff)/rc.width)*2-1,ny=1-((cy-rc.top)/rc.height)*2;
-  const hh=SF.dist*Math.tan(SF.cam.fov*Math.PI/360),hw=hh*SF.cam.aspect,[r,u]=sfAxes();
-  const p=SF.tgt.clone().addScaledVector(r,nx*hw).addScaledVector(u,ny*hh);
-  SF.tgt.sub(p).multiplyScalar(s).add(p);SF.dist=nd;SF.atHome=false;
+function sfZoom(cx,cy,nh){                              // towards the point under the pointer
+  nh=Math.max(3,Math.min(400,nh));const s=nh/SF.hh;if(s===1)return;
+  const rc=SF.R.domElement.getBoundingClientRect(),nx=((cx-rc.left)/rc.width)*2-1,ny=1-((cy-rc.top)/rc.height)*2,[r,u]=sfAxes();
+  const p=SF.tgt.clone().addScaledVector(r,nx*SF.hh*SF.asp).addScaledVector(u,ny*SF.hh);
+  SF.tgt.sub(p).multiplyScalar(s).add(p);SF.hh=nh;sfMode("free");
 }
-function sfTurn(dx,dy,k){SF.az-=dx*k;SF.el=Math.max(0.03,Math.min(Math.PI/2,SF.el+dy*k));SF.atHome=false;}
+function sfTurn(dx,dy,k){SF.az-=dx*k;SF.el=Math.max(0.03,Math.min(Math.PI/2,SF.el+dy*k));sfMode("free");}
 function sfBind(){
   const cv=SF.R.domElement;let md=false,btn=-1,mx=0,my=0;
   cv.addEventListener("mousedown",e=>{md=true;btn=e.button;mx=e.clientX;my=e.clientY;e.preventDefault();});
@@ -3740,7 +3764,7 @@ function sfBind(){
     if(btn===2||(btn===0&&e.shiftKey))sfPan(dx,dy);else if(btn===0)sfTurn(dx,dy,0.005);sfCam();sfDraw();});
   cv.addEventListener("wheel",e=>{e.preventDefault();
     const f=e.ctrlKey?Math.exp(Math.max(-40,Math.min(40,e.deltaY))*0.012):1+Math.max(-3,Math.min(3,e.deltaY*0.01))*0.04;
-    sfZoom(e.clientX,e.clientY,SF.dist*f);sfDraw();},{passive:false});
+    sfZoom(e.clientX,e.clientY,SF.hh*f);sfDraw();},{passive:false});
   // touch: one finger turns, two fingers zoom at the fingers and move
   let t0=null,td=0,pinch=false,pEnd=0,pMid=null;
   const mid=e=>({x:(e.touches[0].clientX+e.touches[1].clientX)/2,y:(e.touches[0].clientY+e.touches[1].clientY)/2});
@@ -3750,7 +3774,7 @@ function sfBind(){
     else if(e.touches.length===1&&!pinch)t0={x:e.touches[0].clientX,y:e.touches[0].clientY};},{passive:false});
   cv.addEventListener("touchmove",e=>{e.preventDefault();
     if(e.touches.length===2&&pinch){const nd=sep(e),nm=mid(e);
-      if(td>0&&nd>0)sfZoom(nm.x,nm.y,SF.dist*td/nd);td=nd;
+      if(td>0&&nd>0)sfZoom(nm.x,nm.y,SF.hh*td/nd);td=nd;
       if(pMid){sfCam();sfPan(nm.x-pMid.x,nm.y-pMid.y);}pMid=nm;sfDraw();}
     else if(e.touches.length===1&&t0&&!pinch){if(Date.now()-pEnd<300)return;
       sfTurn(e.touches[0].clientX-t0.x,e.touches[0].clientY-t0.y,0.004);t0={x:e.touches[0].clientX,y:e.touches[0].clientY};sfDraw();}},{passive:false});
@@ -3870,7 +3894,7 @@ function guide2d(){
   const viewU=`<h3>What the plot shows: safety function</h3>
 <p>The surface is <span data-tex="U(x,y)">U(x, y)</span>: for each point of <span data-tex="Q">Q</span>, the smallest control bound that keeps its orbit in <span data-tex="Q">Q</span> forever. The vertical scale is logarithmic and the colour repeats the height, so the valleys are the points that are easiest to keep.</p>
 <p>The translucent blue plane sits at <span data-tex="u_0">u₀</span>. The part of the surface below the plane is the safe set for that <span data-tex="u_0">u₀</span>. Move the <span data-tex="u_0">u₀</span> slider and the plane moves; when it drops below the whole surface, <span data-tex="u_0<\\min U">u₀ &lt; min U</span> and there is no safe set.</p>
-<p><b>View.</b> Drag to rotate, turn the wheel or pinch to zoom, right-drag or use two fingers to move. <b>Top view</b> looks from above and <b>Reset view</b> returns to the start.</p>
+<p><b>View.</b> Drag to rotate, turn the wheel or pinch to zoom, right-drag or use two fingers to move. <b>Top view</b> looks from above, on the same axes as the Safe set view, so the two pictures can be compared. <b>Reset view</b> returns to the start.</p>
 <p><b>Computation.</b> <span data-tex="U">U</span> is obtained on a grid with the algorithm of Capeáns, Sabuco and Sanjuán (2019). It takes a few seconds and is repeated when the map, <span data-tex="Q">Q</span> or <span data-tex="\\xi_0">ξ₀</span> change, not when <span data-tex="u_0">u₀</span> changes.</p>`;
   const vary=`<h3>What you can change</h3>
 <p>The map and its parameters. The bounds <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, with <b>Lock ratio</b> to move both together. The limits of <span data-tex="Q">Q</span>, typed on the axes of the safe set plot. The grid: a finer grid resolves thinner pieces of the set and takes longer.</p>`;
