@@ -5145,7 +5145,9 @@ function v2w(vx,vy){
 // =========================================================================
 //  DRAW 3D (Panel 2)
 // =========================================================================
-function draw3D(){
+var d3Frame=0;
+function draw3D(){if(!d3Frame)d3Frame=requestAnimationFrame(function(){d3Frame=0;draw3DNow();});}
+function draw3DNow(){
 var c=$('c2'),cx=c.getContext('2d'),W=cW(c),H=cH(c);
 cx.fillStyle='#fdfdfe';cx.fillRect(0,0,W,H);
 if(!fTraj||!fTraj.length){cx.fillStyle='#94a3b8';cx.font='italic 18px '+PC.MF;
@@ -5175,17 +5177,22 @@ cx.strokeStyle='rgba(51,102,187,.35)';cx.lineWidth=1;cx.stroke();}
 // Safe set dots
 if(sBmp){cx.fillStyle='rgba(51,102,187,.5)';
 var st=Math.max(1,Math.floor(N/200));
+cx.beginPath();
 for(var i=0;i<N;i+=st)for(var j=0;j<N;j+=st){
-if(!sBmp[i*N+j])continue;var p=pr(xV[j],yV[i],ZS,c);if(p[2])cx.fillRect(p[0]-.8,p[1]-.8,1.6,1.6);}}
+if(!sBmp[i*N+j])continue;var p=pr(xV[j],yV[i],ZS,c);if(p[2])cx.rect(p[0]-.8,p[1]-.8,1.6,1.6);}
+cx.fill();}
 
 // Trajectory — skip clipped vertices, restart path after gaps
 cx.strokeStyle='rgba(12,14,18,.62)';cx.lineWidth=0.8;cx.lineJoin='round';
+cx.beginPath();
 for(var s=0;s<fTraj.length;s++){
 var seg=fTraj[s],nP=seg.length/3;if(nP<2)continue;
-cx.beginPath();var pen=false;
+var pen=false,qx=0,qy=0;
 for(var i=0;i<nP;i++){var p=pr(seg[i*3],seg[i*3+1],seg[i*3+2],c);
 if(!p[2]){pen=false;continue;}
-pen?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]);pen=true;}cx.stroke();}
+if(pen&&i<nP-1&&Math.abs(p[0]-qx)+Math.abs(p[1]-qy)<1.2)continue;
+pen?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]);pen=true;qx=p[0];qy=p[1];}}
+cx.stroke();
 
 // Controls (yellow) — clip
 if(cPts){var nCtrl=cPts.length/6;
