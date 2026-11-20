@@ -127,6 +127,10 @@ input[type=range]:disabled{opacity:.35}
 #v1d .mob-scroll{display:contents}
 #v1d .side-l{width:296px;min-width:296px;border-right:1px solid var(--line);order:1}
 #v1d .side-r{width:268px;min-width:268px;border-left:1px solid var(--line);order:3}
+/* large screen: the map and the bounds on the left, the views and their options on the right (layout1d) */
+#v1d.split .side-l{width:268px;min-width:268px}
+#v1d.split .side-r{width:296px;min-width:296px}
+#v1d.split .side-l .mob-hide-q{margin-top:14px}
 #v1d .nv{display:flex;flex-direction:column;flex:1;min-height:0}
 #v1d .tsv{grid-template-columns:40% 1fr;grid-template-rows:1fr 1fr;gap:6px;flex:1;min-height:0}
 #v1d .ts-wrap{flex:1;position:relative;background:#fff;border-radius:8px;border:1px solid var(--line);overflow:hidden;min-height:40px}
@@ -242,7 +246,7 @@ input[type=range]:disabled{opacity:.35}
 .lay-row{display:flex;gap:5px}
 .lay-len{display:flex;align-items:center;gap:12px;height:30px;padding:0 4px 0 12px;font-size:14px;color:var(--ink2)}
 .lay-len span{display:flex;align-items:center;gap:10px;flex:none}
-.lay-len i{width:18px;border-top:3px solid var(--ctrl)}
+.lay-len i{width:18px;border-top:3px solid var(--trj,var(--ctrl))}
 .lay-len input{flex:1;min-width:0}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
@@ -759,7 +763,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--ctrl)"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
+        <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--trj,var(--ctrl))"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
       </div>
@@ -2150,6 +2154,29 @@ function drawSafety(){
 }
 
 // ---------------------------------------------------------------------------
+//  Layout on a large screen
+// ---------------------------------------------------------------------------
+// The page keeps the two panels of the original program, and a phone shows them like that. On a large screen
+// the blocks change sides: the map with the region and the bounds go on the left, and the views with the
+// options of the view in use on the right. Each block leaves a marker in its place so that it can go back.
+// With the guide open on a window that is not very wide the guide takes the right side, and the panels return
+// to the original arrangement (the views stay at hand on the left and the definition of the map is hidden).
+const L1={split:false,marks:null};
+function layout1d(){
+  const cl=document.body.classList,split=!PC.isMobile()&&!(cl.contains("guide-push")&&!cl.contains("guide-wide"));
+  if(split===L1.split)return;
+  L1.split=split;ROOT.classList.toggle("split",split);
+  const lb=$("leftPanel").querySelector(".mob-body"),rb=$("rightPanel").querySelector(".mob-body");
+  if(split){
+    const toRight=[lb.querySelector(".modes"),$("iterSection"),$("fsafeWrap")],toLeft=[...rb.children];
+    L1.marks=[];
+    toRight.concat(toLeft).forEach(n=>{const m=document.createComment("");n.parentNode.insertBefore(m,n);L1.marks.push([m,n]);});
+    const first=lb.firstChild;toLeft.forEach(n=>lb.insertBefore(n,first));
+    toRight.forEach(n=>rb.appendChild(n));
+  }else{L1.marks.forEach(([m,n])=>{m.parentNode.insertBefore(n,m);m.remove();});L1.marks=null;}
+}
+
+// ---------------------------------------------------------------------------
 //  Guide
 // ---------------------------------------------------------------------------
 function guide1d(){
@@ -2180,9 +2207,9 @@ PC.register("1d",{
   init(){
     ROOT.querySelectorAll(".mob-header").forEach(h=>h.addEventListener("click",()=>{
       h.classList.toggle("collapsed");h.nextElementSibling.classList.toggle("collapsed");setTimeout(sched,100);}));
-    init();
+    layout1d();init();
   },
-  show(){sched();},resize(){sched();},redraw(){sched();}
+  show(){sched();},resize(){layout1d();sched();},redraw(){sched();}
 });
 })();
 </script>
@@ -3916,6 +3943,99 @@ PC.register("2d",{
 })();
 </script>
 <script>
+// ===== Tests on a closed surface given by triangles (pure functions, also used by the node tests) =====
+// meshIndex(verts,faces) prepares two tables and returns
+//   inside(x,y,z)        is the point inside the surface? (parity of the crossings of a vertical ray)
+//   nearest(x,y,z,rmax)  the point of the surface nearest to the point, if there is one within rmax: {x,y,z,d}
+function meshIndex(verts,faces){
+  const nv=verts.length/3,nf=faces.length/3,lo=[1e30,1e30,1e30],hi=[-1e30,-1e30,-1e30];
+  for(let i=0;i<verts.length;i+=3)for(let k=0;k<3;k++){const v=verts[i+k];if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
+  const span=Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2])||1;
+  // (a) columns: a G x G grid on the xy plane; each cell lists the triangles whose xy box touches it
+  const G=256,gx=G/((hi[0]-lo[0])||1),gy=G/((hi[1]-lo[1])||1),cl=v=>v<0?0:v>=G?G-1:v;
+  const box=new Int16Array(nf*4),cnt=new Int32Array(G*G+1);
+  for(let f=0;f<nf;f++){
+    const a=faces[f*3]*3,b=faces[f*3+1]*3,c=faces[f*3+2]*3;
+    const x0=cl(Math.floor((Math.min(verts[a],verts[b],verts[c])-lo[0])*gx)),x1=cl(Math.floor((Math.max(verts[a],verts[b],verts[c])-lo[0])*gx));
+    const y0=cl(Math.floor((Math.min(verts[a+1],verts[b+1],verts[c+1])-lo[1])*gy)),y1=cl(Math.floor((Math.max(verts[a+1],verts[b+1],verts[c+1])-lo[1])*gy));
+    box[f*4]=x0;box[f*4+1]=x1;box[f*4+2]=y0;box[f*4+3]=y1;
+    for(let j=y0;j<=y1;j++)for(let i=x0;i<=x1;i++)cnt[j*G+i+1]++;
+  }
+  for(let i=0;i<G*G;i++)cnt[i+1]+=cnt[i];
+  const col=new Int32Array(cnt[G*G]),fill=cnt.slice(0,G*G);
+  for(let f=0;f<nf;f++)for(let j=box[f*4+2];j<=box[f*4+3];j++)for(let i=box[f*4];i<=box[f*4+1];i++)col[fill[j*G+i]++]=f;
+  // a tiny shift keeps the ray off the edges and vertices of the triangles
+  const ex=span*1.3e-7,ey=span*2.9e-7;
+  function inside(x,y,z){
+    x+=ex;y+=ey;
+    const i=Math.floor((x-lo[0])*gx),j=Math.floor((y-lo[1])*gy);if(i<0||j<0||i>=G||j>=G)return false;
+    let n=0;
+    for(let k=cnt[j*G+i],e=cnt[j*G+i+1];k<e;k++){
+      const f=col[k]*3,a=faces[f]*3,b=faces[f+1]*3,c=faces[f+2]*3;
+      const ax=verts[a]-x,ay=verts[a+1]-y,bx=verts[b]-x,by=verts[b+1]-y,cx=verts[c]-x,cy=verts[c+1]-y;
+      const w0=bx*cy-by*cx,w1=cx*ay-cy*ax,w2=ax*by-ay*bx;
+      if((w0>0&&w1>0&&w2>0)||(w0<0&&w1<0&&w2<0)){
+        if((w0*verts[a+2]+w1*verts[b+2]+w2*verts[c+2])/(w0+w1+w2)>z)n++;
+      }
+    }
+    return (n&1)===1;
+  }
+  // (b) boxes: an H x H x H grid; each box lists the triangles whose box touches it
+  const H=64,hs=H/span,hc=v=>{const q=Math.floor(v);return q<0?0:q>=H?H-1:q;};
+  const tb=new Uint8Array(nf*6),tc=new Int32Array(H*H*H+1);
+  for(let f=0;f<nf;f++){
+    const a=faces[f*3]*3,b=faces[f*3+1]*3,c=faces[f*3+2]*3;
+    for(let k=0;k<3;k++){tb[f*6+k*2]=hc((Math.min(verts[a+k],verts[b+k],verts[c+k])-lo[k])*hs);tb[f*6+k*2+1]=hc((Math.max(verts[a+k],verts[b+k],verts[c+k])-lo[k])*hs);}
+    for(let k=tb[f*6+4];k<=tb[f*6+5];k++)for(let j=tb[f*6+2];j<=tb[f*6+3];j++)for(let i=tb[f*6];i<=tb[f*6+1];i++)tc[(k*H+j)*H+i+1]++;
+  }
+  for(let i=0;i<H*H*H;i++)tc[i+1]+=tc[i];
+  const tl=new Int32Array(tc[H*H*H]),tf=tc.slice(0,H*H*H);
+  for(let f=0;f<nf;f++)for(let k=tb[f*6+4];k<=tb[f*6+5];k++)for(let j=tb[f*6+2];j<=tb[f*6+3];j++)for(let i=tb[f*6];i<=tb[f*6+1];i++)tl[tf[(k*H+j)*H+i]++]=f;
+  // closest point of triangle f to p (Ericson, Real-Time Collision Detection); the result goes to q
+  const q=[0,0,0];
+  function closestTri(f,px,py,pz){
+    const a=faces[f*3]*3,b=faces[f*3+1]*3,c=faces[f*3+2]*3;
+    const ax=verts[a],ay=verts[a+1],az=verts[a+2],abx=verts[b]-ax,aby=verts[b+1]-ay,abz=verts[b+2]-az,acx=verts[c]-ax,acy=verts[c+1]-ay,acz=verts[c+2]-az;
+    const apx=px-ax,apy=py-ay,apz=pz-az,d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;
+    let v=0,w=0;
+    if(d1<=0&&d2<=0){}
+    else{
+      const bpx=apx-abx,bpy=apy-aby,bpz=apz-abz,d3=abx*bpx+aby*bpy+abz*bpz,d4=acx*bpx+acy*bpy+acz*bpz;
+      if(d3>=0&&d4<=d3){v=1;}
+      else{
+        const vc=d1*d4-d3*d2;
+        if(vc<=0&&d1>=0&&d3<=0){v=d1/(d1-d3);}
+        else{
+          const cpx=apx-acx,cpy=apy-acy,cpz=apz-acz,d5=abx*cpx+aby*cpy+abz*cpz,d6=acx*cpx+acy*cpy+acz*cpz;
+          if(d6>=0&&d5<=d6){w=1;}
+          else{
+            const vb=d5*d2-d1*d6;
+            if(vb<=0&&d2>=0&&d6<=0){w=d2/(d2-d6);}
+            else{
+              const va=d3*d6-d5*d4;
+              if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){w=(d4-d3)/((d4-d3)+(d5-d6));v=1-w;}
+              else{const dn=1/(va+vb+vc);v=vb*dn;w=vc*dn;}
+            }
+          }
+        }
+      }
+    }
+    q[0]=ax+abx*v+acx*w;q[1]=ay+aby*v+acy*w;q[2]=az+abz*v+acz*w;
+    const dx=q[0]-px,dy=q[1]-py,dz=q[2]-pz;return dx*dx+dy*dy+dz*dz;
+  }
+  // the point of the surface nearest to p, if there is one within rmax: {x,y,z,d}
+  function nearest(x,y,z,rmax){
+    const i0=hc((x-rmax-lo[0])*hs),i1=hc((x+rmax-lo[0])*hs),j0=hc((y-rmax-lo[1])*hs),j1=hc((y+rmax-lo[1])*hs),k0=hc((z-rmax-lo[2])*hs),k1=hc((z+rmax-lo[2])*hs);
+    let bd=rmax*rmax,bx=0,by=0,bz=0,found=false;
+    for(let k=k0;k<=k1;k++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
+      const c=(k*H+j)*H+i;
+      for(let t=tc[c],e=tc[c+1];t<e;t++){const d=closestTri(tl[t],x,y,z);if(d<bd){bd=d;bx=q[0];by=q[1];bz=q[2];found=true;}}
+    }
+    return found?{x:bx,y:by,z:bz,d:Math.sqrt(bd)}:null;
+  }
+  return{inside,nearest,lo,hi,span};
+}
+
 // ===========================================================================
 //  3D safe set viewer (precomputed Draco meshes)
 // ===========================================================================
@@ -4083,6 +4203,13 @@ const MAP_CONFIG = {
   }
 };
 
+// The Hénon 3D map has no stored trajectories. Its orbits are computed here, the controlled one with the
+// safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
+Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
+  step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
+  inBox:(x,y,z)=>Math.abs(x)<=2&&Math.abs(y)<=2&&Math.abs(z)<=2});
+const MAP_STEPS=1000,MAP_STEPS_U=200,DOT_CTRL="#dc2626";
+
 const META={
   lorenz:{tex:["\\sigma=10","b=8/3","r=20"],plain:"σ = 10, b = 8/3, r = 20",ref:"Capeáns, Sabuco, Sanjuán & Yorke, Phil. Trans. R. Soc. A 375, 20160211 (2017)"},
   mccann:{tex:["K=0.99","s=0.07","x_c=0.4","y_c=2.009"],plain:"K = 0.99, s = 0.07, xc = 0.4, yc = 2.009",ref:"Capeáns, Sabuco & Sanjuán, Ecol. Complex. 19, 1–8 (2014)"},
@@ -4123,6 +4250,7 @@ function panelInfo(mapKey){
   $('ref').textContent=m.ref;
   PC.setTex($('dtLabel'),cfg.dtLabel?"n":"\\Delta t",cfg.dtLabel||"Δt");
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
+  $('panel').style.setProperty('--trj',cfg.isMap?DOT_CTRL:'');           // colour of the controlled orbit in the panel
 }
 function applyVis(){
   if(layers)Object.keys(vis).forEach(k=>{layers[k].visible=vis[k];});
@@ -4309,7 +4437,7 @@ function resize(){
   const pw=PC.isMobile()?0:Math.min(vw*0.45,$('panel').offsetWidth+24);
   xoff=-pw/2;freeFrac=(vw-pw)/vw;
   cam.aspect=vw/vh;cam.setViewOffset(vw,vh,xoff,0,vw,vh);R.setSize(vw,vh);
-  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=2.6*pr;
+  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=2.6*pr;dotPx.value=6*pr;
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
@@ -4421,11 +4549,43 @@ function ptsToLine(arr,group,color){
   m.position.z=cur.zOff;m.frustumCulled=false;m.userData.n=n-1;
   group.add(m);
 }
+// The orbit of a map is a set of points: round dots joined by faint lines that only show the order.
+// exit, if given, is where the last step leaves the box: the line reaches it, with no dot.
+const dotPx={value:1};
+const DOT_VS=`
+uniform float px;
+void main(){gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);gl_PointSize=px;}`;
+const DOT_FS=`
+uniform vec3 col;
+void main(){
+  vec2 d=gl_PointCoord*2.-1.;float r=length(d);if(r>1.)discard;
+  float k=r/.8,h=sqrt(max(0.,1.-k*k));
+  vec3 c=col*(.66+.34*smoothstep(0.,.7,h))+vec3(.2)*pow(h,8.);      // darker towards the edge, with a small highlight
+  c=mix(c,vec3(1.),smoothstep(.74,.86,r));                           // a white ring keeps the dot visible on a surface of its own colour
+  gl_FragColor=vec4(c,1.-smoothstep(.9,1.,r));
+}`;
+function ptsToDots(arr,group,color,exit){
+  const np=arr.length/3,k=new THREE.Color(color);
+  const lg=new THREE.BufferGeometry();
+  lg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(exit?arr.concat(exit):arr),3));
+  const line=new THREE.Line(lg,new THREE.LineBasicMaterial({color:new THREE.Color(0x4b5563).convertSRGBToLinear(),transparent:true,opacity:0.34,depthWrite:false}));
+  const pg=new THREE.BufferGeometry();
+  pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(arr),3));
+  const dots=new THREE.Points(pg,new THREE.ShaderMaterial({vertexShader:DOT_VS,fragmentShader:DOT_FS,transparent:true,
+    uniforms:{px:dotPx,col:{value:new THREE.Vector3(k.r,k.g,k.b)}}}));
+  // drawn after the sets, which are translucent while an orbit is shown
+  line.renderOrder=4;dots.renderOrder=5;
+  [line,dots].forEach(m=>{m.position.z=cur.zOff;m.frustumCulled=false;m.userData.np=np;group.add(m);});
+  line.userData.more=exit?1:0;
+}
 // The controlled trajectory is long and keeps returning to the same places: drawn whole it fills a band.
 // The slider chooses how much of it is drawn, from its start.
 function applyLen(){
   const f=$('len').value/100;
-  layers.traj.children.forEach(m=>{m.geometry.instanceCount=Math.max(1,Math.round(m.userData.n*f));});
+  layers.traj.children.forEach(m=>{
+    if(m.userData.n)m.geometry.instanceCount=Math.max(1,Math.round(m.userData.n*f));
+    else{const k=Math.max(2,Math.round(m.userData.np*f));m.geometry.setDrawRange(0,k===m.userData.np?k+(m.userData.more||0):k);}
+  });
 }
 
 // ------------------------------ load and build ------------------------------
@@ -4539,7 +4699,7 @@ function build(safeGeom,asymGeom,cfg){
       grpBase.add(mkLabel(lbl,[pos[0]+2,pos[1]-1,pos[2]+2+zOff],4));
     });
   }
-  cur={av,nv,zOff,cfg,eq};
+  cur={av,nv,zOff,cfg,eq,sv,sf,idx:null};
   applyVis();
 }
 
@@ -4553,6 +4713,7 @@ function sRand(){seed=(seed*16807)%2147483647;return(seed-1)/2147483646;}
 // precomputed controlled trajectories (five per parameter set)
 function loadControlledTrajectory(){
   if(trajLoading||!cur||!cur.cfg.hasTraj)return;
+  if(cur.cfg.isMap){computeControlledMap();return;}
   const cfg=cur.cfg,seq=loadSeq;
   const dt=$('selDt').value,xu=$('selXU').value.split(',');
   // five precomputed trajectories per parameter set: pick a different one each time, skipping any that failed to load
@@ -4585,9 +4746,56 @@ function loadControlledTrajectory(){
     trajBad.add(idx);loadControlledTrajectory();
   });
 }
+// ---- orbits of a map, computed here ----
+function mapKick(p,xi){
+  const ang=sRand()*2*Math.PI,cos=2*sRand()-1,sin=Math.sqrt(1-cos*cos),rad=xi*Math.cbrt(sRand());
+  return[p[0]+rad*sin*Math.cos(ang),p[1]+rad*sin*Math.sin(ang),p[2]+rad*cos];
+}
+function mapStart(){const i=Math.floor(sRand()*cur.nv)*3;return[cur.av[i],cur.av[i+1],cur.av[i+2]];}   // a point of the asymptotic set
+// Controlled orbit: n iterations, the disturbance, and then the smallest control that returns the point to the
+// safe set. A point inside the safe surface needs none; otherwise it goes to the nearest point of the surface,
+// and a little further in.
+function computeControlledMap(){
+  const cfg=cur.cfg,{curXi,curU0,nSub}=readParams();
+  if(!cur.idx)cur.idx=meshIndex(cur.sv,cur.sf);                // tables for the tests on the safe surface, once per surface
+  seed=Date.now()%2147483647;
+  const I=cur.idx;let q=mapStart();const pts=[q[0],q[1],q[2]];
+  for(let k=1;k<MAP_STEPS;k++){
+    let p=q;for(let s=0;s<nSub;s++)p=cfg.step(p[0],p[1],p[2]);
+    p=mapKick(p,curXi);
+    if(!I.inside(p[0],p[1],p[2])){
+      const c=I.nearest(p[0],p[1],p[2],Math.max(4*curU0,0.08));
+      if(!c)break;                                            // no surface near: the orbit is lost (it does not happen with these sets)
+      const u=Math.min(c.d+0.1*curU0,Math.max(c.d,curU0)),g=c.d>1e-12?u/c.d:1;
+      p=[p[0]+(c.x-p[0])*g,p[1]+(c.y-p[1])*g,p[2]+(c.z-p[2])*g];
+    }
+    q=p;pts.push(q[0],q[1],q[2]);
+  }
+  clearGroup(layers.traj);ptsToDots(pts,layers.traj,DOT_CTRL);applyLen();
+  vis.traj=true;applyVis();
+}
+// Uncontrolled orbit: the same without control, until it leaves the box
+function computeUncontrolledMap(){
+  const cfg=cur.cfg,{curXi,nSub}=readParams();
+  clearGroup(layers.unctrl);
+  let q=mapStart(),exit=null;const pts=[q[0],q[1],q[2]];
+  for(let k=1;k<MAP_STEPS_U;k++){
+    let p=q,out=false;
+    for(let s=0;s<nSub&&!out;s++){p=cfg.step(p[0],p[1],p[2]);out=!cfg.inBox(p[0],p[1],p[2]);}
+    if(!out){p=mapKick(p,curXi);out=!cfg.inBox(p[0],p[1],p[2]);}
+    if(out){                                                  // the line stops where it crosses the box
+      let t=1;for(let a=0;a<3;a++)if(Math.abs(p[a])>2)t=Math.min(t,((p[a]>0?2:-2)-q[a])/(p[a]-q[a]));
+      exit=[q[0]+t*(p[0]-q[0]),q[1]+t*(p[1]-q[1]),q[2]+t*(p[2]-q[2])];break;
+    }
+    q=p;pts.push(q[0],q[1],q[2]);
+  }
+  ptsToDots(pts,layers.unctrl,PC.UNCTRL,exit);
+  vis.unctrl=true;applyVis();
+}
 // uncontrolled trajectory: the disturbance acts every dt, with no control, until the trajectory escapes
 function computeUncontrolled(){
   if(!cur||!cur.cfg.hasTraj)return;
+  if(cur.cfg.isMap){computeUncontrolledMap();return;}
   const cfg=cur.cfg,eq=cur.eq,av=cur.av,nv=cur.nv,dtT=cfg.dtRK4,stK=cfg.stK;
   const{curXi,nSub}=readParams();
   clearGroup(layers.unctrl);
@@ -4651,8 +4859,8 @@ function guide3d(){
 <p>with a disturbance <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> and a control <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span>, both vectors of three components.</p>
 <h3>What the picture shows</h3>
 <p>The <b>blue</b> surface encloses the safe set: the points from which the trajectory can be kept in the region forever with <span data-tex="|u_n|\\le u_0">|u| ≤ u₀</span>. The <b>red</b> surface is the asymptotic safe set, the part of the safe set where controlled trajectories end up after the first controls.</p>
-`+(cfg.hasTraj?`<p><b>Controlled trajectory</b> draws a trajectory kept with those bounds. <b>Uncontrolled trajectory</b> draws one with the same kind of disturbance and no control, which leaves the region. The surfaces turn translucent while a trajectory is shown, and the round arrows draw a new one. The controlled trajectory is long and keeps returning to the same places, so only its first part is drawn: <b>Length</b> sets how much.</p>
-`:`<p>For this map only the two sets are available, without trajectories.</p>
+`+(cfg.isMap?`<p><b>Controlled trajectory</b> and <b>Uncontrolled trajectory</b> draw orbits of the map as points, red with control and black without it, joined by faint lines that only show the order. Each step is <span data-tex="n">n</span> iterations of the map, then the disturbance and, in the controlled orbit, the smallest control that returns the point to the safe set. They are computed here from the blue surface. The round arrows draw a new orbit and <b>Length</b> sets how much of the controlled one is drawn.</p>
+`:`<p><b>Controlled trajectory</b> draws a trajectory kept with those bounds. <b>Uncontrolled trajectory</b> draws one with the same kind of disturbance and no control, which leaves the region. The surfaces turn translucent while a trajectory is shown, and the round arrows draw a new one. The controlled trajectory is long and keeps returning to the same places, so only its first part is drawn: <b>Length</b> sets how much.</p>
 `)+`<p>The sets were computed in advance on fine three-dimensional grids, only for the values in the menus.</p>
 <h3>No safety function here</h3>
 <p>Safety functions are not shown for these systems. <span data-tex="U">U</span> would be a function of three variables, which cannot be drawn as a surface, so only the safe sets for the listed pairs <span data-tex="(\\xi_0,u_0)">(ξ₀, u₀)</span> are given.</p>
@@ -4904,10 +5112,10 @@ if(cPts){
 var nCtrl=cPts.length/6;
 function toSX(v){return m+(v+3)/6*pW;}
 function toSY(v){return m+(3-v)/6*pH;}
-cx.fillStyle=PC.CTRL;
+cx.fillStyle='#dc2626';
 for(var i=0;i<nCtrl;i++){
 var sx1=toSX(cPts[i*6+4]),sy1=toSY(cPts[i*6+5]);
-cx.beginPath();cx.arc(sx1,sy1,1.2,0,2*Math.PI);cx.fill();
+cx.beginPath();cx.arc(sx1,sy1,2,0,2*Math.PI);cx.fill();
 }}
 }
 
@@ -4971,7 +5179,13 @@ for(var i=0;i<N;i+=st)for(var j=0;j<N;j+=st){
 if(!sBmp[i*N+j])continue;var p=pr(xV[j],yV[i],ZS,c);if(p[2])cx.fillRect(p[0]-.8,p[1]-.8,1.6,1.6);}}
 
 // Trajectory — skip clipped vertices, restart path after gaps
-drawThreads(cx,c);
+cx.strokeStyle='rgba(12,14,18,.62)';cx.lineWidth=0.8;cx.lineJoin='round';
+for(var s=0;s<fTraj.length;s++){
+var seg=fTraj[s],nP=seg.length/3;if(nP<2)continue;
+cx.beginPath();var pen=false;
+for(var i=0;i<nP;i++){var p=pr(seg[i*3],seg[i*3+1],seg[i*3+2],c);
+if(!p[2]){pen=false;continue;}
+pen?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]);pen=true;}cx.stroke();}
 
 // Controls (yellow) — clip
 if(cPts){var nCtrl=cPts.length/6;
@@ -4979,7 +5193,9 @@ cx.strokeStyle='rgba(220,38,38,.9)';cx.lineWidth=1.0;
 for(var i=0;i<nCtrl;i++){
 var p1=pr(cPts[i*6],cPts[i*6+1],ZS,c),p2=pr(cPts[i*6+4],cPts[i*6+5],ZS,c);
 if(p1[2]&&p2[2]){
-cx.beginPath();cx.moveTo(p1[0],p1[1]);cx.lineTo(p2[0],p2[1]);cx.stroke();}}}
+cx.beginPath();cx.moveTo(p1[0],p1[1]);cx.lineTo(p2[0],p2[1]);cx.stroke();}}
+cx.fillStyle='#dc2626';
+for(var i=0;i<nCtrl;i++){var p2=pr(cPts[i*6+4],cPts[i*6+5],ZS,c);if(p2[2]){cx.beginPath();cx.arc(p2[0],p2[1],2,0,2*Math.PI);cx.fill();}}}
 
 // Attractors — clip (orange)
 for(var a=0;a<2;a++){
@@ -5099,44 +5315,6 @@ function guideP(){
 <p><b>Right.</b> A controlled trajectory in phase space. It is corrected only at its crossings of the section, and it keeps moving around both fixed points without falling to either.</p>
 <h3>What you can change</h3>
 <p>The grid, <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, and then press <b>Compute</b>. A finer grid takes longer. In the right plot, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
-}
-
-// The controlled trajectory as threads. It is cut into short pieces that are drawn from the farthest to the
-// nearest, each one over a thin margin in the colour of the paper: a thread in front cuts a gap in those behind
-// it, threads that run side by side stay apart, and the threads at the back are paler. Same projection as pr().
-// Distances are compared in layers and, inside a layer, pieces keep the order of the trajectory. Two threads
-// that run together at the same distance then overlap the same way all along, instead of taking turns.
-const THREAD_LAYERS=24;
-const THREAD_TINTS=(()=>{const k=parseInt(PC.CTRL.slice(1),16),r=k>>16,g=k>>8&255,b=k&255,out=[];
-  for(let i=0;i<THREAD_LAYERS;i++){const t=0.5*i/(THREAD_LAYERS-1);out.push("rgb("+Math.round(r+(253-r)*t)+","+Math.round(g+(253-g)*t)+","+Math.round(b+(254-b)*t)+")");}
-  return out;})();
-function drawThreads(cx,c){
-  const W=cW(c),H=cH(c),f=W*0.95,ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);
-  const pcs=[];let zmin=1e9,zmax=-1e9;
-  for(let s=0;s<fTraj.length;s++){
-    const seg=fTraj[s],nP=seg.length/3;let cur=null,lx=0,ly=0,len=0;
-    const close=()=>{if(cur&&cur.p.length>2){cur.z/=cur.n;pcs.push(cur);if(cur.z<zmin)zmin=cur.z;if(cur.z>zmax)zmax=cur.z;}};
-    for(let i=0;i<nP;i++){
-      const x=seg[i*3]-tx,y=seg[i*3+1]-ty,z=seg[i*3+2]-tz,x1=x*ca-y*sa,y1=x*sa+y*ca,dz=vD+z*se+y1*ce;
-      if(dz<0.01){close();cur=null;continue;}                    // behind the viewer: the thread is cut here
-      const q=f/dz,X=W/2+x1*q,Y=H/2-(z*ce-y1*se)*q;
-      if(!cur){cur={p:[X,Y],z:dz,n:1};lx=X;ly=Y;len=0;continue;}
-      const d=Math.hypot(X-lx,Y-ly);if(d<0.8&&i<nP-1)continue;   // closer than the picture can show
-      cur.p.push(X,Y);cur.z+=dz;cur.n++;len+=d;lx=X;ly=Y;
-      if(len>=12){close();cur={p:[X,Y],z:dz,n:1};len=0;}         // pieces of about 12 pixels, sharing their ends
-    }
-    close();
-  }
-  const span=Math.max(1e-9,zmax-zmin);
-  pcs.forEach((pc,i)=>{pc.k=Math.min(THREAD_LAYERS-1,Math.floor(THREAD_LAYERS*(pc.z-zmin)/span));pc.i=i;});
-  pcs.sort((a,b)=>b.k-a.k||a.i-b.i);
-  cx.lineJoin="round";
-  for(const pc of pcs){
-    const p=pc.p;cx.beginPath();cx.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)cx.lineTo(p[i],p[i+1]);
-    cx.lineCap="butt";cx.strokeStyle="#fdfdfe";cx.lineWidth=2.7;cx.stroke();
-    cx.lineCap="round";cx.strokeStyle=THREAD_TINTS[pc.k];cx.lineWidth=1.3;cx.stroke();
-  }
-  cx.lineCap="butt";cx.lineJoin="miter";
 }
 
 function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();}
