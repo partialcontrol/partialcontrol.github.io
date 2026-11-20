@@ -131,6 +131,9 @@ input[type=range]:disabled{opacity:.35}
 #v1d.split .side-l{width:268px;min-width:268px}
 #v1d.split .side-r{width:296px;min-width:296px}
 #v1d.split .side-l .mob-hide-q{margin-top:14px}
+/* Reset and Export sit at the foot of the right panel, so they stay put when the view changes */
+#v1d.split .side-r .mob-body{display:flex;flex-direction:column;min-height:100%;box-sizing:border-box}
+#v1d.split .side-r .mob-2col{margin-top:auto;padding-top:14px}
 #v1d .nv{display:flex;flex-direction:column;flex:1;min-height:0}
 #v1d .tsv{grid-template-columns:40% 1fr;grid-template-rows:1fr 1fr;gap:6px;flex:1;min-height:0}
 #v1d .ts-wrap{flex:1;position:relative;background:#fff;border-radius:8px;border:1px solid var(--line);overflow:hidden;min-height:40px}
@@ -2158,7 +2161,7 @@ function drawSafety(){
 // ---------------------------------------------------------------------------
 // The page keeps the two panels of the original program, and a phone shows them like that. On a large screen
 // the blocks change sides: the map with the region and the bounds go on the left, and the views with the
-// options of the view in use on the right. Each block leaves a marker in its place so that it can go back.
+// options of the view in use on the right, followed by Reset and Export. Each block leaves a marker in its place so that it can go back.
 // With the guide open on a window that is not very wide the guide takes the right side, and the panels return
 // to the original arrangement (the views stay at hand on the left and the definition of the map is hidden).
 const L1={split:false,marks:null};
@@ -2168,7 +2171,8 @@ function layout1d(){
   L1.split=split;ROOT.classList.toggle("split",split);
   const lb=$("leftPanel").querySelector(".mob-body"),rb=$("rightPanel").querySelector(".mob-body");
   if(split){
-    const toRight=[lb.querySelector(".modes"),$("iterSection"),$("fsafeWrap")],toLeft=[...rb.children];
+    // Reset and Export stay on the right, below the views and their options
+    const acts=$("resetBtn").parentNode,toRight=[lb.querySelector(".modes"),$("iterSection"),$("fsafeWrap"),acts],toLeft=[...rb.children].filter(n=>n!==acts);
     L1.marks=[];
     toRight.concat(toLeft).forEach(n=>{const m=document.createComment("");n.parentNode.insertBefore(m,n);L1.marks.push([m,n]);});
     const first=lb.firstChild;toLeft.forEach(n=>lb.insertBefore(n,first));
