@@ -240,6 +240,10 @@ input[type=range]:disabled{opacity:.35}
 .lay.on .sw.ln{border-style:solid;border-width:3px 0 0 0}
 .lay:hover{border-color:#aab4c2}
 .lay-row{display:flex;gap:5px}
+.lay-len{display:flex;align-items:center;gap:12px;height:30px;padding:0 4px 0 12px;font-size:14px;color:var(--ink2)}
+.lay-len span{display:flex;align-items:center;gap:10px;flex:none}
+.lay-len i{width:18px;border-top:3px solid var(--ctrl)}
+.lay-len input{flex:1;min-width:0}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
 .ico:hover{border-color:#aab4c2;color:var(--ink)}
@@ -386,6 +390,7 @@ input[type=range]:disabled{opacity:.35}
   #t3-ref{font-size:12px;min-height:0;margin-top:1px}
   .t3-sel{margin-top:6px}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+  .lay-len{order:9;grid-column:1/-1;font-size:13.5px;padding-left:9px}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
@@ -755,6 +760,7 @@ body.guide-push #guide{box-shadow:none}
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
         <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--ctrl)"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
+        <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
       </div>
       <p class="t3-note">Safe sets only. Safety functions are not shown in 3D: a function of three variables cannot be drawn as a surface.</p>
@@ -4116,12 +4122,13 @@ function panelInfo(mapKey){
   pe.dataset.k=window.katex?'1':'0';
   $('ref').textContent=m.ref;
   PC.setTex($('dtLabel'),cfg.dtLabel?"n":"\\Delta t",cfg.dtLabel||"Δt");
-  $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;
+  $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
 }
 function applyVis(){
   if(layers)Object.keys(vis).forEach(k=>{layers[k].visible=vis[k];});
   [['bSafe','safe'],['bAsym','asym'],['bTraj','traj'],['bUnctrl','unctrl']].forEach(([id,k])=>{
     $(id).classList.toggle('on',vis[k]);$(id).setAttribute('aria-pressed',vis[k]?'true':'false');});
+  $('len').disabled=!vis.traj;
   if(!layers)return;
   // safe and asymptotic sets turn slightly transparent while a trajectory is shown
   const trajActive=vis.traj||vis.unctrl;
@@ -4166,6 +4173,7 @@ function setup(){
   R.shadowMap.enabled=true;
   R.shadowMap.type=THREE.PCFSoftShadowMap;
   R.outputEncoding=THREE.sRGBEncoding;
+  threadRes.value=new THREE.Vector2(vw0/2,vh0/2);
   R.toneMapping=THREE.ACESFilmicToneMapping;
   R.toneMappingExposure=1.1;
   vp.appendChild(R.domElement);
@@ -4301,6 +4309,7 @@ function resize(){
   const pw=PC.isMobile()?0:Math.min(vw*0.45,$('panel').offsetWidth+24);
   xoff=-pw/2;freeFrac=(vw-pw)/vw;
   cam.aspect=vw/vh;cam.setViewOffset(vw,vh,xoff,0,vw,vh);R.setSize(vw,vh);
+  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=2.6*pr;
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
@@ -4351,10 +4360,72 @@ function clearGroup(g){
     if(c.material){if(c.material.map)c.material.map.dispose();c.material.dispose();}
   }
 }
-function ptsToLine(arr,group,color,opacity){
-  const v=[],zOff=cur.zOff;
-  for(let i=0;i<arr.length;i+=3)v.push(new THREE.Vector3(arr[i],arr[i+1],arr[i+2]+zOff));
-  group.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints(v),new THREE.LineBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),transparent:true,opacity:opacity})));
+// Trajectories are drawn as threads. Each segment is a strip a few pixels wide that always faces the viewer,
+// shaded across its width like a round wire: lighter along the axis, dark at the rim. Threads that run side by
+// side or cross are then told apart, and nearer threads cover and stand out from those behind them.
+const threadRes={value:null},threadPx={value:1};      // half size of the picture and width of a thread, in device pixels
+const THREAD_VS=`
+attribute vec3 iA;attribute vec3 iB;
+uniform vec2 res;uniform float px;uniform vec3 ctr;uniform float rad;
+varying float vX;varying float vD;
+void main(){
+  vec4 ma=modelViewMatrix*vec4(iA,1.),mb=modelViewMatrix*vec4(iB,1.);
+  vec4 a=projectionMatrix*ma,b=projectionMatrix*mb;
+  vec2 d=b.xy/b.w*res-a.xy/a.w*res;float L=length(d);d=L>1e-5?d/L:vec2(1.,0.);
+  vec4 p=mix(a,b,position.x);
+  // half a width to each side, and a little beyond each end so that consecutive segments join without cracks
+  vec2 off=vec2(-d.y,d.x)*position.y*px*.5+d*(position.x*2.-1.)*px*.2;
+  p.xy+=off/res*p.w;
+  vX=position.y;
+  vD=clamp(((modelViewMatrix*vec4(ctr,1.)).z-mix(ma.z,mb.z,position.x))/rad,-1.,1.);   // -1 nearest, 1 farthest
+  gl_Position=p;
+}`;
+const THREAD_FS=`
+uniform vec3 col;uniform vec3 rim;uniform vec3 shine;
+varying float vX;varying float vD;
+void main(){
+  float h=sqrt(max(0.,1.-vX*vX));                      // 1 on the axis of the wire, 0 at its rim
+  vec3 c=mix(rim,col,smoothstep(.25,.8,h))+shine*pow(h,5.);
+  c*=1.-.3*smoothstep(-.7,1.,vD);                      // threads at the back are a little darker
+  gl_FragColor=vec4(c,1.);
+}`;
+const THREAD_LOOK={};
+THREAD_LOOK[PC.CTRL]={rim:"#8a5200",shine:"#40300c"};
+THREAD_LOOK[PC.UNCTRL]={rim:"#000000",shine:"#5a5f68"};
+function ptsToLine(arr,group,color){
+  // thin out points that are closer than the picture can show; the two ends of a kick are always kept
+  let lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];
+  for(let i=0;i<arr.length;i+=3)for(let k=0;k<3;k++){const v=arr[i+k];if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
+  const size=Math.hypot(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2])||1,min2=(size/400)*(size/400);
+  const out=[arr[0],arr[1],arr[2]];let lx=arr[0],ly=arr[1],lz=arr[2];
+  for(let i=3;i<arr.length;i+=3){
+    const x=arr[i],y=arr[i+1],z=arr[i+2],last=i+3>=arr.length;
+    if(last||(x-lx)*(x-lx)+(y-ly)*(y-ly)+(z-lz)*(z-lz)>=min2){out.push(x,y,z);lx=x;ly=y;lz=z;}
+  }
+  const n=out.length/3;if(n<2)return;
+  const g=new THREE.InstancedBufferGeometry();
+  // one strip of four corners, repeated for every segment: x says which end, y which side
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array([0,-1,0, 0,1,0, 1,-1,0, 1,1,0]),3));
+  g.setIndex([0,2,1,1,2,3]);
+  // the points are stored once: the second end of a segment is read one point further on
+  const buf=new THREE.InstancedInterleavedBuffer(new Float32Array(out),3,1);
+  g.setAttribute('iA',new THREE.InterleavedBufferAttribute(buf,3,0));
+  g.setAttribute('iB',new THREE.InterleavedBufferAttribute(buf,3,3));
+  g.instanceCount=n-1;
+  const look=THREAD_LOOK[color],C=c=>{const k=new THREE.Color(c);return new THREE.Vector3(k.r,k.g,k.b);};
+  const m=new THREE.Mesh(g,new THREE.ShaderMaterial({vertexShader:THREAD_VS,fragmentShader:THREAD_FS,side:THREE.DoubleSide,
+    uniforms:{res:threadRes,px:threadPx,col:{value:C(color)},rim:{value:C(look.rim)},shine:{value:C(look.shine)},
+      ctr:{value:new THREE.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2)},rad:{value:size/2}}}));
+  // drawn after the sets, which are translucent while a trajectory is shown, so that they do not tint the threads
+  m.material.transparent=true;m.renderOrder=5;
+  m.position.z=cur.zOff;m.frustumCulled=false;m.userData.n=n-1;
+  group.add(m);
+}
+// The controlled trajectory is long and keeps returning to the same places: drawn whole it fills a band.
+// The slider chooses how much of it is drawn, from its start.
+function applyLen(){
+  const f=$('len').value/100;
+  layers.traj.children.forEach(m=>{m.geometry.instanceCount=Math.max(1,Math.round(m.userData.n*f));});
 }
 
 // ------------------------------ load and build ------------------------------
@@ -4505,7 +4576,7 @@ function loadControlledTrajectory(){
     const nPts=new DataView(buf).getUint32(0,true);
     const coords=new Float32Array(buf,4,nPts*3);
     clearGroup(layers.traj);
-    ptsToLine(coords,layers.traj,PC.CTRL,0.95);
+    ptsToLine(coords,layers.traj,PC.CTRL);applyLen();
     trajIdx=idx;vis.traj=true;applyVis();
   }).catch(err=>{
     console.warn('Trajectory '+idx+' could not be loaded:',err);
@@ -4536,7 +4607,7 @@ function computeUncontrolled(){
     sx+=rad*sin*Math.cos(ang);sy+=rad*sin*Math.sin(ang);sz+=rad*cos;
     pts.push(sx,sy,sz);
   }
-  ptsToLine(pts,layers.unctrl,PC.UNCTRL,0.7);
+  ptsToLine(pts,layers.unctrl,PC.UNCTRL);
   vis.unctrl=true;applyVis();
 }
 function recomputeU(){seed=Date.now()%2147483647;computeUncontrolled();}
@@ -4580,7 +4651,7 @@ function guide3d(){
 <p>with a disturbance <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> and a control <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span>, both vectors of three components.</p>
 <h3>What the picture shows</h3>
 <p>The <b>blue</b> surface encloses the safe set: the points from which the trajectory can be kept in the region forever with <span data-tex="|u_n|\\le u_0">|u| ≤ u₀</span>. The <b>red</b> surface is the asymptotic safe set, the part of the safe set where controlled trajectories end up after the first controls.</p>
-`+(cfg.hasTraj?`<p><b>Controlled trajectory</b> draws a trajectory kept with those bounds. <b>Uncontrolled trajectory</b> draws one with the same kind of disturbance and no control, which leaves the region. The surfaces turn translucent while a trajectory is shown, and the round arrows draw a new one.</p>
+`+(cfg.hasTraj?`<p><b>Controlled trajectory</b> draws a trajectory kept with those bounds. <b>Uncontrolled trajectory</b> draws one with the same kind of disturbance and no control, which leaves the region. The surfaces turn translucent while a trajectory is shown, and the round arrows draw a new one. The controlled trajectory is long and keeps returning to the same places, so only its first part is drawn: <b>Length</b> sets how much.</p>
 `:`<p>For this map only the two sets are available, without trajectories.</p>
 `)+`<p>The sets were computed in advance on fine three-dimensional grids, only for the values in the menus.</p>
 <h3>No safety function here</h3>
@@ -4601,6 +4672,7 @@ PC.register("3d",{
     $('bTraj').addEventListener('click',()=>tog('traj'));
     $('bUnctrl').addEventListener('click',()=>tog('unctrl'));
     $('bRecomp').addEventListener('click',loadControlledTrajectory);
+    $('len').addEventListener('input',applyLen);
     $('bRecompU').addEventListener('click',recomputeU);
     $('reset').addEventListener('click',resetView);
     $('retry').addEventListener('click',()=>{if(ready)loadAndBuild();else boot();});
@@ -4899,13 +4971,7 @@ for(var i=0;i<N;i+=st)for(var j=0;j<N;j+=st){
 if(!sBmp[i*N+j])continue;var p=pr(xV[j],yV[i],ZS,c);if(p[2])cx.fillRect(p[0]-.8,p[1]-.8,1.6,1.6);}}
 
 // Trajectory — skip clipped vertices, restart path after gaps
-cx.strokeStyle=PC.CTRL;cx.lineWidth=0.9;
-for(var s=0;s<fTraj.length;s++){
-var seg=fTraj[s],nP=seg.length/3;if(nP<2)continue;
-cx.beginPath();var pen=false;
-for(var i=0;i<nP;i++){var p=pr(seg[i*3],seg[i*3+1],seg[i*3+2],c);
-if(!p[2]){pen=false;continue;}
-pen?cx.lineTo(p[0],p[1]):cx.moveTo(p[0],p[1]);pen=true;}cx.stroke();}
+drawThreads(cx,c);
 
 // Controls (yellow) — clip
 if(cPts){var nCtrl=cPts.length/6;
@@ -5033,6 +5099,44 @@ function guideP(){
 <p><b>Right.</b> A controlled trajectory in phase space. It is corrected only at its crossings of the section, and it keeps moving around both fixed points without falling to either.</p>
 <h3>What you can change</h3>
 <p>The grid, <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, and then press <b>Compute</b>. A finer grid takes longer. In the right plot, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+}
+
+// The controlled trajectory as threads. It is cut into short pieces that are drawn from the farthest to the
+// nearest, each one over a thin margin in the colour of the paper: a thread in front cuts a gap in those behind
+// it, threads that run side by side stay apart, and the threads at the back are paler. Same projection as pr().
+// Distances are compared in layers and, inside a layer, pieces keep the order of the trajectory. Two threads
+// that run together at the same distance then overlap the same way all along, instead of taking turns.
+const THREAD_LAYERS=24;
+const THREAD_TINTS=(()=>{const k=parseInt(PC.CTRL.slice(1),16),r=k>>16,g=k>>8&255,b=k&255,out=[];
+  for(let i=0;i<THREAD_LAYERS;i++){const t=0.5*i/(THREAD_LAYERS-1);out.push("rgb("+Math.round(r+(253-r)*t)+","+Math.round(g+(253-g)*t)+","+Math.round(b+(254-b)*t)+")");}
+  return out;})();
+function drawThreads(cx,c){
+  const W=cW(c),H=cH(c),f=W*0.95,ca=Math.cos(az),sa=Math.sin(az),ce=Math.cos(el),se=Math.sin(el);
+  const pcs=[];let zmin=1e9,zmax=-1e9;
+  for(let s=0;s<fTraj.length;s++){
+    const seg=fTraj[s],nP=seg.length/3;let cur=null,lx=0,ly=0,len=0;
+    const close=()=>{if(cur&&cur.p.length>2){cur.z/=cur.n;pcs.push(cur);if(cur.z<zmin)zmin=cur.z;if(cur.z>zmax)zmax=cur.z;}};
+    for(let i=0;i<nP;i++){
+      const x=seg[i*3]-tx,y=seg[i*3+1]-ty,z=seg[i*3+2]-tz,x1=x*ca-y*sa,y1=x*sa+y*ca,dz=vD+z*se+y1*ce;
+      if(dz<0.01){close();cur=null;continue;}                    // behind the viewer: the thread is cut here
+      const q=f/dz,X=W/2+x1*q,Y=H/2-(z*ce-y1*se)*q;
+      if(!cur){cur={p:[X,Y],z:dz,n:1};lx=X;ly=Y;len=0;continue;}
+      const d=Math.hypot(X-lx,Y-ly);if(d<0.8&&i<nP-1)continue;   // closer than the picture can show
+      cur.p.push(X,Y);cur.z+=dz;cur.n++;len+=d;lx=X;ly=Y;
+      if(len>=12){close();cur={p:[X,Y],z:dz,n:1};len=0;}         // pieces of about 12 pixels, sharing their ends
+    }
+    close();
+  }
+  const span=Math.max(1e-9,zmax-zmin);
+  pcs.forEach((pc,i)=>{pc.k=Math.min(THREAD_LAYERS-1,Math.floor(THREAD_LAYERS*(pc.z-zmin)/span));pc.i=i;});
+  pcs.sort((a,b)=>b.k-a.k||a.i-b.i);
+  cx.lineJoin="round";
+  for(const pc of pcs){
+    const p=pc.p;cx.beginPath();cx.moveTo(p[0],p[1]);for(let i=2;i<p.length;i+=2)cx.lineTo(p[i],p[i+1]);
+    cx.lineCap="butt";cx.strokeStyle="#fdfdfe";cx.lineWidth=2.7;cx.stroke();
+    cx.lineCap="round";cx.strokeStyle=THREAD_TINTS[pc.k];cx.lineWidth=1.3;cx.stroke();
+  }
+  cx.lineCap="butt";cx.lineJoin="miter";
 }
 
 function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();}
