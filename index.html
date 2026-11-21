@@ -218,10 +218,6 @@ input[type=range]:disabled{opacity:.35}
 
 /* ---------- 3D ---------- */
 #v3d{background:var(--bg)}
-#sub3{position:absolute;top:10px;right:12px;z-index:30;background:rgba(255,255,255,.92);box-shadow:0 0 0 1px var(--line);
-  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px)}
-#sub3 button{background:transparent}
-#sub3 button.on{background:var(--ink);color:#fff;box-shadow:none}
 .sub3{position:absolute;inset:0;display:none}
 .sub3.on{display:block}
 #t3-viewport{position:absolute;inset:0;touch-action:none}
@@ -251,6 +247,15 @@ input[type=range]:disabled{opacity:.35}
 .lay-len span{display:flex;align-items:center;gap:10px;flex:none}
 .lay-len i{width:18px;border-top:3px solid var(--trj,var(--ctrl))}
 .lay-len.cut i{border-top:2px dashed #3366bb}
+.cut-ax{display:flex;flex:none;gap:2px;padding:2px;border-radius:8px;background:rgba(28,36,48,.06)}
+.cut-ax button{display:flex;align-items:center;justify-content:center;width:25px;height:22px;padding:0 0 2px;border:0;border-radius:6px;background:transparent;color:var(--ink2);font-size:14px;line-height:1;cursor:pointer}
+.cut-ax button .katex{font-size:15px;line-height:1}
+.cut-ax button *{pointer-events:none}
+.cut-ax button{position:relative}
+.cut-ax button.act{color:#3366bb}
+.cut-ax button.act::after{content:"";position:absolute;left:7px;right:7px;bottom:1px;height:2px;border-radius:1px;background:#3366bb}
+.cut-ax button.on{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line)}
+.cut-ax button.on.act{color:#3366bb}
 .lay-len input{flex:1;min-width:0}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
@@ -267,11 +272,12 @@ input[type=range]:disabled{opacity:.35}
 .bar{width:200px;height:4px;background:#dbe0e8;border-radius:2px;margin:12px auto 0;overflow:hidden}
 .fill{height:100%;background:var(--safe);border-radius:2px;width:0%;transition:width .2s}
 
-#p3-root{flex-direction:column}
+#p3-root{flex-direction:column;z-index:6;background:var(--bg)}
 #p3-root.on{display:flex}
-.p3-bar{flex:none;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 300px 9px 16px;background:#fff;border-bottom:1px solid var(--line);min-height:56px}
+.p3-bar{flex:none;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:9px 16px;background:#fff;border-bottom:1px solid var(--line);min-height:56px}
 .p3-bar label{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);white-space:nowrap}
 .p3-bar select{width:88px}
+.p3-bar #p3-map{width:250px;margin-right:6px}
 .p3-bar input[type=number]{width:84px}
 .p3-bar .btn{width:auto;padding:7px 18px}
 .p3-prog{flex:1;min-width:150px;display:flex;align-items:center;gap:10px}
@@ -388,8 +394,6 @@ input[type=range]:disabled{opacity:.35}
   #v2d .grow select{min-width:62px;padding:5px 2px 5px 6px}
   #v2d .grow .btn{padding:5px 5px;font-size:13px}
 
-  #sub3{top:8px;right:auto;left:50%;transform:translateX(-50%)}
-  #sub3 button{font-size:13.5px;height:28px}
   #t3-viewer{--t3p:max(34%,264px)}
   #t3-viewport{inset:0 0 auto 0;height:calc(100% - var(--t3p))}
   #t3-panel{top:calc(100% - var(--t3p));left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding:9px 12px 10px;overflow-y:auto;
@@ -398,16 +402,19 @@ input[type=range]:disabled{opacity:.35}
   #t3-params{margin-top:5px;font-size:13px;min-height:19px}
   #t3-ref{font-size:12px;min-height:0;margin-top:1px}
   .t3-sel{margin-top:6px}
-  .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
-  .lay-len{order:9;font-size:13.5px;padding:0 2px 0 9px;gap:8px}
-  .lay-len span{gap:7px}
+  .t3-layers{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin-top:7px}
+  .t3-layers>*{grid-column:span 6}
+  .lay-len{order:9;grid-column:span 5;font-size:13.5px;padding:0 2px 0 7px;gap:7px}
+  .lay-len.cut{grid-column:span 7}
+  .lay-len i{display:none}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
   #t3-hint{display:none}
   #t3-loading{inset:0 0 var(--t3p) 0}
 
-  .p3-bar{padding:44px 10px 8px;gap:7px 9px;min-height:0}
+  .p3-bar{padding:8px 10px;gap:7px 9px;min-height:0}
+  .p3-bar #p3-map{width:100%;margin:0;font-size:15.5px;padding:5px 6px}
   .p3-bar select{width:70px}
   .p3-bar input[type=number]{width:64px}
   .p3-bar .btn{padding:6px 14px}
@@ -668,6 +675,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="p-head">
         <select id="d2-mapSelect" class="sel-title" aria-label="Map">
           <option value="henon">Hénon map</option>
+          <option value="lorenz_p">Lorenz, Poincaré section</option>
           <option value="henon_saddle">Hénon, period 7</option>
           <option value="lozi">Lozi map</option>
           <option value="ikeda">Ikeda map</option>
@@ -747,13 +755,44 @@ body.guide-push #guide{box-shadow:none}
       </div>
     </div>
   </div>
+  <div id="p3-root" class="sub3">
+    <div class="p3-bar">
+      <select id="p3-map" class="sel-title" aria-label="Map">
+        <option value="henon">Hénon map</option>
+        <option value="lorenz_p" selected>Lorenz, Poincaré section</option>
+        <option value="henon_saddle">Hénon, period 7</option>
+        <option value="lozi">Lozi map</option>
+        <option value="ikeda">Ikeda map</option>
+        <option value="zaslavsky">Zaslavsky map</option>
+      </select>
+      <label>Grid
+        <select id="p3-gs" aria-label="Grid size">
+          <option value="201">201</option><option value="301">301</option><option value="401">401</option>
+          <option value="501" selected>501</option><option value="601">601</option><option value="801">801</option>
+          <option value="1001">1001</option><option value="1201">1201</option><option value="2001">2001</option>
+        </select></label>
+      <label class="vlbl xi"><span data-tex="\xi_0=">ξ₀ =</span><input type="number" id="p3-xi" value="0.09" step="0.01" min="0.01" max="2" aria-label="Disturbance bound"></label>
+      <label class="vlbl u"><span data-tex="u_0=">u₀ =</span><input type="number" id="p3-u0" value="0.07" step="0.01" min="0.01" max="2" aria-label="Control bound"></label>
+      <button id="p3-go" class="btn btn-primary">Compute</button>
+      <div class="p3-prog"><div class="pb"><div class="pf" id="p3-pf"></div></div><span id="p3-st">Ready</span></div>
+    </div>
+    <div class="p3-main">
+      <div class="pn">
+        <div class="ph"><span class="pt">Safe set on the Poincaré section <span class="nw" data-tex="z=19">z = 19</span></span><span class="pi" id="p3-si"></span></div>
+        <div class="cw"><canvas id="p3-c1"></canvas><div class="ov" id="p3-o1">Press Compute</div></div>
+      </div>
+      <div class="pn">
+        <div class="ph"><span class="pt">Controlled trajectory in phase space</span><span class="pi" id="p3-ti">drag to rotate, scroll to zoom</span><button id="p3-reset" class="btn">Reset view</button></div>
+        <div class="cw"><canvas id="p3-c2"></canvas><div class="ov" id="p3-o2">Press Compute</div></div>
+      </div>
+    </div>
+  </div>
 </section>
 
 <!-- =============================== 3D =============================== -->
 <section id="v3d" class="view" aria-label="Three-dimensional systems">
-  <div id="sub3" class="seg" role="tablist" aria-label="3D view"><button data-go="3d" class="on">Safe sets in 3D</button><button data-go="poincare">Lorenz on a Poincaré section</button></div>
 
-  <div id="t3-viewer" class="sub3">
+  <div id="t3-viewer" class="sub3 on">
     <div id="t3-viewport"><div id="t3-noise"></div></div>
     <div id="t3-panel">
       <select id="t3-selMap" class="sel-title" aria-label="System">
@@ -770,7 +809,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Height of the horizontal cut of the sets"></div>
+        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><div class="cut-ax" id="t3-cutAx" role="group" aria-label="Axis of the cut"><button data-ax="0" aria-pressed="false">x</button><button data-ax="1" aria-pressed="false">y</button><button data-ax="2" class="on" aria-pressed="true">z</button></div><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Position of the cut along the chosen axis"></div>
         <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--trj,var(--ctrl))"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
@@ -788,30 +827,6 @@ body.guide-push #guide{box-shadow:none}
     </div></div>
   </div>
 
-  <div id="p3-root" class="sub3">
-    <div class="p3-bar">
-      <label>Grid
-        <select id="p3-gs" aria-label="Grid size">
-          <option value="201">201</option><option value="301">301</option><option value="401">401</option>
-          <option value="501" selected>501</option><option value="601">601</option><option value="801">801</option>
-          <option value="1001">1001</option><option value="1201">1201</option><option value="2001">2001</option>
-        </select></label>
-      <label class="vlbl xi"><span data-tex="\xi_0=">ξ₀ =</span><input type="number" id="p3-xi" value="0.09" step="0.01" min="0.01" max="2" aria-label="Disturbance bound"></label>
-      <label class="vlbl u"><span data-tex="u_0=">u₀ =</span><input type="number" id="p3-u0" value="0.07" step="0.01" min="0.01" max="2" aria-label="Control bound"></label>
-      <button id="p3-go" class="btn btn-primary">Compute</button>
-      <div class="p3-prog"><div class="pb"><div class="pf" id="p3-pf"></div></div><span id="p3-st">Ready</span></div>
-    </div>
-    <div class="p3-main">
-      <div class="pn">
-        <div class="ph"><span class="pt">Safe set on the Poincaré section <span data-tex="z=19">z = 19</span></span><span class="pi" id="p3-si"></span></div>
-        <div class="cw"><canvas id="p3-c1"></canvas><div class="ov" id="p3-o1">Press Compute</div></div>
-      </div>
-      <div class="pn">
-        <div class="ph"><span class="pt">Controlled trajectory in phase space</span><span class="pi" id="p3-ti">drag to rotate, scroll to zoom</span><button id="p3-reset" class="btn">Reset view</button></div>
-        <div class="cw"><canvas id="p3-c2"></canvas><div class="ov" id="p3-o2">Press Compute</div></div>
-      </div>
-    </div>
-  </div>
 </section>
 </main>
 
@@ -834,9 +849,9 @@ body.guide-push #guide{box-shadow:none}
     <h3>1D maps</h3>
     <p>Tent, logistic, cubic, Gauss and other maps, or your own equation. Follow controlled and uncontrolled orbits on the cobweb diagram, step through single iterations to see <span class="nw"><span data-tex="f(x)">f(x)</span>,</span> <span data-tex="\xi_n">ξ</span> and <span data-tex="u_n">u</span> as arrows, or switch to the time series. The safety function view plots <span class="nw"><span data-tex="U(x)">U(x)</span>:</span> moving <span data-tex="u_0">u₀</span> floods its valleys, and the flooded intervals are the safe set. The region <span data-tex="Q">Q</span> can be made of up to three intervals, and the computation can be exported as Python and MATLAB scripts.</p>
     <h3>2D maps</h3>
-    <p>Hénon, Lozi, Ikeda and Zaslavsky maps. The safe set is computed in your browser on a grid. Drag on the plot to zoom into its structure, edit the limits of <span data-tex="Q">Q</span> on the axes, and overlay controlled orbits, uncontrolled orbits and the chaotic saddle. The safety function view draws <span data-tex="U(x,y)">U(x, y)</span> as a surface you can rotate, with a plane at <span data-tex="u_0">u₀</span> that leaves the safe set below it.</p>
+    <p>Hénon, Lozi, Ikeda and Zaslavsky maps, and the Lorenz system controlled each time its trajectory crosses the Poincaré section <span class="nw"><span data-tex="z=19">z = 19</span>,</span> which makes the problem two-dimensional. The safe set is computed in your browser on a grid. Drag on the plot to zoom into its structure, edit the limits of <span data-tex="Q">Q</span> on the axes, and overlay controlled orbits, uncontrolled orbits and the chaotic saddle. The safety function view draws <span data-tex="U(x,y)">U(x, y)</span> as a surface you can rotate, with a plane at <span data-tex="u_0">u₀</span> that leaves the safe set below it.</p>
     <h3>3D systems</h3>
-    <p>Safe sets of the Lorenz system, the McCann-Yodzis ecological model and a delayed Hénon map, precomputed for several control intervals and bounds and shown as surfaces you can rotate. The red surface is the asymptotic safe set, where controlled trajectories end up. For the Lorenz system the control can also be applied each time the trajectory crosses the Poincaré section <span data-tex="z=19">z = 19</span>, which makes the safe set two-dimensional. For these systems only safe sets are shown, not safety functions.</p>
+    <p>Safe sets of the Lorenz system, the McCann-Yodzis ecological model and a delayed Hénon map, precomputed for several control intervals and bounds and shown as surfaces you can rotate. The red surface is the asymptotic safe set, where controlled trajectories end up. <b>Cut</b> opens them along any of the three axes to show their sections. For these systems only safe sets are shown, not safety functions.</p>
     <h3>References</h3>
     <div class="refs">
       <p>J. Sabuco, S. Zambrano, M.A.F. Sanjuán and J.A. Yorke, Commun. Nonlinear Sci. Numer. Simul. 17(11), 4274–4280 (2012). <a href="https://doi.org/10.1016/j.cnsns.2012.02.033" target="_blank" rel="noopener">doi:10.1016/j.cnsns.2012.02.033</a></p>
@@ -857,7 +872,8 @@ const PC=(()=>{
   const THREE_URL="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js";
   const CTRL="#f2a00a",UNCTRL="#111";       // controlled and uncontrolled orbits in every view (--ctrl and --unctrl in the styles)
   const MF="KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
-  const routes={"1d":"v1d","2d":"v2d","3d":"v3d","poincare":"v3d"};
+  const routes={"1d":"v1d","2d":"v2d","3d":"v3d","poincare":"v2d"};   // the Lorenz map on a Poincaré section is one of the 2D maps, with a view of its own
+  let last2d="2d";
   const mods={},inited={},scripts={};
   const mq=window.matchMedia("(max-width:820px)");
   let cur=null;
@@ -934,7 +950,7 @@ const PC=(()=>{
     // the recursion of the safety function
     recur:q=>'<p class="eq sm">'+gt("\\displaystyle U_{k+1}("+q+")=\\max_{|\\xi|\\le\\xi_0}\\,\\min_{y\\in Q}\\,\\max\\bigl(|f("+q+")+\\xi-y|,\\,U_k(y)\\bigr)","U(k+1) = max over ξ of min over y of max(|f + ξ − y|, U(k)(y))")+'</p>',
     // several equations, one per line and aligned at the equals sign
-    lines:arr=>'<p class="eq">'+gt("\\begin{aligned}"+arr.map(t=>t.replace("=","&=")).join("\\\\[3pt]")+"\\end{aligned}",arr.join("; "))+'</p>'
+    lines:(arr,small)=>'<p class="eq'+(small?' sm':'')+'">'+gt("\\begin{aligned}"+arr.map(t=>t.replace("=","&=")).join(small?"\\\\[8pt]":"\\\\[3pt]")+"\\end{aligned}",arr.join("; "))+'</p>'
   };
 
   function go(name){
@@ -944,8 +960,7 @@ const PC=(()=>{
     if(prev&&mods[prev]&&mods[prev].hide)mods[prev].hide();
     document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id===routes[name]));
     document.querySelectorAll("#tabs button").forEach(b=>b.setAttribute("aria-selected",routes[b.dataset.go]===routes[name]?"true":"false"));
-    document.querySelectorAll("#sub3 button").forEach(b=>b.classList.toggle("on",b.dataset.go===name));
-    document.getElementById("t3-viewer").classList.toggle("on",name==="3d");
+    if(routes[name]==="v2d")last2d=name;
     document.getElementById("p3-root").classList.toggle("on",name==="poincare");
     if(location.hash.slice(1)!==name){try{history.replaceState(null,"","#"+name);}catch(e){try{location.replace("#"+name);}catch(e2){}}}
     const m=mods[name];
@@ -966,7 +981,7 @@ const PC=(()=>{
   }
 
   function boot(){
-    document.querySelectorAll("#tabs button,#sub3 button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go)));
+    document.querySelectorAll("#tabs button").forEach(b=>b.addEventListener("click",()=>go(b.dataset.go==="2d"?last2d:b.dataset.go)));
     const about=document.getElementById("about"),openBtn=document.getElementById("aboutBtn");
     const close=()=>{about.hidden=true;openBtn.focus();};
     openBtn.addEventListener("click",()=>{about.hidden=false;typeset(about);document.getElementById("aboutClose").focus();});
@@ -1514,7 +1529,7 @@ for(let i=0;i<data.length;i++){ctx.beginPath();ctx.arc(txf(i),tyf(data[i]),dr,0,
 ctx.fillStyle=col===PC.CTRL?"#1c2430":col;ctx.font="600 "+(w>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx.fillText(lbl,w-P.r-ctx.measureText(lbl).width,14);}
 
 let _raf=0;
-function redraw(){PC.guideKey("1d|"+S.mapName+"|"+S.mode+"|"+S.regionQ.join());if(S.mode==="safety"){S.ax=compAx(S.xmap,S.ymap,S.xmap.length,S.xmin,S.xmax);drawSafety();return;}recompute();if(S.mode==="safeset")drawMain();else if(S.mode==="iterations")drawIterations();
+function redraw(){PC.guideKey("1d|"+S.mapName+"|"+S.mode+"|"+S.regionQ.join()+"|"+S.paramA+"|"+S.paramB);if(S.mode==="safety"){S.ax=compAx(S.xmap,S.ymap,S.xmap.length,S.xmin,S.xmax);drawSafety();return;}recompute();if(S.mode==="safeset")drawMain();else if(S.mode==="iterations")drawIterations();
 else if(S.mode==="controlled_activate")drawControlled();else drawCtrlIter();}
 function sched(){if(_raf)return;_raf=1;requestAnimationFrame(()=>{_raf=0;redraw();});}
 
@@ -2211,8 +2226,24 @@ function guide1d(){
   const g=PC.gt,G=PC.guideText,X=g("x","x"),Q=g("Q","Q"),U0=g("u_0","u₀"),XI0=g("\\xi_0","ξ₀");
   const iv=[];for(let k=0;k<S.regionQ.length-1;k+=2){const a=S.regionQ[k],b=S.regionQ[k+1];if(!isNaN(a)&&!isNaN(b)&&a<b)iv.push("["+sig(a,4)+",\\,"+sig(b,4)+"]");}
   const qTex="Q="+(iv.join("\\cup")||"\\varnothing"),custom=S.mapName==="Custom equation";
+  // the equation of the map on screen, with the current values of its parameters
+  const A=sig(S.paramA,4),B=sig(S.paramB,4),pw=(a,ia,b,ib)=>"f(x)=\\begin{cases}"+a+"&"+ia+"\\\\[3pt]"+b+"&"+ib+"\\end{cases}";
+  const EQ={
+    "Tent map":[pw("Ax","0\\le x\\le B","\\dfrac{AB\\,(1-x)}{1-B}","B<x\\le 1"),1,1],
+    "Logistic map":["f(x)=Ax(1-x)",1,0],
+    "Cubic map":["f(x)=Ax-x^3+B",1,1],
+    "Gauss map":["f(x)=e^{-Ax^2}+B",1,1],
+    "Double-hump map":["f(x)=Ax^2(1-x^2)+B",1,1],
+    "Asymmetric Shift map":[pw("\\dfrac{A}{B}\\,x","0\\le x\\le B","\\dfrac{A\\,(x-B)}{1-B}","B<x\\le 1"),1,1],
+    "Sin map":["f(x)=A\\sin(Bx)",1,1],
+    "Parabola map":["f(x)=Ax^2+B",1,1]}[S.mapName];
+  const pars=EQ?"with "+[EQ[1]&&g("A="+A,"A = "+A),EQ[2]&&g("B="+B,"B = "+B)].filter(Boolean).join(" and ")+", the values of the map panel":"";
+  const what=custom||!EQ?`<p>The black curve is the map ${g("f(x)","f(x)")} typed in the map panel, with ${g("A="+A,"A = "+A)} and ${g("B="+B,"B = "+B)}.`
+    :`<p>The black curve is the <b>${S.mapName}</b>,</p>
+<p class="eq">${g(EQ[0],S.mapName)}</p>
+<p>${pars}.`;
   const sys=`<h3>The map on screen</h3>
-<p>The black curve is ${custom?"the map typed in the map panel":"the <b>"+S.mapName+"</b>"}, a one-dimensional map ${g("f(x)","f(x)")}, with the parameters ${g("A","A")} and ${g("B","B")} of the map panel. The thick line on the axis is the region ${g(qTex,"Q")}. An orbit bounces chaotically inside ${Q} for a while and then leaves it. The aim is to keep it inside forever.</p>
+${what} The thick line on the axis is the region ${g(qTex,"Q")}. An orbit bounces chaotically inside ${Q} for a while and then leaves it. The aim is to keep it inside forever.</p>
 <h3>The control problem</h3>
 ${G.eq("x","f")}
 <p>${G.bounds("x","f")} ${G.aim}</p>`;
@@ -3087,7 +3118,7 @@ function loadMap(name){
   $("numIter").value=cf.iter||200;
   syncUI();computeSafeSet();
 }
-$("mapSelect").addEventListener("change",e=>loadMap(e.target.value));
+$("mapSelect").addEventListener("change",e=>{if(e.target.value==="lorenz_p"){e.target.value=S.mapName;PC.go("poincare");}else loadMap(e.target.value);});
 function doCompute(){if(S.N>=1001)computeHires(S.N,null);else computeSafeSet();}
 
 function onQchange(){
@@ -4252,6 +4283,7 @@ const MAP_CONFIG = {
 
 // The Hénon 3D map has no stored trajectories. Its orbits are computed here, the controlled one with the
 // safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
+MAP_CONFIG.mccann.axes=['R','C','P'];
 Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
   step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
   inBox:(x,y,z)=>Math.abs(x)<=2&&Math.abs(y)<=2&&Math.abs(z)<=2});
@@ -4267,7 +4299,7 @@ let scene,cam,R,vp,world,layers,grpBase,draco,ground=null,groundZ=0;
 let ready=false,active=false,raf=0,loadSeq=0;
 let currentMap='lorenz',cur=null,home=null,fitArgs=null,xoff=0,freeFrac=1;
 let tgt,camDist=110,camAz=-0.7,camEl=0.45;
-let cutPlane,grpCut,cut=null;
+let cutPlanes,grpCut,cut=null,cutAxis=2;const cutVal=[100,100,100];   // one cut per axis, as a percentage of the size of the safe set
 let trajLoading=false,trajIdx=-1,trajBad=new Set(),seed=Date.now()%2147483647,fitNext=true;
 const vis={safe:true,asym:true,traj:false,unctrl:false};
 
@@ -4297,6 +4329,7 @@ function panelInfo(mapKey){
   pe.dataset.k=window.katex?'1':'0';
   $('ref').textContent=m.ref;
   PC.setTex($('dtLabel'),cfg.dtLabel?"n":"\\Delta t",cfg.dtLabel||"Δt");
+  (cfg.axes||['x','y','z']).forEach((n,i)=>PC.setTex($('cutAx').children[i],n,n));
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
   $('panel').style.setProperty('--trj',cfg.isMap?DOT_CTRL:'');           // colour of the controlled orbit in the panel
 }
@@ -4352,7 +4385,7 @@ function setup(){
   R.shadowMap.type=THREE.PCFSoftShadowMap;
   R.outputEncoding=THREE.sRGBEncoding;
   R.localClippingEnabled=true;
-  cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),1e6);   // keeps what lies below the plane
+  cutPlanes=[0,1,2].map(()=>new THREE.Plane(new THREE.Vector3(0,0,-1),1e6));
   threadRes.value=new THREE.Vector2(vw0/2,vh0/2);
   R.toneMapping=THREE.ACESFilmicToneMapping;
   R.toneMappingExposure=1.1;
@@ -4517,7 +4550,7 @@ function mkMesh(verts,faces,normals,color,opacity){
   g.setAttribute('position',new THREE.BufferAttribute(verts,3));
   g.setIndex(new THREE.BufferAttribute(faces,1));
   g.setAttribute('normal',new THREE.BufferAttribute(normals,3));
-  const m=new THREE.MeshPhongMaterial({color,opacity,transparent:opacity<0.99,side:THREE.DoubleSide,depthWrite:opacity>0.9,clippingPlanes:[cutPlane],clipShadows:true,
+  const m=new THREE.MeshPhongMaterial({color,opacity,transparent:opacity<0.99,side:THREE.DoubleSide,depthWrite:opacity>0.9,clippingPlanes:cutPlanes,clipShadows:true,
     shininess:50,specular:new THREE.Color(0x333333),dithering:true});
   const mesh=new THREE.Mesh(g,m);
   mesh.castShadow=true;mesh.receiveShadow=true;
@@ -4534,24 +4567,35 @@ function mkLabel(text,pos,size){
   sp.scale.set(size,size*0.5,1);
   return sp;
 }
-// Horizontal cut. The sets are drawn only below a plane, and the hole left in each surface is closed with a flat
-// face, its section at that height. The face is found with the stencil buffer: seen through the cut surface,
-// a pixel lies inside the set when the back and front faces behind it do not cancel.
+// Cuts. The sets are drawn only on one side of a plane perpendicular to each axis, and the hole left in each
+// surface is closed with a flat face, its section there. The face is found with the stencil buffer: seen through
+// the cut surface, a pixel lies inside the set when the back and front faces behind it do not cancel.
 const CUT_SAFE=0x3366bb,CUT_ASYM=0xcc2211;   // the cut faces have the plain colours of the legend, with no shading
-function mkCap(geom,color,order,key,cx,cy,size,zOff){
+function mkCap(geom,color,key,ax,size,zOff){
+  const order=1+ax*0.6+(key==='asym'?0.2:0),plane=cutPlanes[ax];
   [[THREE.BackSide,THREE.IncrementWrapStencilOp],[THREE.FrontSide,THREE.DecrementWrapStencilOp]].forEach(([side,op])=>{
-    const m=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({side,clippingPlanes:[cutPlane],depthWrite:false,depthTest:false,colorWrite:false,
+    const m=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({side,clippingPlanes:[plane],depthWrite:false,depthTest:false,colorWrite:false,
       transparent:true,stencilWrite:true,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:op,stencilZFail:op,stencilZPass:op}));
-    m.position.z=zOff;m.renderOrder=order;m.userData.key=key;grpCut.add(m);});
-  const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),toneMapped:false,side:THREE.DoubleSide,transparent:true,
+    m.position.z=zOff;m.renderOrder=order;m.userData={key,ax};grpCut.add(m);});
+  const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),toneMapped:false,
+    side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),
     stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
-  cap.position.set(cx,cy,0);cap.renderOrder=order+0.5;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,cap:true};grpCut.add(cap);
+  if(ax===0)cap.rotation.y=Math.PI/2;else if(ax===1)cap.rotation.x=Math.PI/2;
+  cap.renderOrder=order+0.1;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,ax,cap:true};grpCut.add(cap);
 }
 function applyCut(){
   if(!cut)return;
-  const f=$('cut').value/100,on=f<1,z=cut.z0+(cut.z1-cut.z0)*f+cut.zOff;
-  cutPlane.constant=on?z*cut.sc:1e6;
-  grpCut.children.forEach(m=>{m.visible=on&&vis[m.userData.key];if(m.userData.cap)m.position.z=z;});
+  const pos=[0,1,2].map(ax=>{
+    const f=cutVal[ax]/100,d=cut.dir[ax],c=(d>0?cut.lo[ax]+(cut.hi[ax]-cut.lo[ax])*f:cut.hi[ax]-(cut.hi[ax]-cut.lo[ax])*f)+(ax===2?cut.zOff:0);
+    // d>0: the side of larger coordinates is removed; d<0: the side of smaller ones. It is the side that faces the initial view
+    cutPlanes[ax].normal.set(0,0,0).setComponent(ax,-d);cutPlanes[ax].constant=f<1?d*c*cut.sc:1e6;
+    return c;});
+  grpCut.children.forEach(m=>{const ax=m.userData.ax;m.visible=cutVal[ax]<100&&vis[m.userData.key];
+    if(m.userData.cap){m.position.copy(cut.mid);m.position.setComponent(ax,pos[ax]);}});
+}
+function syncCut(){
+  $('cut').value=cutVal[cutAxis];
+  $('cutAx').querySelectorAll('button').forEach((b,i)=>{b.classList.toggle('on',i===cutAxis);b.classList.toggle('act',cutVal[i]<100);b.setAttribute('aria-pressed',i===cutAxis?'true':'false');});
 }
 function clearGroup(g){
   while(g.children.length){
@@ -4771,10 +4815,11 @@ function build(safeGeom,asymGeom,cfg){
       grpBase.add(mkLabel(lbl,[pos[0]+2,pos[1]-1,pos[2]+2+zOff],4));
     });
   }
-  let zMax=-1e9;for(let i=2;i<sv.length;i+=3)zMax=Math.max(zMax,sv[i]);
-  cut={z0:zMin,z1:zMax,zOff,sc};
-  mkCap(mSafe.geometry,CUT_SAFE,1,'safe',cx,cy,cfg.groundSize,zOff);
-  mkCap(mAsym.geometry,CUT_ASYM,2,'asym',cx,cy,cfg.groundSize,zOff);
+  const lo=[1e9,1e9,1e9],hi=[-1e9,-1e9,-1e9];
+  for(let i=0;i<sv.length;i++){const k=i%3,v=sv[i];if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
+  cut={lo,hi,zOff,sc,dir:[Math.cos(cfg.camAz)>=0?1:-1,Math.sin(cfg.camAz)>=0?1:-1,1],mid:new THREE.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2+zOff)};
+  const capSize=2*Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]);
+  for(let ax=0;ax<3;ax++){mkCap(mSafe.geometry,CUT_SAFE,'safe',ax,capSize,zOff);mkCap(mAsym.geometry,CUT_ASYM,'asym',ax,capSize,zOff);}
   cur={av,nv,zOff,cfg,eq,sv,sf,idx:null};
   applyVis();
 }
@@ -4912,7 +4957,7 @@ function onMapChange(){
   populate(currentMap);panelInfo(currentMap);PC.refreshGuide();
   vis.traj=false;vis.unctrl=false;trajIdx=-1;trajBad=new Set();applyVis();
   if(!ready)return;
-  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;$('cut').value=100;
+  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;cutVal.fill(100);syncCut();
   loadAndBuild();
 }
 
@@ -4941,7 +4986,9 @@ ${G.lines(["\\dot x=\\sigma(y-x)","\\dot y=x(r-z)-y","\\dot z=xy-bz"])}
       keep:`the points from which the trajectory can be kept away from ${g("C^{+}","C+")} and ${g("C^{-}","C−")} forever`,
       grid:`a grid of 2001 points per axis over the region ${g("Q","Q")} of phase space where the trajectory is to stay`,end:"it ends at one of the fixed points"},
     mccann:{title:"McCann-Yodzis model",
-      what:`<p>A food chain of three species, the McCann-Yodzis model: a resource ${g("R","R")}, a consumer ${g("C","C")} and a predator ${g("P","P")}, with the parameters shown in the panel. For these values the three populations oscillate chaotically for a while and then the predator becomes extinct. The aim is to keep the three species alive forever.</p>`,
+      what:`<p>The McCann-Yodzis model, a food chain of three species: a resource ${g("R","R")}, a consumer ${g("C","C")} and a predator ${g("P","P")},</p>
+${G.lines(["\\dot R=R\\left(1-\\dfrac{R}{K}\\right)-x_c\\,y_c\\,\\dfrac{C\\,R}{R+R_0}","\\dot C=x_c\\,C\\left(\\dfrac{y_c\\,R}{R+R_0}-1\\right)-\\psi(P)\\,\\dfrac{y_p\\,C}{C+C_0}","\\dot P=\\psi(P)\\,\\dfrac{y_p\\,C}{C+C_0}-x_p\\,P"],true)}
+<p>where ${g("\\psi(P)=x_p\\left[(1-s)P+sP^2\\right]","ψ(P) = xp[(1 − s)P + sP²]")} is the predation term. The parameters are ${g("K=0.99")}, ${g("s=0.07")}, ${g("x_c=0.4")}, ${g("y_c=2.009")}, ${g("x_p=0.08")}, ${g("y_p=2.876")}, ${g("R_0=0.16129")} and ${g("C_0=0.5")}. For these values the three populations oscillate chaotically for a while and then the predator becomes extinct. The aim is to keep the three species alive forever.</p>`,
       keep:"the states from which the extinction of the predator can be avoided forever",
       grid:`a fine three-dimensional grid over the region ${g("Q","Q")} of phase space where the populations are to stay`,end:"it ends with the extinction of the predator"},
     henon3d:{title:"Hénon 3D map",
@@ -4966,7 +5013,7 @@ ${G.eq("q","f")}
 <h3>What is drawn and how it was obtained</h3>
 <p><b>Blue surface: the safe set</b> for these bounds, ${SYS.keep}, whatever the disturbance does. It was computed in advance with the Sculpting Algorithm on ${SYS.grid}: ${G.sculpt}. The surface is the boundary of that set, smoothed for drawing.</p>
 <p><b>Red surface: the asymptotic safe set</b>, the part of the safe set that controlled trajectories visit once the first corrections have been made.</p>
-<p><b>Cut</b> removes what lies above a horizontal plane, to look inside the sets. The flat faces in plain blue and red are the sections of the two sets at that height.</p>
+<p><b>Cut</b> opens the sets with a plane perpendicular to the chosen axis, ${(cfg.axes||['x','y','z']).map(n=>g(n,n)).join(', ').replace(/, ([^,]*)$/,' or $1')}, to look inside them. The flat faces in plain blue and red are the sections of the two sets on that plane. The three cuts can be combined.</p>
 ${traj}
 <h3>No safety function here</h3>
 <p>${g("U","U")} would be a function of three variables, which cannot be drawn as a surface, so only the safe sets of the pairs ${g("(\\xi_0,u_0)","(ξ₀, u₀)")} in the menu are given.</p>
@@ -4987,7 +5034,8 @@ PC.register("3d",{
     $('bUnctrl').addEventListener('click',()=>tog('unctrl'));
     $('bRecomp').addEventListener('click',loadControlledTrajectory);
     $('len').addEventListener('input',applyLen);
-    $('cut').addEventListener('input',applyCut);
+    $('cut').addEventListener('input',e=>{cutVal[cutAxis]=+e.target.value;syncCut();applyCut();});
+    $('cutAx').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;cutAxis=+b.dataset.ax;syncCut();});
     $('bRecompU').addEventListener('click',recomputeU);
     $('reset').addEventListener('click',resetView);
     $('retry').addEventListener('click',()=>{if(ready)loadAndBuild();else boot();});
@@ -5422,7 +5470,9 @@ $('reset').addEventListener('click',function(){az=-40*Math.PI/180;el=25*Math.PI/
 function guideP(){
   const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
   return{title:"Guide: Lorenz on a Poincaré section",html:`<h3>The system on screen</h3>
-<p>The Lorenz system with ${g("\\sigma=10")}, ${g("b=8/3")} and ${g("r=20")}. Its trajectories wander around the two fixed points ${Cp} and ${Cm} for a while and then spiral into one of them. The aim is to keep the trajectory wandering forever, correcting it as seldom as possible.</p>
+<p>The Lorenz system</p>
+${G.lines(["\\dot x=\\sigma(y-x)","\\dot y=x(r-z)-y","\\dot z=xy-bz"])}
+<p>with ${g("\\sigma=10")}, ${g("b=8/3")} and ${g("r=20")}. Its trajectories wander around the two fixed points ${Cp} and ${Cm} for a while and then spiral into one of them. The aim is to keep the trajectory wandering forever, correcting it as seldom as possible.</p>
 <h3>The control problem</h3>
 <p>The trajectory is corrected only when it crosses the plane ${g("z=19")}, which contains ${Cp} and ${Cm}, going down. The map ${g("P","P")} that takes one crossing point ${g("q=(x,y)","q = (x, y)")} to the next is a map of the plane, so the problem becomes two-dimensional:</p>
 ${G.eq("q","P")}
@@ -5437,7 +5487,10 @@ ${G.eq("q","P")}
 function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();}
 PC.register("poincare",{
   guide:guideP,
-  init(){if(PC.isMobile())$('gs').value='301';setupC();setupOrbit();$('go').onclick=run;run();},
+  init(){if(PC.isMobile())$('gs').value='301';setupC();setupOrbit();$('go').onclick=run;run();
+    // choosing another map returns to the view of the 2D maps
+    $('map').addEventListener('change',e=>{const v=e.target.value;e.target.value='lorenz_p';if(v==='lorenz_p')return;
+      PC.go('2d');const sel=document.getElementById('d2-mapSelect');sel.value=v;sel.dispatchEvent(new Event('change'));});},
   show(){_refresh();},resize(){_refresh();},redraw(){_refresh();}
 });
 })();
