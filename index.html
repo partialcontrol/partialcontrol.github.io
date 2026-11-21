@@ -247,7 +247,6 @@ input[type=range]:disabled{opacity:.35}
 .lay-len{display:flex;align-items:center;gap:12px;height:30px;padding:0 4px 0 12px;font-size:14px;color:var(--ink2)}
 .lay-len>span{display:flex;align-items:center;gap:10px;flex:none}
 .lay-len i{width:18px;border-top:3px solid var(--trj,var(--ctrl))}
-.lay-len.cut i{border-top:2px dashed #3366bb}
 .cut-ax{display:flex;flex:none;gap:2px;padding:2px;border-radius:8px;background:rgba(28,36,48,.06)}
 .cut-ax button{position:relative;display:block;width:28px;height:24px;padding:0;margin:0;border:0;border-radius:6px;background:transparent;color:var(--ink2);
   font:italic 17px/24px KaTeX_Math,"Times New Roman",serif;text-align:center;cursor:pointer;-webkit-appearance:none;appearance:none}
@@ -404,7 +403,7 @@ input[type=range]:disabled{opacity:.35}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
   .lay-len{order:9;grid-column:1/-1;font-size:14px;padding:0 2px 0 9px;gap:10px}
   .lay-len.cut{order:0}
-  .lay-len>span{gap:8px;min-width:76px}
+  .lay-len>span{gap:8px}
   .cut-ax button{width:34px;height:26px;font-size:19px;line-height:26px}
   .cut-ax button.act::after{left:10px;right:10px}
   .r-long{display:none}.r-short{display:inline}
@@ -810,7 +809,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><div class="cut-ax" id="t3-cutAx" role="group" aria-label="Axis of the cut"><button data-ax="0" class="on" aria-pressed="true">x</button><button data-ax="1" aria-pressed="false">y</button><button data-ax="2" aria-pressed="false">z</button></div><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Position of the cut along the chosen axis"></div>
+        <div class="lay-len cut" id="t3-rowCut"><span>Cut</span><div class="cut-ax" id="t3-cutAx" role="group" aria-label="Axis of the cut"><button data-ax="0" class="on" aria-pressed="true">x</button><button data-ax="1" aria-pressed="false">y</button><button data-ax="2" aria-pressed="false">z</button></div><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Position of the cut along the chosen axis"></div>
         <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--trj,var(--ctrl))"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
@@ -4334,18 +4333,22 @@ function panelInfo(mapKey){
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
   $('panel').style.setProperty('--trj',cfg.isMap?DOT_CTRL:'');           // colour of the controlled orbit in the panel
 }
+const GLASS=Number((location.search.match(/glass=([\d.]+)/)||[])[1])||0.34,GLASS_A=Number((location.search.match(/glassa=([\d.]+)/)||[])[1])||0.5;   // opacity of the glass: safe set and asymptotic safe set
 function applyVis(){
   if(layers)Object.keys(vis).forEach(k=>{layers[k].visible=vis[k];});
   [['bSafe','safe'],['bAsym','asym'],['bTraj','traj'],['bUnctrl','unctrl']].forEach(([id,k])=>{
     $(id).classList.toggle('on',vis[k]);$(id).setAttribute('aria-pressed',vis[k]?'true':'false');});
   $('len').disabled=!vis.traj;
   if(!layers)return;
-  // safe and asymptotic sets turn slightly transparent while a trajectory is shown
-  const trajActive=vis.traj||vis.unctrl;
-  [layers.safe,layers.asym].forEach(grp=>grp.children.forEach(child=>{
-    if(child.material){const baseOp=trajActive?0.7:1.0;
-      child.material.opacity=baseOp;child.material.transparent=baseOp<1;child.material.depthWrite=baseOp>=0.9;child.material.needsUpdate=true;}}));
-  grpCut.children.forEach(m=>{if(m.userData.cap){m.material.opacity=trajActive?0.7:1.0;m.material.depthWrite=!trajActive;}});
+  // While a trajectory is shown the sets turn into glass, so that it is seen inside them. The trajectory is drawn
+  // first. Then each set, the asymptotic one and after it the safe set that contains it, is drawn in two steps:
+  // one with no colour that finds its nearest wall, and one that draws only that wall. A wall in front of the
+  // trajectory veils it, and where nothing lies in front the trajectory is clean.
+  const glass=vis.traj||vis.unctrl;
+  [[layers.asym,3,GLASS_A],[layers.safe,3.2,GLASS]].forEach(([grp,order,op])=>grp.children.forEach(ch=>{const m=ch.material;if(!m)return;
+    if(ch.userData.depthOnly){ch.visible=glass;ch.renderOrder=order;return;}
+    m.opacity=glass?op:1;m.transparent=glass;m.depthWrite=!glass;m.polygonOffset=glass;m.polygonOffsetFactor=-1;m.polygonOffsetUnits=-2;
+    ch.renderOrder=glass?order+0.1:0;m.needsUpdate=true;}));
   applyCut();
 }
 function tog(key){
@@ -4519,7 +4522,7 @@ function resize(){
   const pw=PC.isMobile()?0:Math.min(vw*0.45,$('panel').offsetWidth+24);
   xoff=-pw/2;freeFrac=(vw-pw)/vw;
   cam.aspect=vw/vh;cam.setViewOffset(vw,vh,xoff,0,vw,vh);R.setSize(vw,vh);
-  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=2.6*pr;dotPx.value=6*pr;
+  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=(PC.isMobile()?1.5:2.6)*pr;dotPx.value=6*pr;
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
@@ -4558,7 +4561,7 @@ function mkLabel(text,pos,size){
   ctx.fillStyle='#777';ctx.font='bold 40px "Segoe UI",system-ui,sans-serif';
   ctx.textAlign='center';ctx.textBaseline='middle';
   ctx.fillText(text,64,32);
-  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true}));
+  const sp=new THREE.Sprite(new THREE.SpriteMaterial({map:new THREE.CanvasTexture(c),transparent:true,depthWrite:false}));
   sp.position.set(pos[0],pos[1],pos[2]);
   sp.scale.set(size,size*0.5,1);
   return sp;
@@ -4574,7 +4577,8 @@ function mkCap(geom,color,key,ax,size,zOff){
       transparent:true,stencilWrite:true,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:op,stencilZFail:op,stencilZPass:op}));
     m.position.z=zOff;m.renderOrder=order;m.userData={key,ax};grpCut.add(m);});
   const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),toneMapped:false,
-    side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),
+    side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),   // listed with the transparent objects only to be drawn in order
+    
     stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
   if(ax===0)cap.rotation.y=Math.PI/2;else if(ax===1)cap.rotation.x=Math.PI/2;
   cap.renderOrder=order+0.1;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,ax,cap:true};grpCut.add(cap);
@@ -4656,8 +4660,6 @@ function ptsToLine(arr,group,color){
   const m=new THREE.Mesh(g,new THREE.ShaderMaterial({vertexShader:THREAD_VS,fragmentShader:THREAD_FS,side:THREE.DoubleSide,
     uniforms:{res:threadRes,px:threadPx,col:{value:C(color)},rim:{value:C(look.rim)},shine:{value:C(look.shine)},
       ctr:{value:new THREE.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2)},rad:{value:size/2}}}));
-  // drawn after the sets, which are translucent while a trajectory is shown, so that they do not tint the threads
-  m.material.transparent=true;m.renderOrder=5;
   m.position.z=cur.zOff;m.frustumCulled=false;m.userData.n=n-1;
   group.add(m);
 }
@@ -4685,8 +4687,8 @@ function ptsToDots(arr,group,color,exit){
   pg.setAttribute('position',new THREE.BufferAttribute(new Float32Array(arr),3));
   const dots=new THREE.Points(pg,new THREE.ShaderMaterial({vertexShader:DOT_VS,fragmentShader:DOT_FS,transparent:true,
     uniforms:{px:dotPx,col:{value:new THREE.Vector3(k.r,k.g,k.b)}}}));
-  // drawn after the sets, which are translucent while an orbit is shown
-  line.renderOrder=4;dots.renderOrder=5;
+  // drawn before the sets, which are glass while an orbit is shown
+  line.renderOrder=0.4;dots.renderOrder=0.5;
   [line,dots].forEach(m=>{m.position.z=cur.zOff;m.frustumCulled=false;m.userData.np=np;group.add(m);});
   line.userData.more=exit?1:0;
 }
@@ -4802,6 +4804,9 @@ function build(safeGeom,asymGeom,cfg){
   mAsym.material.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>',
     '#include <project_vertex>\n\tvec4 pcFront=projectionMatrix*vec4(mvPosition.xyz+vec3(0.0,0.0,ASYM_FRONT),1.0);\n\tgl_Position.z=pcFront.z/pcFront.w*gl_Position.w;'.replace('ASYM_FRONT',ASYM_FRONT.toFixed(3)));};
   mAsym.position.z=zOff;layers.asym.add(mAsym);
+  [[mSafe,layers.safe],[mAsym,layers.asym]].forEach(([mesh,grp])=>{
+    const m=mesh.material.clone();m.clippingPlanes=cutPlanes;m.onBeforeCompile=mesh.material.onBeforeCompile;m.colorWrite=false;m.transparent=true;
+    const dm=new THREE.Mesh(mesh.geometry,m);dm.position.copy(mesh.position);dm.renderOrder=3;dm.visible=false;dm.userData.depthOnly=true;grp.add(dm);});
 
   // fixed points C+ and C- (Lorenz)
   if(eq){
