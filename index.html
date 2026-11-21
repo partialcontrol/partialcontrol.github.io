@@ -4758,33 +4758,31 @@ function build(safeGeom,asymGeom,cfg){
   gp.position.set(cx,cy,zMin+zOff-5/sc);gp.receiveShadow=true;
   grpBase.add(gp);ground=gp;groundZ=(zMin+zOff)*sc-5;
 
-  // safe set: keep only the largest connected component (removes small islands)
+  // Safe set: keep only its largest piece (removes the small islands). Two triangles belong to the same piece when
+  // they share a point of space. The files repeat many vertices, the same point under several numbers, so the points
+  // are matched by position first: going by the numbers would break the surface into thousands of pieces and leave holes.
   let safeFaces=sf;
   (function(){
-    const nV=sv.length/3,nF=sf.length/3;
-    const adj=new Array(nV);
-    for(let i=0;i<nV;i++)adj[i]=[];
-    for(let i=0;i<nF;i++){const a=sf[i*3],b=sf[i*3+1],c=sf[i*3+2];adj[a].push(b,c);adj[b].push(a,c);adj[c].push(a,b);}
-    const comp=new Int32Array(nV).fill(-1);
-    let compId=0;const compSize=[];
-    for(let s=0;s<nV;s++){
-      if(comp[s]>=0)continue;
-      const stack=[s];let count=0;
-      while(stack.length){
-        const v=stack.pop();
-        if(comp[v]>=0)continue;
-        comp[v]=compId;count++;
-        const nb=adj[v];
-        for(let j=0;j<nb.length;j++)if(comp[nb[j]]<0)stack.push(nb[j]);
-      }
-      compSize.push(count);compId++;
+    const nV=sv.length/3,nF=sf.length/3,bits=new Int32Array(sv.buffer,sv.byteOffset,sv.length);
+    let size=1;while(size<2*nV)size<<=1;
+    const table=new Int32Array(size).fill(-1),pt=new Int32Array(nV);   // pt[i]: the first vertex found at the position of vertex i
+    for(let i=0;i<nV;i++){
+      const x=bits[3*i],y=bits[3*i+1],z=bits[3*i+2];
+      let h=(Math.imul(x,73856093)^Math.imul(y,19349663)^Math.imul(z,83492791))&(size-1);
+      for(;;){const j=table[h];
+        if(j<0){table[h]=i;pt[i]=i;break;}
+        if(bits[3*j]===x&&bits[3*j+1]===y&&bits[3*j+2]===z){pt[i]=j;break;}
+        h=(h+1)&(size-1);}
     }
-    let maxComp=0,maxSize=0;
-    for(let i=0;i<compSize.length;i++)if(compSize[i]>maxSize){maxSize=compSize[i];maxComp=i;}
-    const newF=[];
-    for(let i=0;i<nF;i++){const a=sf[i*3],b=sf[i*3+1],c=sf[i*3+2];
-      if(comp[a]===maxComp&&comp[b]===maxComp&&comp[c]===maxComp)newF.push(a,b,c);}
-    safeFaces=new Uint32Array(newF);
+    const par=new Int32Array(nV);for(let i=0;i<nV;i++)par[i]=i;
+    const find=v=>{while(par[v]!==v){par[v]=par[par[v]];v=par[v];}return v;};
+    for(let i=0;i<nF;i++){const a=find(pt[sf[3*i]]),b=find(pt[sf[3*i+1]]),c=find(pt[sf[3*i+2]]);par[b]=a;par[find(c)]=a;}
+    const count=new Int32Array(nV);let best=-1,most=0;
+    for(let i=0;i<nF;i++){const r=find(pt[sf[3*i]]);if(++count[r]>most){most=count[r];best=r;}}
+    if(most===nF)return;
+    const kept=new Uint32Array(3*most);let k=0;
+    for(let i=0;i<nF;i++)if(find(pt[sf[3*i]])===best){kept[k++]=sf[3*i];kept[k++]=sf[3*i+1];kept[k++]=sf[3*i+2];}
+    safeFaces=kept;
   })();
   // frame the safe set: on first load and when the system changes; a change of parameters keeps the current view
   fitArgs=[sv,safeFaces,zOff,cfg.camAz,cfg.camEl,cx,cy,sc];
