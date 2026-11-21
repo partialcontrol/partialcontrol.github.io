@@ -66,8 +66,6 @@ main{flex:1;min-height:0;position:relative}
 .canvas-wrap{flex:1;position:relative;background:#fff;border-radius:10px;border:1px solid var(--line);overflow:hidden;min-height:0}
 .canvas-wrap canvas{position:absolute;top:0;left:0;width:100%;height:100%;display:block}
 .section{padding:9px 11px 10px;background:#fff;border:1px solid var(--line);border-radius:10px}
-.section-xi{background:var(--xi-soft);border-color:var(--xi-line)}
-.section-u{background:var(--u-soft);border-color:var(--u-line)}
 .sec-title{display:block;font-size:15px;font-weight:700;margin-bottom:6px}
 .lbl{display:block;font-size:14px;font-weight:600;color:var(--ink2);margin-bottom:3px}
 .mb{margin-bottom:9px}
@@ -110,11 +108,8 @@ input[type=range]:disabled{opacity:.35}
 .seg{display:flex;padding:3px;gap:2px;background:var(--bg);border-radius:10px}
 .seg button{flex:1;height:32px;padding:0 10px;border:0;border-radius:7px;background:transparent;font-size:15px;font-weight:600;color:var(--ink2);white-space:nowrap}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line2),0 1px 2px rgba(28,36,48,.06)}
-.vrow{display:flex;align-items:center;gap:7px;margin-bottom:2px}
 .vlbl{flex:none;font-size:15px;font-weight:600;white-space:nowrap}
 .vlbl.xi{color:var(--xi)}.vlbl.u{color:var(--u)}
-.vrow input[type=text]{flex:1}
-.vrow input.xi{color:var(--xi)}.vrow input.u{color:var(--u)}
 .mob-header{display:none}
 .info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink3);color:var(--ink3);
   font:italic 700 12px Georgia,serif;margin-left:4px;flex:none;position:relative;cursor:default}
@@ -125,10 +120,9 @@ input[type=range]:disabled{opacity:.35}
 /* ---------- 1D ---------- */
 #v1d .center{flex:1;display:flex;flex-direction:column;padding:10px;gap:6px;min-width:0;overflow:hidden;order:2;position:relative}
 #v1d .mob-scroll{display:contents}
-#v1d .side-l{width:296px;min-width:296px;border-right:1px solid var(--line);order:1}
+#v1d .side-l{width:268px;min-width:268px;border-right:1px solid var(--line);order:1}
 #v1d .side-r{width:268px;min-width:268px;border-left:1px solid var(--line);order:3}
 /* large screen: the map and the bounds on the left, the views and their options on the right (layout1d) */
-#v1d.split .side-l{width:268px;min-width:268px}
 #v1d.split .side-r{width:296px;min-width:296px}
 /* Reset and Export sit at the foot of the right panel, so they stay put when the view changes */
 #v1d.split .side-r .mob-body{display:flex;flex-direction:column;min-height:100%;box-sizing:border-box}
@@ -153,7 +147,6 @@ input[type=range]:disabled{opacity:.35}
 #v1d .q-pair::after,#v1d .q-pair-m::after{content:'';position:absolute;bottom:-7px;left:25%;right:25%;height:5px;border:1.5px solid var(--ink2);border-top:none;border-radius:0 0 5px 5px}
 #v1d .q-pair input,#v1d .q-pair-m input{flex:1;min-width:0}
 #v1d .ratio-row{display:flex;align-items:center;gap:8px}
-#v1d .ratio-row .frac{font-size:15px;flex:none}
 #v1d .ratio-row input{width:70px;flex:none;border-width:2px}
 #v1d .x0row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
 #v1d .x0row .vlbl{font-weight:400}
@@ -181,7 +174,7 @@ input[type=range]:disabled{opacity:.35}
 /* ---------- 2D ---------- */
 #v2d .center{flex:1;display:flex;flex-direction:column;padding:10px;gap:5px;min-width:0;overflow:hidden;order:2;position:relative}
 #v2d .mob-scroll{display:contents}
-#v2d .side-l{width:304px;min-width:304px;border-right:1px solid var(--line);order:1;display:flex;flex-direction:column;gap:9px}
+#v2d .side-l{width:268px;min-width:268px;border-right:1px solid var(--line);order:1;display:flex;flex-direction:column;gap:9px}
 #v2d .canvas-wrap canvas{touch-action:none}
 #v2d .plot-title{position:absolute;top:0;left:0;right:0;display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 22px;padding:8px 14px 0 14px;
   font-size:16px;pointer-events:none}
@@ -200,11 +193,12 @@ input[type=range]:disabled{opacity:.35}
 #v2d .grid-sec{order:2}
 #v2d .param-2{display:flex;gap:14px}
 #v2d .param-2 .param-row{flex:1;min-width:0;margin:0}
-#v2d .param-row{margin-bottom:5px}
-#v2d .param-row:last-child{margin-bottom:0}
-#v2d .mob-param-label{display:flex;align-items:center;gap:6px;font-size:15px;min-height:26px}
+#v2d .param-row,#v1d .dc .param-row{margin-bottom:5px}
+#v2d .param-row:last-child,#v1d .dc .param-row:last-child{margin-bottom:0}
+#v2d .mob-param-label,#v1d .mob-param-label{display:flex;align-items:center;gap:6px;font-size:15px;min-height:26px}
 #v2d .mob-param-label .val{font-variant-numeric:tabular-nums}
-#v2d .mob-param-label input[type=text]{width:84px;flex:none;padding:3px 7px}
+#v2d .mob-param-label input[type=text],#v1d .mob-param-label input[type=text]{width:84px;flex:none;padding:3px 7px}
+#v1d .dc .ratio-row{margin-top:6px}
 #v2d .ratio-row{display:flex;align-items:center;gap:8px;margin-top:6px}
 #v2d .ratio-row input{width:70px;flex:none;border-width:2px}
 #v2d .orow{display:flex;align-items:center;gap:5px;margin-bottom:7px}
@@ -216,8 +210,7 @@ input[type=range]:disabled{opacity:.35}
 #v2d .mob-orbit-row .btn{flex:1;padding:7px 6px;white-space:nowrap}
 #v2d .grow{display:flex;align-items:center;gap:6px;margin-bottom:7px}
 #v2d .grow .sec-title{margin:0 2px 0 0}
-#v2d .grow select{width:auto;flex:1}
-#v2d .grow .btn{width:auto;padding:5px 9px;font-size:14px}
+#v2d .grow .btn{width:auto;flex:1;padding:5px 4px;font-size:14px}
 
 /* ---------- 3D ---------- */
 #v3d{background:var(--bg)}
@@ -226,12 +219,18 @@ input[type=range]:disabled{opacity:.35}
 #t3-viewport{position:absolute;inset:0;touch-action:none}
 #t3-viewport canvas{display:block}
 #t3-noise{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.04}
-#t3-panel{position:absolute;top:12px;left:12px;width:284px;z-index:10;padding:12px 14px 13px;border-radius:14px;
+#v1d .plot-ctl{bottom:calc(17% + 6px)}   /* above the band of the safe set */
+#t3-panel{position:absolute;top:8px;left:8px;width:260px;z-index:10;padding:12px 11px 13px;border-radius:14px;
   background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 1px var(--line),0 8px 28px rgba(28,36,48,.10)}
 .t3-sel{display:flex;gap:8px;margin-top:10px}
 .t3-sel label{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);white-space:nowrap}
 .t3-sel label:last-child{flex:1;min-width:0}
 .t3-sel select{width:auto;flex:1;min-width:0;padding:4px 2px 4px 5px}
+#t3-panel .t3-sel{gap:6px}
+#t3-panel .t3-sel label{gap:5px}
+#t3-panel .t3-sel select{font-size:13.5px;padding:4px 0 4px 2px}
+#t3-panel .t3-sel label:first-child select{flex:none;width:45px}
+#t3-panel .t3-sel label{font-size:14px}
 .t3-layers{display:flex;flex-direction:column;gap:5px;margin-top:11px}
 .lay{display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#fff;
   font-size:15px;font-weight:600;color:var(--ink3);text-align:left;white-space:nowrap}
@@ -349,10 +348,6 @@ input[type=range]:disabled{opacity:.35}
     min-height:42px;display:flex;align-items:center;justify-content:center}
   #v1d .modes .btn:last-child{border-right:0}
   #v1d .mob-hide-q{display:none!important}
-  #v1d .desk-stack{display:flex;gap:7px}
-  #v1d .desk-stack>*{flex:1;min-width:0}
-  #v1d .vrow{flex-wrap:wrap;gap:2px 5px}
-  #v1d .vlbl .w{display:none}
   #v1d .mob-2col{display:flex;gap:8px}
   #v1d .mob-2col>*{flex:1;min-width:0}
   #v1d .mob-q-inline{display:flex!important;gap:4px;align-items:flex-start;flex:1;min-width:0;padding-bottom:6px}
@@ -381,8 +376,10 @@ input[type=range]:disabled{opacity:.35}
   #v2d .q-edit{font-size:12px;width:38px}
   #v2d .statusline{font-size:12.5px;height:17px;line-height:17px}
   #v2d .sec-title{font-size:14px;margin-bottom:3px}
-  #v2d .mob-param-label{min-height:24px}
-  #v2d .mob-param-label input[type=text]{width:64px}
+  #v2d .mob-param-label,#v1d .mob-param-label{min-height:24px}
+  #v1d .dc-rows{display:flex;gap:12px}
+  #v1d .dc-rows .param-row{flex:1;min-width:0;margin:0}
+  #v2d .mob-param-label input[type=text],#v1d .mob-param-label input[type=text]{width:64px}
   #v2d .ratio-row{gap:5px;margin-top:2px;flex-wrap:wrap}
   #v2d .ratio-row input{flex:1;width:auto;min-width:0}
   #v2d .lock-btn{flex:1 0 100%;padding:5px 6px;font-size:13px}
@@ -395,7 +392,6 @@ input[type=range]:disabled{opacity:.35}
   #v2d .btn .dot{margin-right:4px;width:9px;height:9px}
   #v2d .grow{gap:4px;flex-wrap:wrap;margin-bottom:5px}
   #v2d .grow .sec-title{flex-basis:100%;margin:0}
-  #v2d .grow select{min-width:62px;padding:5px 2px 5px 6px}
   #v2d .grow .btn{padding:5px 5px;font-size:13px}
 
   #t3-viewer{--t3p:max(34%,240px)}
@@ -544,7 +540,8 @@ body.guide-push #guide{box-shadow:none}
 <section id="v1d" class="view" aria-label="One-dimensional maps">
   <div id="d1-centerArea" class="center">
     <div id="d1-normalView" class="nv">
-      <div id="d1-mainWrap" class="canvas-wrap"><canvas id="d1-mainCanvas"></canvas></div>
+      <div id="d1-mainWrap" class="canvas-wrap"><canvas id="d1-mainCanvas"></canvas>
+        <div id="d1-uCtl" class="plot-ctl" hidden><button id="d1-logBtn" class="btn">Log view</button></div></div>
     </div>
     <div id="d1-tsView" class="tsv" style="display:none">
       <div id="d1-tsPhaseWrap" class="canvas-wrap" style="grid-row:1;grid-column:1"><canvas id="d1-tsPhaseCanvas"></canvas></div>
@@ -573,22 +570,25 @@ body.guide-push #guide{box-shadow:none}
               <div class="prow"><input id="d1-paramBmin" type="text" value="-5" aria-label="B minimum"><input id="d1-paramBslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter B"><input id="d1-paramBmax" type="text" value="5" aria-label="B maximum"></div></div>
           </div>
         </div>
-        <div id="d1-dcSection" class="desk-stack">
-          <div class="section section-xi mb">
-            <div class="vrow"><span class="vlbl xi"><span class="w">Disturbance </span><span data-tex="\xi_0">ξ₀</span> =</span><input id="d1-distInput" class="xi" type="text" aria-label="Disturbance bound"></div>
-            <span id="d1-distVal" hidden>0</span>
-            <input id="d1-distSlider" type="range" class="sl-xi" min="0" max="0.1" step="0.0001" value="0.02" aria-label="Disturbance bound">
+        <div id="d1-dcSection" class="section mb dc">
+          <span class="sec-title">Disturbance and control</span>
+          <div class="dc-rows">
+            <div class="param-row">
+              <div class="mob-param-label"><span class="vlbl xi"><span data-tex="\xi_0">ξ₀</span> =</span><input id="d1-distInput" class="xi" type="text" aria-label="Disturbance bound"></div>
+              <span id="d1-distVal" hidden>0</span>
+              <input id="d1-distSlider" type="range" class="sl-xi" min="0" max="0.1" step="0.0001" value="0.02" aria-label="Disturbance bound">
+            </div>
+            <div class="param-row">
+              <div class="mob-param-label"><span class="vlbl u"><span data-tex="u_0">u₀</span> =</span><input id="d1-ctrlInput" class="u" type="text" aria-label="Control bound"></div>
+              <span id="d1-ctrlVal" hidden>0</span>
+              <input id="d1-ctrlSlider" type="range" class="sl-u" min="0" max="0.1" step="0.0001" value="0.015" aria-label="Control bound">
+            </div>
           </div>
-          <div class="section section-u mb">
-            <div class="vrow"><span class="vlbl u"><span class="w">Control </span><span data-tex="u_0">u₀</span> =</span><input id="d1-ctrlInput" class="u" type="text" aria-label="Control bound"></div>
-            <span id="d1-ctrlVal" hidden>0</span>
-            <input id="d1-ctrlSlider" type="range" class="sl-u" min="0" max="0.1" step="0.0001" value="0.015" aria-label="Control bound">
+          <div class="ratio-row">
+            <span data-tex="u_0/\xi_0=">u₀/ξ₀ =</span>
+            <input id="d1-rateInput" type="text" value="0.75" aria-label="Ratio u0 over xi0">
+            <button id="d1-lockBtn" class="lock-btn" title="Keep the ratio fixed while moving the sliders">Lock ratio</button>
           </div>
-        </div>
-        <div id="d1-ratioRow" class="ratio-row mb">
-          <span class="frac" data-tex="\dfrac{u_0}{\xi_0}=">u₀/ξ₀ =</span>
-          <input id="d1-rateInput" type="text" value="0.75" aria-label="Ratio u0 over xi0">
-          <button id="d1-lockBtn" class="lock-btn" title="Keep the ratio fixed while moving the sliders">Lock ratio</button>
         </div>
         <div id="d1-eqSection" class="section mb">
           <span class="sec-title">Map definition</span>
@@ -743,13 +743,9 @@ body.guide-push #guide{box-shadow:none}
           <div class="section grid-sec">
             <div class="grow">
               <span class="sec-title">Grid</span>
-              <select id="d2-gridN" aria-label="Grid size">
-                <option value="401">401</option>
-                <option value="601" selected>601</option>
-                <option value="801">801</option>
-                <option value="1001">1001</option>
-                <option value="1201">1201</option>
-              </select>
+              <input type="hidden" id="d2-gridN" value="601">
+              <button id="d2-grid601Btn" class="btn">601</button>
+              <button id="d2-grid1201Btn" class="btn">1201</button>
               <button id="d2-hires1Btn" class="btn">1601</button>
               <button id="d2-hires2Btn" class="btn">2001</button>
             </div>
@@ -1555,7 +1551,7 @@ $("numIter").value=S.numIter;$("paramAval").textContent=sig(S.paramA,3);$("param
 const ms={safeset:"btnSafe",iterations:"btnIter",controlled_activate:"btnCheck",controlled_iterates:"btnCtrlIter"};
 const cs={safeset:"btn-blue",iterations:"btn-unctrl",controlled_activate:"btn-blue",controlled_iterates:"btn-ctrl"};
 for(const[m,id]of Object.entries(ms))$(id).className="btn "+(S.mode===m?cs[m]:"btn-inactive");
-$("viewSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",(x.dataset.view==="U")===(S.mode==="safety")));
+$("viewSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",(x.dataset.view==="U")===(S.mode==="safety")));$("uCtl").hidden=S.mode!=="safety";$("logBtn").textContent=S.uLog?"Linear view":"Log view";
 $("parSection").style.opacity=S.eqEnabled?1:.3;$("iterSection").style.display=(S.mode==="safeset"||(S.mode==="safety"&&!PC.isMobile()))?"none":"block";
 $("x0Wrap").style.display=(S.mode==="safeset"||S.mode==="safety")?"none":"flex";
 $("numIterWrap").style.display=S.mode==="controlled_iterates"?"flex":"none";
@@ -2125,16 +2121,24 @@ function drawSafety(){
   const tx=x=>P.l+((x-a)/(b-a))*pw;
   const bt=P.t+.85*ph,bb=P.t+.997*ph;                              // safe set band: same pixels as the other views
   const y0=bt-(big?16:9),y1=P.t+(big?18:10);                       // U axis: 0 at y0, ymax at y1
-  const ymax=Math.max(3*S.dist,1.6*S.ctrl,(xx-xn)/200);
-  const ty=v=>y0-(v/ymax)*(y0-y1);
-  const r=getU();
+  const r=getU(),LOG=!!S.uLog;
+  // Linear view: from 0 to a few times the bounds, where the safe sets live. Log view: the whole function, from
+  // below its smallest value to its largest, so the deep narrow valleys and the high parts are seen together.
+  let ymax=Math.max(3*S.dist,1.6*S.ctrl,(xx-xn)/200),lo=ymax/1000;
+  if(LOG){let mn=Infinity,mx=0;
+    if(r)for(let i=0;i<r.n;i++){const v=r.Uc[i];if(v>=r.INF)continue;if(v>mx)mx=v;if(v>0&&v<mn)mn=v;}
+    const g=r?r.gx:ymax/1000;
+    lo=Math.max(g/2,Math.min(mn===Infinity?ymax:mn*g,S.ctrl>0?S.ctrl:ymax,S.dist>0?S.dist:ymax)/2);ymax=Math.max(ymax,mx*g*1.25,lo*10);}
+  const ty=LOG?v=>y0-Math.log((v>lo?v:lo)/lo)/Math.log(ymax/lo)*(y0-y1):v=>y0-(v/ymax)*(y0-y1);
 
   // horizontal grid and U ticks
-  const step=niceStep(ymax/4.2);
   ctx.font=(big?14:11)+"px "+MF;ctx.textAlign="right";ctx.textBaseline="middle";
-  for(let k=0;k*step<=ymax*1.0001;k++){const v=k*step,y=ty(v);
-    ctx.strokeStyle=k===0?"#aaa":"#edf0f4";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();
-    ctx.fillStyle="#566172";ctx.fillText(mns(sig(v,3)),P.l-6,y);}
+  const tick=(v,base)=>{const y=ty(v);
+    ctx.strokeStyle=base?"#aaa":"#edf0f4";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();
+    ctx.fillStyle="#566172";ctx.fillText(mns(sig(v,3)),P.l-6,y);};
+  if(LOG){const dec=Math.log10(ymax/lo),ms=dec>2.4?[1]:dec>1.1?[1,3]:[1,2,5];
+    for(let d=Math.floor(Math.log10(lo));d<=Math.ceil(Math.log10(ymax));d++)for(const k of ms){const v=k*Math.pow(10,d);if(v>=lo*0.999&&v<=ymax*1.001)tick(v,false);}}
+  else{const step=niceStep(ymax/4.2);for(let k=0;k*step<=ymax*1.0001;k++)tick(k*step,k===0);}
   ctx.textAlign="left";ctx.textBaseline="alphabetic";
 
   let thr=-1,flooded=false;
@@ -2209,9 +2213,9 @@ const L1={k:""};
 // and the ways of exploring it on the right. With the guide open on a narrow window only the left panel is shown, so
 // the modes move into it and the rarely used blocks stay in the hidden one. On a phone the map and the modes come first.
 const L1_ORDER={
-  wide:[["mapSelect","viewSeg","parSection","dcSection","ratioRow","eqSection","qSection"],["modes","iterSection","fsafeWrap","acts"]],
-  narrow:[["mapSelect","viewSeg","modes","iterSection","fsafeWrap","parSection","dcSection","ratioRow"],["eqSection","qSection","acts"]],
-  phone:[["mapSelect","viewSeg","modes","dcSection","ratioRow","iterSection","fsafeWrap"],["parSection","eqSection","qSection","acts"]]};
+  wide:[["mapSelect","viewSeg","parSection","dcSection","eqSection","qSection"],["modes","iterSection","fsafeWrap","acts"]],
+  narrow:[["mapSelect","viewSeg","modes","iterSection","fsafeWrap","parSection","dcSection"],["eqSection","qSection","acts"]],
+  phone:[["mapSelect","viewSeg","modes","dcSection","iterSection","fsafeWrap"],["parSection","eqSection","qSection","acts"]]};
 function layout1d(){
   const cl=document.body.classList,k=PC.isMobile()?"phone":cl.contains("guide-push")&&!cl.contains("guide-wide")?"narrow":"wide";
   if(k===L1.k)return;
@@ -2224,6 +2228,7 @@ $("viewSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(
   if(U===(S.mode==="safety"))return;
   if(U){_mode1d=S.mode;S.mode="safety";}else S.mode=_mode1d;
   S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
+$("logBtn").addEventListener("click",()=>{S.uLog=!S.uLog;syncUI();redraw();});
 
 // ---------------------------------------------------------------------------
 //  Guide
@@ -3051,23 +3056,21 @@ function computeChaoticSaddle(){
   // Generate SST trajectory
   let px=ip.px,py=ip.py,qx=ip.qx,qy=ip.qy;
   const saddle=new Float64Array(nSteps*2);
-  let count=0;
+  let count=0,skip=0,starts=0;const target=S.mapName==="ikeda"?6000:0;
 
   for(let n=0;n<nSteps;n++){
-    saddle[n*2]=0.5*(px+qx);
-    saddle[n*2+1]=0.5*(py+qy);
-    count++;
+    if(skip>0)skip--;else{saddle[count*2]=0.5*(px+qx);saddle[count*2+1]=0.5*(py+qy);count++;}
+    if(target&&count>=target)break;
 
     const hp=hmap(px,py),hq=hmap(qx,qy);
     px=hp[0];py=hp[1];qx=hq[0];qy=hq[1];
 
     if(norm2(px,py,qx,qy)>delta){
       const r=refinePair(px,py,qx,qy);
-      if(!r.ok){
-        $("statusBar").textContent=`Chaotic saddle: ${count} pts (refinement failed at step ${n})`;
-        break;
-      }
-      px=r.px;py=r.py;qx=r.qx;qy=r.qy;
+      let nr=r;
+      while(!nr.ok&&count<target&&starts<600){starts++;const t=(starts*0.6180339887)%1,yl=qyi+(qyf-qyi)*(0.03+0.94*t);nr=refinePair(qxi,yl,qxf,yl);skip=12;}
+      if(!nr.ok)break;
+      px=nr.px;py=nr.py;qx=nr.qx;qy=nr.qy;
     }
   }
 
@@ -3155,7 +3158,6 @@ $("ctrlInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v
 $("lockBtn").addEventListener("click",()=>{S.rateLocked=!S.rateLocked;if(S.rateLocked)S._lockedRate=S.rate;syncUI();});
 $("rateInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v){S.rate=v;if(S.rateLocked)S._lockedRate=v;S.ctrl=S.dist*v;syncUI();scheduleCompute();}});
 $("gridN").addEventListener("change",e=>{S.N=+e.target.value;
-  $("gridN").style.background="#2f62b0";$("gridN").style.color="#fff";
   $("hires1Btn").style.background="#fff";$("hires1Btn").style.color="#1c2430";
   $("hires2Btn").style.background="#fff";$("hires2Btn").style.color="#1c2430";
   if(S.N>=1001){computeHires(S.N,null);}
@@ -3170,7 +3172,6 @@ async function computeHires(N,btn){
     $("hires1Btn").style.background="#fff";$("hires1Btn").style.color="#1c2430";
     $("hires2Btn").style.background="#fff";$("hires2Btn").style.color="#1c2430";
     btn.style.background="#2f62b0";btn.style.color="#fff";
-    $("gridN").style.background="";$("gridN").style.color="";
   }
   $("stopBtn").style.background="linear-gradient(to right,#c3d5f0 0%,#fff 0%)";
 
@@ -3260,13 +3261,13 @@ function updateHiresBtn(){
   const dn=S._drawN;
   const gn=+$("gridN").value;
   const isDropdown=(dn===gn&&dn!==1601&&dn!==2001);
-  $("gridN").style.background=isDropdown?"#2f62b0":"";
-  $("gridN").style.color=isDropdown?"#fff":"";
+  [[601,"grid601Btn"],[1201,"grid1201Btn"]].forEach(([n,id])=>{const on=isDropdown&&dn===n;$(id).style.background=on?"#2f62b0":"#fff";$(id).style.color=on?"#fff":"#333";});
   if(dn===1601){$("hires1Btn").style.background="#2f62b0";$("hires1Btn").style.color="#fff";}
   else{$("hires1Btn").style.background="#fff";$("hires1Btn").style.color="#1c2430";}
   if(dn===2001){$("hires2Btn").style.background="#2f62b0";$("hires2Btn").style.color="#fff";}
   else{$("hires2Btn").style.background="#fff";$("hires2Btn").style.color="#1c2430";}
 }
+[[601,"grid601Btn"],[1201,"grid1201Btn"]].forEach(([n,id])=>$(id).addEventListener("click",()=>{$("gridN").value=n;$("gridN").dispatchEvent(new Event("change"));}));
 $("hires1Btn").addEventListener("click",()=>computeHires(1601,$("hires1Btn")));
 $("hires2Btn").addEventListener("click",()=>computeHires(2001,$("hires2Btn")));
 $("numIter").addEventListener("change",()=>{
@@ -4300,7 +4301,7 @@ const MAP_CONFIG = {
 
 // The Hénon 3D map has no stored trajectories. Its orbits are computed here, the controlled one with the
 // safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
-MAP_CONFIG.mccann.axes=['R','C','P'];
+MAP_CONFIG.mccann.axes=['R','C','P'];MAP_CONFIG.mccann.startSmall=true;   // opens with its smallest disturbance, the finest set
 for(const k in MAP_CONFIG)MAP_CONFIG[k].camAz+=Math.PI/3;   // the first view, turned 60 degrees: the sets show their open side
 Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
   step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
@@ -4326,7 +4327,7 @@ function fillXU(mapKey){
   sel.innerHTML='';
   opts.forEach(o=>{const opt=document.createElement('option');opt.value=o.value;opt.textContent=o.label;sel.appendChild(opt);});
   // keep the pair in use; if it is not offered at this interval, take the smallest one that is
-  sel.value=!prev?opts[0].value:opts.some(o=>o.value===prev)?prev:opts[opts.length-1].value;
+  sel.value=!prev?(cfg.startSmall?opts[opts.length-1]:opts[0]).value:opts.some(o=>o.value===prev)?prev:opts[opts.length-1].value;
 }
 function populate(mapKey){
   const cfg=MAP_CONFIG[mapKey],selDt=$('selDt');
