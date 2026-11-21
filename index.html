@@ -219,7 +219,8 @@ input[type=range]:disabled{opacity:.35}
 #t3-viewport{position:absolute;inset:0;touch-action:none}
 #t3-viewport canvas{display:block}
 #t3-noise{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.04}
-#v1d .plot-ctl{bottom:calc(17% + 6px)}   /* above the band of the safe set */
+#v1d .plot-ctl{top:27px;right:10px;bottom:auto}   /* in the free corner under the readout of u0 */
+#v1d .plot-ctl .btn{padding:2px 9px;font-size:13px;box-shadow:none}
 #t3-panel{position:absolute;top:8px;left:8px;width:260px;z-index:10;padding:12px 11px 13px;border-radius:14px;
   background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 1px var(--line),0 8px 28px rgba(28,36,48,.10)}
 .t3-sel{display:flex;gap:8px;margin-top:10px}
@@ -499,6 +500,8 @@ body.guide-push #guide{box-shadow:none}
 
 @media(max-width:820px){
   .plot-ctl{right:8px;bottom:8px;gap:5px}
+  #v1d .plot-ctl{top:17px;right:5px;bottom:auto}
+  #v1d .plot-ctl .btn{padding:1px 7px;font-size:11.5px}
   .plot-ctl .btn{padding:5px 10px;font-size:13px}
   #d2-zoomCtl{right:12px;bottom:42px}
   #t3-ctl{bottom:calc(var(--t3p) + 8px)}
@@ -2200,8 +2203,8 @@ function drawSafety(){
   ctx.fillStyle="#c0392b";mt(ctx,ro.x,r1y,ro.vfs,["r:|","i:\u03BE","s:n","r:| \u2264 ","i:\u03BE","S:0","r: = "+sig(S.dist,3)]);
   ctx.fillStyle="#2471a3";mt(ctx,ro.x2,r1y,ro.vfs,["r:|","i:u","s:n","r:| \u2264 ","i:u","S:0","r: = "+sig(S.ctrl,3)]);
   if(r&&isFinite(r.umin)){
-    ctx.fillStyle="#333";mt(ctx,ro.x,r2y,ro.vfs,["r:min ","i:U","r: = "+sig(r.umin,3)]);
-    if(thr<r.cmin){ctx.fillStyle="#c0392b";mt(ctx,ro.x2,r2y,ro.vfs,["i:u","S:0","r: < min ","i:U"]);}
+    // the place to its right, under the readout of u0, is for the Log view button
+    const none=thr<r.cmin;ctx.fillStyle=none?"#c0392b":"#333";mt(ctx,ro.x,r2y,ro.vfs,["r:min ","i:U","r: = "+sig(r.umin,3)].concat(none?["r: > ","i:u","S:0"]:[]));
   }else{ctx.fillStyle="#c0392b";ctx.font="bold "+(big?18:14)+"px 'Source Sans 3',sans-serif";ctx.fillText("Region Q is empty",w*.35,h*.5);}
 }
 
