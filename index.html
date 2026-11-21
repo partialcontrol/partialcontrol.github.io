@@ -276,6 +276,12 @@ input[type=range]:disabled{opacity:.35}
 .p3-bar label{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);white-space:nowrap}
 .p3-bar select{width:88px}
 .p3-bar #p3-map{width:250px;margin-right:6px}
+.p3-bar .p3-view{flex:none;background:var(--bg)}
+.p3-bar .p3-view button{flex:none}
+#v2d #p3-root .surf{display:none}
+#v2d #p3-root.u-view .surf{display:block}
+#p3-root.u-view #p3-c1,#p3-root.u-view #p3-o1{visibility:hidden}
+#p3-root .surf .plot-ctl{top:8px;left:8px;right:auto;bottom:auto}   /* here the plot reaches the foot of the panel */
 .p3-bar input[type=number]{width:84px}
 .p3-bar .btn{width:auto;padding:7px 18px}
 .p3-prog{flex:1;min-width:150px;display:flex;align-items:center;gap:10px}
@@ -471,7 +477,8 @@ input[type=range]:disabled{opacity:.35}
 #v2d .surf-lab{position:absolute;inset:0;overflow:hidden;pointer-events:none}
 #v2d .surf-lab .sl{position:absolute;left:0;top:0;font:15px var(--math);color:var(--ink2);white-space:nowrap}
 #v2d .surf-lab .xn,#v2d .surf-lab .yn,#v2d .surf-lab .zn{font-size:19px;color:var(--ink)}
-#v2d .canvas-wrap .surf-bar{left:auto;right:10px;top:50%;transform:translateY(-56%);pointer-events:none;border-radius:8px;
+#v2d .surf canvas{touch-action:none}
+#v2d .surf .surf-bar{position:absolute;left:auto;right:10px;top:50%;transform:translateY(-56%);pointer-events:none;border-radius:8px;
   background:rgba(255,255,255,.92);box-shadow:0 0 0 1px var(--line)}
 #v2d .surf.top .surf-bar{right:22px}
 #v2d .surf-msg{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);max-width:82%;padding:8px 18px;border-radius:20px;
@@ -504,7 +511,7 @@ body.guide-push #guide{box-shadow:none}
   #t3-ctl{bottom:calc(var(--t3p) + 8px)}
   #v2d .surf-lab .sl{font-size:12.5px}
   #v2d .surf-lab .xn,#v2d .surf-lab .yn,#v2d .surf-lab .zn{font-size:15px}
-  #v2d .canvas-wrap .surf-bar{right:4px}
+  #v2d .surf .surf-bar{right:4px}
   #v2d .surf-msg{font-size:13.5px}
   .t3-note{display:none}
   .p3-main .ph .btn{padding:2px 8px;font-size:12.5px}
@@ -765,6 +772,7 @@ body.guide-push #guide{box-shadow:none}
         <option value="ikeda">Ikeda map</option>
         <option value="zaslavsky">Zaslavsky map</option>
       </select>
+      <div class="seg p3-view" id="p3-viewSeg" role="tablist" aria-label="View"><button data-view="S" class="on">Safe set</button><button data-view="U">Safety function</button></div>
       <label>Grid
         <select id="p3-gs" aria-label="Grid size">
           <option value="201">201</option><option value="301">301</option><option value="401">401</option>
@@ -778,7 +786,7 @@ body.guide-push #guide{box-shadow:none}
     </div>
     <div class="p3-main">
       <div class="pn">
-        <div class="ph"><span class="pt">Safe set on the Poincaré section <span class="nw" data-tex="z=19">z = 19</span></span><span class="pi" id="p3-si"></span></div>
+        <div class="ph"><span class="pt"><span id="p3-ttl">Safe set</span> on the Poincaré section <span class="nw" data-tex="z=19">z = 19</span></span><span class="pi" id="p3-si"></span><span class="pi" id="p3-ui" hidden></span></div>
         <div class="cw"><canvas id="p3-c1"></canvas><div class="ov" id="p3-o1">Press Compute</div></div>
       </div>
       <div class="pn">
@@ -3639,6 +3647,17 @@ function u2dSafety(Nx,Ny,imgX,imgY,inQ,dx,dy,xi0,corners,onProgress){
 // ---------------------------------------------------------------------------
 const SF={state:"idle",R:null,scene:null,cam:null,root:null,mesh:null,grid:null,plane:null,edge:null,
   data:null,box:null,tgt:null,az:-1.25,el:0.5,hh:60,asp:1,mode:"home",shape:"",raf:0,labels:[]};
+// What the surface shows comes from a source: the 2D maps or the Lorenz map on the Poincaré section. The element
+// moves to the view that uses it; only one of the two is on screen at a time.
+SF.src={on:()=>S.view==="U",data:()=>{const U=S.U;return U&&U.done&&U.key===uKey()?U:null;},plot:()=>S._plot,
+  u0:()=>S.ctrl,xi0:()=>S.dist,titleH:()=>$("plotTitle").offsetHeight};
+const SF_SRC2D=SF.src,SF_HOME={el:$("surf"),parent:$("surf").parentNode,next:$("surf").nextSibling};
+function sfUse(src,host,next){
+  if(SF.src!==src){SF.src=src;SF.data=null;SF.fitted=false;SF.shape="";}
+  const el=SF_HOME.el;if(el.parentNode!==host||(next&&el.nextSibling!==next))host.insertBefore(el,next||null);
+}
+function sfOwn2d(){sfUse(SF_SRC2D,SF_HOME.parent,SF_HOME.next);}
+PC.surf={use(src,host){sfUse(src,host);surfShow();},sync(){surfSync();},resize(){sfResize();},worker(){return uWorkerURL();}};
 const SF_ZH=46;                                         // height of the box; its longer side is 100
 const SF_D=1500;                                        // distance of the camera (parallel projection: it does not change the size)
 const SF_MAP=[[62,38,168],[72,82,244],[46,135,247],[18,177,214],[55,200,151],[171,199,57],[254,195,56],[250,220,42],[249,251,21]];
@@ -3674,7 +3693,7 @@ function sfResize(){
 }
 // The base takes the proportions of the Safe set plot. Returns true when the plot has changed.
 function sfShape(){
-  const p=S._plot;if(!p||!SF.box)return false;
+  const p=SF.src.plot();if(!p||!SF.box)return false;
   const key=[p.P.l,p.P.t,p.pw,p.ph,p.w,p.h].join();if(key===SF.shape)return false;
   SF.shape=key;const a=p.pw/p.ph,b=SF.box;b.hx=a>=1?50:50*a;b.hy=a>=1?50/a:50;
   SF.root.scale.set(b.hx/50,b.hy/50,1);return true;
@@ -3683,8 +3702,8 @@ function sfRefit(){if(!SF.box)return;if(SF.mode==="home")sfHome();else if(SF.mod
 function sfMode(m){if(m===SF.mode)return;SF.mode=m;$("surf").classList.toggle("top",m==="top");sfBar();}
 // keep the picture in step with the state: new data, a moved u0, or a computation in progress
 function surfSync(){
-  if(SF.state!=="ready"||S.view!=="U")return;
-  const U=S.U,cur=U&&U.done&&U.key===uKey();
+  if(SF.state!=="ready"||!SF.src.on())return;
+  const U=SF.src.data(),cur=!!U;
   if(cur&&SF.data!==U)sfBuild(U);
   if(sfShape())sfRefit();
   sfMsg(cur?"":SF.mesh?"Updating":"Computing the safety function");
@@ -3745,7 +3764,7 @@ function sfTicks(zlo,zhi){
 function sfFmt(v){return String(+v.toPrecision(2)).replace("-","−");}
 function sfPlane(){
   if(!SF.plane||!SF.box)return;
-  const z=S.ctrl>0?SF.Z(S.ctrl):-1e9,on=z>=-0.15*SF_ZH&&z<=SF_ZH;
+  const u0=SF.src.u0(),z=u0>0?SF.Z(u0):-1e9,on=z>=-0.15*SF_ZH&&z<=SF_ZH;
   SF.plane.visible=on;SF.plane.position.z=z;
 }
 
@@ -3765,7 +3784,7 @@ function sfLabels(){
   if(!SF.box||!SF.labels.length)return;
   const b=SF.box,cam=SF.cam,w=$("surfGl").clientWidth,h=$("surfGl").clientHeight,v=new THREE.Vector3();
   const scr=(x,y,z)=>{v.set(x,y,z).project(cam);return[(v.x+1)/2*w,(1-v.y)/2*h];};
-  const pl=S._plot,top=SF.mode==="top"&&pl,big=pl&&pl.w>560;
+  const pl=SF.src.plot(),top=SF.mode==="top"&&pl,big=pl&&pl.w>560;
   // x and y labels run along the edges of the base nearest to the viewer; the vertical axis sits on the corner seen leftmost
   const flat=SF.el>1.45,sy=flat||cam.position.y<SF.tgt.y?-1:1,sx=flat||cam.position.x<SF.tgt.x?-1:1;
   let zc=null,zx=Infinity;
@@ -3793,7 +3812,7 @@ function sfBar(){
   const cv=$("surfBar"),b=SF.box;if(!b||SF.state!=="ready"){cv.style.visibility="hidden";return;}
   cv.style.visibility="";
   // from above the bar goes to the corner, where the Safe set plot has its legend
-  const tp=SF.mode==="top"&&S._plot;cv.style.top=tp?(S._plot.P.t+8)+"px":"";cv.style.transform=tp?"none":"";
+  const pl=SF.src.plot(),tp=SF.mode==="top"&&pl;cv.style.top=tp?(pl.P.t+8)+"px":"";cv.style.transform=tp?"none":"";
   const big=!PC.isMobile(),W=big?96:74,H=big?216:147,dpr=Math.min(window.devicePixelRatio||1,2);
   if(cv.width!==W*dpr||cv.height!==H*dpr){cv.width=W*dpr;cv.height=H*dpr;cv.style.width=W+"px";cv.style.height=H+"px";}
   const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.clearRect(0,0,W,H);
@@ -3806,7 +3825,7 @@ function sfBar(){
   SF.ticks.forEach(v=>{const y=yOf(v);c.strokeStyle="#566172";c.lineWidth=1;c.beginPath();c.moveTo(bx-3,y);c.lineTo(bx,y);c.stroke();
     c.strokeStyle=halo;c.lineWidth=3;c.strokeText(sfFmt(v),bx-5,y);c.fillText(sfFmt(v),bx-5,y);});
   // marks of xi0 and u0; when they are close the two names are moved apart, each joined to its mark
-  const ms=[[S.dist,"#c0392b","ξ"],[S.ctrl,"#2471a3","u"]].filter(m=>m[0]>0).map(m=>({y:yOf(m[0]),c:m[1],s:m[2]})).filter(m=>m.y>=by-1&&m.y<=by+bh+1).sort((p,q)=>p.y-q.y);
+  const ms=[[SF.src.xi0(),"#c0392b","ξ"],[SF.src.u0(),"#2471a3","u"]].filter(m=>m[0]>0).map(m=>({y:yOf(m[0]),c:m[1],s:m[2]})).filter(m=>m.y>=by-1&&m.y<=by+bh+1).sort((p,q)=>p.y-q.y);
   const gap=fs+3;ms.forEach(m=>{m.ty=m.y;});
   if(ms.length===2&&ms[1].ty-ms[0].ty<gap){const mid=(ms[0].y+ms[1].y)/2;ms[0].ty=mid-gap/2;ms[1].ty=mid+gap/2;}
   ms.forEach(m=>{c.strokeStyle=m.c;c.lineWidth=2;c.beginPath();c.moveTo(bx-2,m.y);c.lineTo(bx+bw+2,m.y);c.lineTo(bx+bw+7,m.ty);c.stroke();
@@ -3822,15 +3841,15 @@ function sfCam(){
 }
 function sfDraw(){
   if(SF.state!=="ready"||SF.raf)return;
-  SF.raf=requestAnimationFrame(()=>{SF.raf=0;if(S.view!=="U")return;sfCam();SF.R.render(SF.scene,SF.cam);sfLabels();});
+  SF.raf=requestAnimationFrame(()=>{SF.raf=0;if(!SF.src.on())return;sfCam();SF.R.render(SF.scene,SF.cam);sfLabels();});
 }
 // Place the box for the current direction. From above, its base goes exactly on the axes of the Safe set plot.
 // Otherwise the box and its labels are centred in the free part of the picture (below the title, above the
 // buttons, left of the colour bar) and drawn as large as it allows.
 function sfFrame(top){
-  const b=SF.box||{hx:50,hy:50},pts=[],v=new THREE.Vector3(),cam=SF.cam,pl=S._plot;
+  const b=SF.box||{hx:50,hy:50},pts=[],v=new THREE.Vector3(),cam=SF.cam,pl=SF.src.plot();
   const w=$("surfGl").clientWidth||1,h=$("surfGl").clientHeight||1;
-  let x0=-0.97,x1=1-(PC.isMobile()?64:100)/w*2,y0=-1+50/h*2,y1=1-($("plotTitle").offsetHeight+8)/h*2;
+  let x0=-0.97,x1=1-(PC.isMobile()?64:100)/w*2,y0=-1+50/h*2,y1=1-(SF.src.titleH()+8)/h*2;
   if(top&&pl){
     for(const sx of[-1,1])for(const sy of[-1,1])pts.push([sx*b.hx,sy*b.hy,0]);
     x0=pl.P.l/w*2-1;x1=(pl.P.l+pl.pw)/w*2-1;y1=1-pl.P.t/h*2;y0=1-(pl.P.t+pl.ph)/h*2;
@@ -4016,7 +4035,7 @@ ${G.recur("q")}
 PC.register("2d",{
   guide:guide2d,
   init(){loadMap(S.mapName);},
-  show(){drawSafeSet();if(S.view==="U")surfShow();},resize(){drawSafeSet();sfResize();},redraw(){_titleKey="";drawSafeSet();}
+  show(){sfOwn2d();drawSafeSet();if(S.view==="U")surfShow();},resize(){drawSafeSet();sfResize();},redraw(){_titleKey="";drawSafeSet();}
 });
 })();
 </script>
@@ -5462,7 +5481,7 @@ var nc=cPts?cPts.length/6:0;
 $('ti').textContent=nc+' crossings of the section';
 drawSS();
 draw3D();
-setP(100,'Done in '+((t3-t0)/1e3).toFixed(1)+' s');PC.refreshGuide();
+setP(100,'Done in '+((t3-t0)/1e3).toFixed(1)+' s');PC.refreshGuide();startPU();PC.surf.sync();
 $('go').disabled=false;$('go').textContent='Recompute';
 }
 
@@ -5470,6 +5489,47 @@ $('go').disabled=false;$('go').textContent='Recompute';
 
 // ------------------------------ view and guide ------------------------------
 $('reset').addEventListener('click',function(){az=-40*Math.PI/180;el=25*Math.PI/180;vD=55;tx=0;ty=0;tz=19;if(fTraj)draw3D();});
+// ------------------------------ safety function ------------------------------
+// Computed from the same map P: the images of the grid points are already known, so only the recursion remains.
+// On grids finer than 1201 it uses every second point (or every s-th), which keeps it near a million points.
+function psig(v,n){return +v.toPrecision(n);}
+var pView='S',PU=null,puBusy='',puWorker=null,puFrac=0;
+function puKey(){return N+'|'+XI0;}
+function puStride(){var s=1;if(N>1201){s=2;while((N-1)%s||(N-1)/s>1000)s++;}return s;}
+const PSRC={on:()=>pView==='U'&&$('root').classList.contains('on'),data:()=>PU&&PU.key===puKey()?PU:null,
+  plot:()=>{const c=$('c1'),m=48,s=c.clientWidth,host=c.parentNode;
+    return{P:{l:c.offsetLeft+m,t:c.offsetTop+m},pw:s-2*m,ph:s-2*m,w:host.clientWidth,h:host.clientHeight};},
+  u0:()=>U0,xi0:()=>XI0,titleH:()=>44};   // room for Top view and Reset view, above the box
+function puStatus(t){
+  if(t!==undefined){$('ui').textContent=t;return;}
+  const U=PSRC.data();
+  $('ui').textContent=U?(U.exact?'min U = ':'min U ≈ ')+psig(U.umin,3):puBusy===puKey()?'Computing: '+Math.round(100*puFrac)+' %':'';
+}
+function startPU(){
+  if(pView!=='U'||!mVl||$('go').disabled||PSRC.data()||puBusy===puKey())return;
+  if(puWorker){puWorker.terminate();puWorker=null;}
+  const s=puStride(),NU=(N-1)/s+1,dx=6/(NU-1),NQ=NU*NU,imgX=new Float64Array(NQ),imgY=new Float64Array(NQ),inQ=new Uint8Array(NQ);
+  for(let J=0,q=0;J<NU;J++)for(let I=0;I<NU;I++,q++){const k=J*s*N+I*s;
+    if(mVl[k]){inQ[q]=1;imgX[q]=(mXi[k]+3)/dx;imgY[q]=(mYi[k]+3)/dx;}}
+  const key=puKey(),xi0=XI0;puBusy=key;puFrac=0;
+  let w;
+  try{w=puWorker=new Worker(PC.surf.worker());}catch(e){puBusy='';puStatus('needs Web Workers');return;}
+  w.onmessage=ev=>{if(w!==puWorker)return;const d=ev.data;
+    if(d.t==='part'){puFrac=d.f;puStatus();return;}
+    PU={key,N:NU,dx,dy:dx,xi:-3,yi:-3,rxi:xi0/dx,U:d.U,done:true,umin:d.umin,exact:d.exact};
+    puBusy='';w.terminate();puWorker=null;puStatus();PC.surf.sync();PC.refreshGuide();};
+  w.onerror=()=>{if(w!==puWorker)return;puBusy='';puWorker=null;puStatus('could not be computed');};
+  w.postMessage({N:NU,imgX,imgY,inQ,dx,dy:dx,xi0},[imgX.buffer,imgY.buffer,inQ.buffer]);
+  puStatus();PC.surf.sync();
+}
+function puShow(){if(pView!=='U')return;PC.surf.use(PSRC,$('c1').parentNode);startPU();puStatus();}
+function setPView(v){
+  pView=v;$('viewSeg').querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.view===v));
+  $('root').classList.toggle('u-view',v==='U');$('ttl').textContent=v==='U'?'Safety function':'Safe set';
+  $('si').hidden=v==='U';$('ui').hidden=v!=='U';
+  puShow();PC.refreshGuide();
+}
+$('viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.view!==pView)setPView(b.dataset.view);});
 function guideP(){
   const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
   return{title:"Guide: Lorenz on a Poincaré section",html:`<h3>The system on screen</h3>
@@ -5481,13 +5541,19 @@ ${G.lines(["\\dot x=\\sigma(y-x)","\\dot y=x(r-z)-y","\\dot z=xy-bz"])}
 ${G.eq("q","P")}
 <p>${G.bounds("q","P")} Both act on the plane. Between two crossings the system evolves on its own.</p>
 <h3>What is drawn and how it was obtained</h3>
-<p><b>Left.</b> The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
-<p><b>Right.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
+${pView==='U'?'<p><b>Safe set view.</b> ':'<p><b>Left.</b> '}The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
+${pView==='U'?puGuide():''}<p><b>Right.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
 <h3>What you can change</h3>
-<p>The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the right picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+<p>The view, <b>Safe set</b> or <b>Safety function</b>. The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the right picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+}
+function puGuide(){
+  const g=PC.gt,G=PC.guideText,s=puStride(),NU=(N-1)/s+1,U=PSRC.data();
+  return `<p><b>Left, safety function view.</b> The safety function ${g("U(q)","U(q)")} on the same square: for each crossing point, the smallest control bound that keeps the trajectory away from ${g("C^{+}","C+")} and ${g("C^{-}","C−")} forever, whatever the disturbances. It is obtained from the same map ${g("P","P")}, with the images of the grid points already computed${s>1?`, on every ${s===2?"second":s+"th"} point (${NU} × ${NU})`:""}, by the recursion</p>
+${G.recur("q").replace(/f\(/g,"P(")}
+<p>starting from ${g("U_0=0","U₀ = 0")} until it stops changing. Height and colour show ${g("\\log_{10}U","log10 U")}. The safe set for a bound ${g("u_0","u₀")} is the region ${g("\\{U\\le u_0\\}","{U ≤ u₀}")}, the part of the surface below the blue plane, so one surface holds the safe sets of every ${g("u_0","u₀")}. Its lowest value${U?", here "+g("\\min U="+psig(U.umin,2),"min U = "+psig(U.umin,2))+",":""} is the smallest control bound for which a safe set exists. ${g("U","U")} depends on ${g("\\xi_0","ξ₀")} but not on ${g("u_0","u₀")}: a new ${g("u_0","u₀")} only moves the plane. <b>Top view</b> shows the surface from above.</p>`;
 }
 
-function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();}
+function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();if(pView==='U'){puShow();PC.surf.resize();}}
 PC.register("poincare",{
   guide:guideP,
   init(){if(PC.isMobile())$('gs').value='301';setupC();setupOrbit();$('go').onclick=run;run();
