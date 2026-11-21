@@ -229,6 +229,7 @@ input[type=range]:disabled{opacity:.35}
 #t3-params .pm{display:inline-block;margin-right:14px}
 #t3-params .pm:last-child{margin-right:0}
 #t3-ref{margin-top:3px;font-size:13.5px;color:var(--ink3);line-height:1.3;min-height:18px}
+.r-short{display:none}
 .t3-sel{display:flex;gap:10px;margin-top:10px}
 .t3-sel label{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);white-space:nowrap}
 .t3-sel label:last-child{flex:1}
@@ -244,16 +245,14 @@ input[type=range]:disabled{opacity:.35}
 .lay:hover{border-color:#aab4c2}
 .lay-row{display:flex;gap:5px}
 .lay-len{display:flex;align-items:center;gap:12px;height:30px;padding:0 4px 0 12px;font-size:14px;color:var(--ink2)}
-.lay-len span{display:flex;align-items:center;gap:10px;flex:none}
+.lay-len>span{display:flex;align-items:center;gap:10px;flex:none}
 .lay-len i{width:18px;border-top:3px solid var(--trj,var(--ctrl))}
 .lay-len.cut i{border-top:2px dashed #3366bb}
 .cut-ax{display:flex;flex:none;gap:2px;padding:2px;border-radius:8px;background:rgba(28,36,48,.06)}
-.cut-ax button{display:flex;align-items:center;justify-content:center;width:25px;height:22px;padding:0 0 2px;border:0;border-radius:6px;background:transparent;color:var(--ink2);font-size:14px;line-height:1;cursor:pointer}
-.cut-ax button .katex{font-size:15px;line-height:1}
-.cut-ax button *{pointer-events:none}
-.cut-ax button{position:relative}
+.cut-ax button{position:relative;display:block;width:28px;height:24px;padding:0;margin:0;border:0;border-radius:6px;background:transparent;color:var(--ink2);
+  font:italic 17px/24px KaTeX_Math,"Times New Roman",serif;text-align:center;cursor:pointer;-webkit-appearance:none;appearance:none}
 .cut-ax button.act{color:#3366bb}
-.cut-ax button.act::after{content:"";position:absolute;left:7px;right:7px;bottom:1px;height:2px;border-radius:1px;background:#3366bb}
+.cut-ax button.act::after{content:"";position:absolute;left:8px;right:8px;bottom:1px;height:2px;border-radius:1px;background:#3366bb}
 .cut-ax button.on{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line)}
 .cut-ax button.on.act{color:#3366bb}
 .lay-len input{flex:1;min-width:0}
@@ -394,7 +393,7 @@ input[type=range]:disabled{opacity:.35}
   #v2d .grow select{min-width:62px;padding:5px 2px 5px 6px}
   #v2d .grow .btn{padding:5px 5px;font-size:13px}
 
-  #t3-viewer{--t3p:max(34%,264px)}
+  #t3-viewer{--t3p:max(34%,282px)}
   #t3-viewport{inset:0 0 auto 0;height:calc(100% - var(--t3p))}
   #t3-panel{top:calc(100% - var(--t3p));left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding:9px 12px 10px;overflow-y:auto;
     box-shadow:0 -1px 0 var(--line),0 -6px 20px rgba(28,36,48,.08);background:#fff;backdrop-filter:none}
@@ -402,11 +401,13 @@ input[type=range]:disabled{opacity:.35}
   #t3-params{margin-top:5px;font-size:13px;min-height:19px}
   #t3-ref{font-size:12px;min-height:0;margin-top:1px}
   .t3-sel{margin-top:6px}
-  .t3-layers{display:grid;grid-template-columns:repeat(12,1fr);gap:5px;margin-top:7px}
-  .t3-layers>*{grid-column:span 6}
-  .lay-len{order:9;grid-column:span 5;font-size:13.5px;padding:0 2px 0 7px;gap:7px}
-  .lay-len.cut{grid-column:span 7}
-  .lay-len i{display:none}
+  .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
+  .lay-len{order:9;grid-column:1/-1;font-size:14px;padding:0 2px 0 9px;gap:10px}
+  .lay-len.cut{order:8}
+  .lay-len>span{gap:8px;min-width:76px}
+  .cut-ax button{width:34px;height:26px;font-size:19px;line-height:26px}
+  .cut-ax button.act::after{left:10px;right:10px}
+  .r-long{display:none}.r-short{display:inline}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
@@ -506,7 +507,7 @@ body.guide-push #guide{box-shadow:none}
   #v2d .surf-lab .xn,#v2d .surf-lab .yn,#v2d .surf-lab .zn{font-size:15px}
   #v2d .canvas-wrap .surf-bar{right:4px}
   #v2d .surf-msg{font-size:13.5px}
-  .t3-note{margin-top:7px;font-size:12.5px}
+  .t3-note{display:none}
   .p3-main .ph .btn{padding:2px 8px;font-size:12.5px}
   #guide{top:auto;left:0;width:auto;height:52%;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(28,36,48,.18)}
   #guide .g-head{padding:9px 12px 8px 16px}
@@ -4327,9 +4328,9 @@ function panelInfo(mapKey){
   if(window.katex)m.tex.forEach(t=>{const sp=document.createElement('span');sp.className='pm';PC.setTex(sp,t);pe.appendChild(sp);});
   else pe.textContent=m.plain;
   pe.dataset.k=window.katex?'1':'0';
-  $('ref').textContent=m.ref;
+  $('ref').innerHTML=m.ref.replace('&','&amp;').replace(/^(Capeáns)(, Sabuco, Sanjuán &amp; Yorke)/,'$1<span class="r-long">$2</span><span class="r-short"> et al.</span>');   // on a phone the four authors would take a second line
   PC.setTex($('dtLabel'),cfg.dtLabel?"n":"\\Delta t",cfg.dtLabel||"Δt");
-  (cfg.axes||['x','y','z']).forEach((n,i)=>PC.setTex($('cutAx').children[i],n,n));
+  (cfg.axes||['x','y','z']).forEach((n,i)=>{$('cutAx').children[i].textContent=n;});   // plain letters in the maths font: one text node, nothing to misplace
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
   $('panel').style.setProperty('--trj',cfg.isMap?DOT_CTRL:'');           // colour of the controlled orbit in the panel
 }
