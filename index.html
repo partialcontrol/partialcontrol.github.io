@@ -130,7 +130,6 @@ input[type=range]:disabled{opacity:.35}
 /* large screen: the map and the bounds on the left, the views and their options on the right (layout1d) */
 #v1d.split .side-l{width:268px;min-width:268px}
 #v1d.split .side-r{width:296px;min-width:296px}
-#v1d.split .side-l .mob-hide-q{margin-top:14px}
 /* Reset and Export sit at the foot of the right panel, so they stay put when the view changes */
 #v1d.split .side-r .mob-body{display:flex;flex-direction:column;min-height:100%;box-sizing:border-box}
 #v1d.split .side-r .mob-2col{margin-top:auto;padding-top:14px}
@@ -197,6 +196,10 @@ input[type=range]:disabled{opacity:.35}
 #v2d .p-head{display:flex;flex-direction:column;gap:9px}
 #v2d .statusline{flex:none;font-size:14px;color:var(--ink2);text-align:center;height:20px;line-height:20px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 #v2d .mob-grid,#v2d .mob-col-left,#v2d .mob-col-right{display:contents}
+#v2d .orbit-sec{order:1}
+#v2d .grid-sec{order:2}
+#v2d .param-2{display:flex;gap:14px}
+#v2d .param-2 .param-row{flex:1;min-width:0;margin:0}
 #v2d .param-row{margin-bottom:5px}
 #v2d .param-row:last-child{margin-bottom:0}
 #v2d .mob-param-label{display:flex;align-items:center;gap:6px;font-size:15px;min-height:26px}
@@ -223,17 +226,12 @@ input[type=range]:disabled{opacity:.35}
 #t3-viewport{position:absolute;inset:0;touch-action:none}
 #t3-viewport canvas{display:block}
 #t3-noise{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.04}
-#t3-panel{position:absolute;top:12px;left:12px;width:348px;z-index:10;padding:12px 14px 13px;border-radius:14px;
+#t3-panel{position:absolute;top:12px;left:12px;width:284px;z-index:10;padding:12px 14px 13px;border-radius:14px;
   background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);box-shadow:0 0 0 1px var(--line),0 8px 28px rgba(28,36,48,.10)}
-#t3-params{margin-top:8px;font-size:14px;color:var(--ink);min-height:21px}
-#t3-params .pm{display:inline-block;margin-right:14px}
-#t3-params .pm:last-child{margin-right:0}
-#t3-ref{margin-top:3px;font-size:13.5px;color:var(--ink3);line-height:1.3;min-height:18px}
-.r-short{display:none}
-.t3-sel{display:flex;gap:10px;margin-top:10px}
+.t3-sel{display:flex;gap:8px;margin-top:10px}
 .t3-sel label{display:flex;align-items:center;gap:7px;font-size:15px;color:var(--ink2);white-space:nowrap}
-.t3-sel label:last-child{flex:1}
-.t3-sel select{width:auto;flex:1;padding:4px 4px 4px 6px}
+.t3-sel label:last-child{flex:1;min-width:0}
+.t3-sel select{width:auto;flex:1;min-width:0;padding:4px 2px 4px 5px}
 .t3-layers{display:flex;flex-direction:column;gap:5px;margin-top:11px}
 .lay{display:flex;align-items:center;gap:10px;width:100%;height:36px;padding:0 11px;border:1px solid var(--line);border-radius:8px;background:#fff;
   font-size:15px;font-weight:600;color:var(--ink3);text-align:left;white-space:nowrap}
@@ -373,6 +371,8 @@ input[type=range]:disabled{opacity:.35}
   #v2d .p-head .sel-title{flex:1;font-size:15px;padding:5px 6px}
   #v2d .p-head .seg{flex:1.25}
   #v2d .seg button{font-size:13.5px;padding:0 4px;height:30px}
+  #v2d .param-2{display:block}
+  #v2d .param-2 .param-row{margin-bottom:2px}
   #v2d .mob-grid{display:flex;gap:7px;align-items:stretch}
   #v2d .mob-col-left,#v2d .mob-col-right{flex:1;display:flex;flex-direction:column;gap:7px;min-width:0}
   #v2d .plot-title{font-size:12.5px;padding:5px 8px 0;gap:0 12px}
@@ -398,13 +398,11 @@ input[type=range]:disabled{opacity:.35}
   #v2d .grow select{min-width:62px;padding:5px 2px 5px 6px}
   #v2d .grow .btn{padding:5px 5px;font-size:13px}
 
-  #t3-viewer{--t3p:max(34%,282px)}
+  #t3-viewer{--t3p:max(34%,240px)}
   #t3-viewport{inset:0 0 auto 0;height:calc(100% - var(--t3p))}
   #t3-panel{top:calc(100% - var(--t3p));left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding:9px 12px 10px;overflow-y:auto;
     box-shadow:0 -1px 0 var(--line),0 -6px 20px rgba(28,36,48,.08);background:#fff;backdrop-filter:none}
   #t3-panel .sel-title{font-size:15.5px;padding:5px 6px}
-  #t3-params{margin-top:5px;font-size:13px;min-height:19px}
-  #t3-ref{font-size:12px;min-height:0;margin-top:1px}
   .t3-sel{margin-top:6px}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
   .lay-len{order:9;grid-column:1/-1;font-size:14px;padding:0 2px 0 9px;gap:10px}
@@ -412,7 +410,6 @@ input[type=range]:disabled{opacity:.35}
   .lay-len>span{gap:8px}
   .cut-ax button{width:34px;height:26px;font-size:19px;line-height:26px}
   .cut-ax button.act::after{left:10px;right:10px}
-  .r-long{display:none}.r-short{display:inline}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
@@ -561,24 +558,22 @@ body.guide-push #guide{box-shadow:none}
   </div>
   <div id="d1-mobScroll" class="mob-scroll">
     <div id="d1-leftPanel" class="panel side-l">
-      <div class="mob-header">Partial control method</div>
       <div class="mob-body">
-        <div class="modes mb">
-          <button id="d1-btnCtrlIter" class="btn btn-ctrl">Controlled orbits</button>
-          <button id="d1-btnIter" class="btn btn-inactive">Uncontrolled orbits</button>
-          <button id="d1-btnSafe" class="btn btn-inactive">Explore the safe set</button>
-          <button id="d1-btnCheck" class="btn btn-inactive">Check the safe set</button>
-          <button id="d1-btnSafety" class="btn btn-inactive">Safety function</button>
-        </div>
-        <div class="section mb mob-hide-q">
-          <div class="mob-q-toggle"><label class="check"><input type="checkbox" id="d1-showQ" checked><span><b>Region <span data-tex="Q">Q</span></b></span></label></div>
-          <div id="d1-mobQgrid" class="q-grid">
-            <div class="q-pair"><input id="d1-q0" type="text" aria-label="Q interval 1 start"><input id="d1-q1" type="text" aria-label="Q interval 1 end"></div>
-            <div class="q-pair"><input id="d1-q2" type="text" aria-label="Q interval 2 start"><input id="d1-q3" type="text" aria-label="Q interval 2 end"></div>
-            <div class="q-pair"><input id="d1-q4" type="text" aria-label="Q interval 3 start"><input id="d1-q5" type="text" aria-label="Q interval 3 end"></div>
+        <select id="d1-mapSelect" class="sel-title mb" aria-label="Map">
+          <option>Tent map</option><option>Logistic map</option><option>Cubic map</option>
+          <option>Gauss map</option><option>Double-hump map</option><option>Asymmetric Shift map</option>
+          <option>Sin map</option><option>Parabola map</option><option>Custom equation</option>
+        </select>
+        <div class="seg mb" id="d1-viewSeg" role="tablist" aria-label="View"><button data-view="S" class="on">Safe set</button><button data-view="U">Safety function</button></div>
+        <div id="d1-parSection">
+          <div class="mob-2col">
+            <div class="mb"><span class="lbl">Parameter A = <b id="d1-paramAval">0</b></span>
+              <div class="prow"><input id="d1-paramAmin" type="text" value="-5" aria-label="A minimum"><input id="d1-paramAslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter A"><input id="d1-paramAmax" type="text" value="5" aria-label="A maximum"></div></div>
+            <div class="mb"><span class="lbl">Parameter B = <b id="d1-paramBval">0</b></span>
+              <div class="prow"><input id="d1-paramBmin" type="text" value="-5" aria-label="B minimum"><input id="d1-paramBslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter B"><input id="d1-paramBmax" type="text" value="5" aria-label="B maximum"></div></div>
           </div>
         </div>
-        <div class="desk-stack">
+        <div id="d1-dcSection" class="desk-stack">
           <div class="section section-xi mb">
             <div class="vrow"><span class="vlbl xi"><span class="w">Disturbance </span><span data-tex="\xi_0">ξ₀</span> =</span><input id="d1-distInput" class="xi" type="text" aria-label="Disturbance bound"></div>
             <span id="d1-distVal" hidden>0</span>
@@ -590,10 +585,41 @@ body.guide-push #guide{box-shadow:none}
             <input id="d1-ctrlSlider" type="range" class="sl-u" min="0" max="0.1" step="0.0001" value="0.015" aria-label="Control bound">
           </div>
         </div>
-        <div class="ratio-row mb">
+        <div id="d1-ratioRow" class="ratio-row mb">
           <span class="frac" data-tex="\dfrac{u_0}{\xi_0}=">u₀/ξ₀ =</span>
           <input id="d1-rateInput" type="text" value="0.75" aria-label="Ratio u0 over xi0">
           <button id="d1-lockBtn" class="lock-btn" title="Keep the ratio fixed while moving the sliders">Lock ratio</button>
+        </div>
+        <div id="d1-eqSection" class="section mb">
+          <span class="sec-title">Map definition</span>
+          <div class="mob-2col">
+            <div>
+              <div class="lim-row"><div class="lim-pair"><span data-tex="x_1=">x1=</span><input id="d1-l1" class="code" type="text"></div><div class="lim-pair"><span data-tex="x_2=">x2=</span><input id="d1-l2" class="code" type="text"></div></div>
+              <div class="eq-row"><span class="eq-lbl" data-tex="f_1=">f1=</span><input id="d1-eq1" class="code" type="text"></div>
+            </div>
+            <div>
+              <div class="lim-row"><div class="lim-pair"><span data-tex="x_3=">x3=</span><input id="d1-l3" class="code" type="text"></div><div class="lim-pair"><span data-tex="x_4=">x4=</span><input id="d1-l4" class="code" type="text"></div></div>
+              <div class="eq-row"><span class="eq-lbl" data-tex="f_2=">f2=</span><input id="d1-eq2" class="code" type="text"></div>
+            </div>
+          </div>
+        </div>
+        <div id="d1-qSection" class="section mb mob-hide-q">
+          <div class="mob-q-toggle"><label class="check"><input type="checkbox" id="d1-showQ" checked><span><b>Region <span data-tex="Q">Q</span></b></span></label></div>
+          <div id="d1-mobQgrid" class="q-grid">
+            <div class="q-pair"><input id="d1-q0" type="text" aria-label="Q interval 1 start"><input id="d1-q1" type="text" aria-label="Q interval 1 end"></div>
+            <div class="q-pair"><input id="d1-q2" type="text" aria-label="Q interval 2 start"><input id="d1-q3" type="text" aria-label="Q interval 2 end"></div>
+            <div class="q-pair"><input id="d1-q4" type="text" aria-label="Q interval 3 start"><input id="d1-q5" type="text" aria-label="Q interval 3 end"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="d1-rightPanel" class="panel side-r">
+      <div class="mob-body">
+        <div id="d1-modes" class="modes mb">
+          <button id="d1-btnCtrlIter" class="btn btn-ctrl">Controlled orbits</button>
+          <button id="d1-btnIter" class="btn btn-inactive">Uncontrolled orbits</button>
+          <button id="d1-btnSafe" class="btn btn-inactive">Explore the safe set</button>
+          <button id="d1-btnCheck" class="btn btn-inactive">Check the safe set</button>
         </div>
         <div id="d1-iterSection" class="section mb" style="display:none">
           <div id="d1-x0Wrap" class="x0row"><span class="vlbl" data-tex="x_0=">x₀ =</span><input id="d1-x0input" type="text" value="0.33" aria-label="Initial condition"><input id="d1-x0slider" type="range" min="0" max="1" step="0.001" value="0.33" aria-label="Initial condition"></div>
@@ -618,35 +644,7 @@ body.guide-push #guide{box-shadow:none}
           </div>
         </div>
         <div id="d1-fsafeWrap" style="display:none" class="mb"><label class="check"><input type="checkbox" id="d1-showFsafe"> <span>Show <span data-tex="f(\text{safe set})">f(safe set)</span></span></label></div>
-      </div>
-    </div>
-    <div id="d1-rightPanel" class="panel side-r">
-      <div class="mob-header">Map settings</div>
-      <div class="mob-body">
-        <select id="d1-mapSelect" class="sel-title mb" aria-label="Map">
-          <option>Tent map</option><option>Logistic map</option><option>Cubic map</option>
-          <option>Gauss map</option><option>Double-hump map</option><option>Asymmetric Shift map</option>
-          <option>Sin map</option><option>Parabola map</option><option>Custom equation</option>
-        </select>
-        <div id="d1-eqSection">
-          <div class="mob-2col">
-            <div>
-              <div class="lim-row"><div class="lim-pair"><span data-tex="x_1=">x1=</span><input id="d1-l1" class="code" type="text"></div><div class="lim-pair"><span data-tex="x_2=">x2=</span><input id="d1-l2" class="code" type="text"></div></div>
-              <div class="eq-row"><span class="eq-lbl" data-tex="f_1=">f1=</span><input id="d1-eq1" class="code" type="text"></div>
-            </div>
-            <div>
-              <div class="lim-row"><div class="lim-pair"><span data-tex="x_3=">x3=</span><input id="d1-l3" class="code" type="text"></div><div class="lim-pair"><span data-tex="x_4=">x4=</span><input id="d1-l4" class="code" type="text"></div></div>
-              <div class="eq-row"><span class="eq-lbl" data-tex="f_2=">f2=</span><input id="d1-eq2" class="code" type="text"></div>
-            </div>
-          </div>
-          <div class="mob-2col">
-            <div class="mb"><span class="lbl">Parameter A = <b id="d1-paramAval">0</b></span>
-              <div class="prow"><input id="d1-paramAmin" type="text" value="-5" aria-label="A minimum"><input id="d1-paramAslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter A"><input id="d1-paramAmax" type="text" value="5" aria-label="A maximum"></div></div>
-            <div class="mb"><span class="lbl">Parameter B = <b id="d1-paramBval">0</b></span>
-              <div class="prow"><input id="d1-paramBmin" type="text" value="-5" aria-label="B minimum"><input id="d1-paramBslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter B"><input id="d1-paramBmax" type="text" value="5" aria-label="B maximum"></div></div>
-          </div>
-        </div>
-        <div class="mob-2col">
+        <div id="d1-acts" class="mob-2col">
           <button id="d1-resetBtn" class="btn mb mob-reset">Reset</button>
           <button id="d1-saveBtn" class="btn btn-export"><svg width="16" height="14" viewBox="0 0 16 14" aria-hidden="true"><path d="M2 12C3 8 4.5 3 6 5C7.5 7 8 10 9 8C10 6 11 2 13 2" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round"/></svg>Export Python / MATLAB</button>
         </div>
@@ -694,6 +692,7 @@ body.guide-push #guide{box-shadow:none}
         <div class="mob-col-left">
           <div class="section">
             <span id="d2-mapParamTitle" class="sec-title">Map parameters</span>
+            <div class="param-2">
             <div class="param-row">
               <div class="mob-param-label"><span id="d2-paramAlbl" class="m">a</span><span>=</span><span id="d2-paramAval" class="val">6</span></div>
               <input id="d2-paramA" type="range" min="1" max="10" step="0.01" value="6" aria-label="First map parameter">
@@ -702,11 +701,12 @@ body.guide-push #guide{box-shadow:none}
               <div class="mob-param-label"><span id="d2-paramBlbl" class="m">b</span><span>=</span><span id="d2-paramBval" class="val">0.4</span></div>
               <input id="d2-paramB" type="range" min="-1" max="1" step="0.01" value="0.4" aria-label="Second map parameter">
             </div>
+            </div>
           </div>
           <div class="section orbit-sec">
             <div class="orow">
               <span class="sec-title">Orbits</span>
-              <input id="d2-numIter" type="text" value="200" aria-label="Number of iterations">
+              <input id="d2-numIter" type="text" value="2000" aria-label="Number of iterations">
               <button id="d2-d10Btn" class="btn">÷10</button>
               <button id="d2-x10Btn" class="btn">×10</button>
             </div>
@@ -740,7 +740,7 @@ body.guide-push #guide{box-shadow:none}
               <button id="d2-lockBtn" class="lock-btn" title="Keep the ratio fixed while moving the sliders">Lock ratio</button>
             </div>
           </div>
-          <div class="section">
+          <div class="section grid-sec">
             <div class="grow">
               <span class="sec-title">Grid</span>
               <select id="d2-gridN" aria-label="Grid size">
@@ -808,8 +808,6 @@ body.guide-push #guide{box-shadow:none}
         <option value="mccann">McCann-Yodzis model</option>
         <option value="henon3d">Delayed Hénon 3D map</option>
       </select>
-      <div id="t3-params"></div>
-      <div id="t3-ref"></div>
       <div class="t3-sel">
         <label><span id="t3-dtLabel">Δt</span><select id="t3-selDt" aria-label="Time between controls"></select></label>
         <label><span data-tex="(\xi_0,\,u_0)">(ξ₀, u₀)</span><select id="t3-selXU" aria-label="Disturbance and control bounds"></select></label>
@@ -1554,10 +1552,11 @@ for(let i=0;i<6;i++){const v=isNaN(S.regionQ[i])?"":sig(S.regionQ[i],4);$("q"+i)
 if(typeof syncMobQ==='function')syncMobQ();
 $("x0input").value=sig(S.x0,4);$("x0slider").min=S.xmin;$("x0slider").max=S.xmax;$("x0slider").step=(S.xmax-S.xmin)/500;$("x0slider").value=S.x0;
 $("numIter").value=S.numIter;$("paramAval").textContent=sig(S.paramA,3);$("paramBval").textContent=sig(S.paramB,3);
-const ms={safeset:"btnSafe",iterations:"btnIter",controlled_activate:"btnCheck",controlled_iterates:"btnCtrlIter",safety:"btnSafety"};
-const cs={safeset:"btn-blue",iterations:"btn-unctrl",controlled_activate:"btn-blue",controlled_iterates:"btn-ctrl",safety:"btn-slate"};
+const ms={safeset:"btnSafe",iterations:"btnIter",controlled_activate:"btnCheck",controlled_iterates:"btnCtrlIter"};
+const cs={safeset:"btn-blue",iterations:"btn-unctrl",controlled_activate:"btn-blue",controlled_iterates:"btn-ctrl"};
 for(const[m,id]of Object.entries(ms))$(id).className="btn "+(S.mode===m?cs[m]:"btn-inactive");
-$("iterSection").style.display=(S.mode==="safeset"||(S.mode==="safety"&&!PC.isMobile()))?"none":"block";
+$("viewSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",(x.dataset.view==="U")===(S.mode==="safety")));
+$("parSection").style.opacity=S.eqEnabled?1:.3;$("iterSection").style.display=(S.mode==="safeset"||(S.mode==="safety"&&!PC.isMobile()))?"none":"block";
 $("x0Wrap").style.display=(S.mode==="safeset"||S.mode==="safety")?"none":"flex";
 $("numIterWrap").style.display=S.mode==="controlled_iterates"?"flex":"none";
 $("tsToggleWrap").style.display=S.mode==="controlled_iterates"?"block":"none";
@@ -1599,7 +1598,6 @@ for(let i=0;i<S.regionQ.length;i+=2){if(!isNaN(S.regionQ[i]))S.regionQ[i]=clamp(
 function init(){
 $("mapSelect").addEventListener("change",e=>loadMap(e.target.value));
 $("btnSafe").addEventListener("click",()=>{S.mode="safeset";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
-$("btnSafety").addEventListener("click",()=>{S.mode="safety";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
 $("btnIter").addEventListener("click",()=>{S.mode="iterations";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
 $("btnCheck").addEventListener("click",()=>{if(!S.safex.length)return;S.mode="controlled_activate";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;S._advanceCheck=false;S._checkRand=undefined;syncUI();redraw();});
 $("btnCtrlIter").addEventListener("click",()=>{S.mode="controlled_iterates";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
@@ -2206,26 +2204,26 @@ function drawSafety(){
 // ---------------------------------------------------------------------------
 //  Layout on a large screen
 // ---------------------------------------------------------------------------
-// The page keeps the two panels of the original program, and a phone shows them like that. On a large screen
-// the blocks change sides: the map with the region and the bounds go on the left, and the views with the
-// options of the view in use on the right, followed by Reset and Export. Each block leaves a marker in its place so that it can go back.
-// With the guide open on a window that is not very wide the guide takes the right side, and the panels return
-// to the original arrangement (the views stay at hand on the left and the definition of the map is hidden).
-const L1={split:false,marks:null};
+const L1={k:""};
+// Where each block of controls goes. Large screen: the map and what defines the problem on the left, most used first,
+// and the ways of exploring it on the right. With the guide open on a narrow window only the left panel is shown, so
+// the modes move into it and the rarely used blocks stay in the hidden one. On a phone the map and the modes come first.
+const L1_ORDER={
+  wide:[["mapSelect","viewSeg","parSection","dcSection","ratioRow","eqSection","qSection"],["modes","iterSection","fsafeWrap","acts"]],
+  narrow:[["mapSelect","viewSeg","modes","iterSection","fsafeWrap","parSection","dcSection","ratioRow"],["eqSection","qSection","acts"]],
+  phone:[["mapSelect","viewSeg","modes","dcSection","ratioRow","iterSection","fsafeWrap"],["parSection","eqSection","qSection","acts"]]};
 function layout1d(){
-  const cl=document.body.classList,split=!PC.isMobile()&&!(cl.contains("guide-push")&&!cl.contains("guide-wide"));
-  if(split===L1.split)return;
-  L1.split=split;ROOT.classList.toggle("split",split);
-  const lb=$("leftPanel").querySelector(".mob-body"),rb=$("rightPanel").querySelector(".mob-body");
-  if(split){
-    // Reset and Export stay on the right, below the views and their options
-    const acts=$("resetBtn").parentNode,toRight=[lb.querySelector(".modes"),$("iterSection"),$("fsafeWrap"),acts],toLeft=[...rb.children].filter(n=>n!==acts);
-    L1.marks=[];
-    toRight.concat(toLeft).forEach(n=>{const m=document.createComment("");n.parentNode.insertBefore(m,n);L1.marks.push([m,n]);});
-    const first=lb.firstChild;toLeft.forEach(n=>lb.insertBefore(n,first));
-    toRight.forEach(n=>rb.appendChild(n));
-  }else{L1.marks.forEach(([m,n])=>{m.parentNode.insertBefore(n,m);m.remove();});L1.marks=null;}
+  const cl=document.body.classList,k=PC.isMobile()?"phone":cl.contains("guide-push")&&!cl.contains("guide-wide")?"narrow":"wide";
+  if(k===L1.k)return;
+  L1.k=k;ROOT.classList.toggle("split",k==="wide");
+  [$("leftPanel"),$("rightPanel")].forEach((p,i)=>{const body=p.querySelector(".mob-body");L1_ORDER[k][i].forEach(id=>body.appendChild($(id)));});
 }
+// Safe set or safety function, as in the 2D maps. A mode of the right panel returns to the safe set.
+let _mode1d="controlled_iterates";
+$("viewSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const U=b.dataset.view==="U";
+  if(U===(S.mode==="safety"))return;
+  if(U){_mode1d=S.mode;S.mode="safety";}else S.mode=_mode1d;
+  S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
 
 // ---------------------------------------------------------------------------
 //  Guide
@@ -2309,7 +2307,7 @@ const MAP_CONFIGS={
     title:"Hénon: x' = 1.23 + 0.3y − x²,  y' = x",
     paramLabels:["r_hole","—"],
     a:0.1, b:0, Amin:0.01, Amax:0.25, Bmin:0, Bmax:0, Bstep:0,
-    xi:-2, yi:-3, xf:2, yf:3, dist:0.05, ctrl:0.035, iter:200,
+    xi:-2, yi:-3, xf:2, yf:3, dist:0.05, ctrl:0.035, iter:2000,
     holes:[
       [0.5270837687, 0.8375962801],
       [1.2034615848, 0.5270837687],
@@ -2868,7 +2866,7 @@ let _unctrlIC=null; // stored initial condition {x,y}
 
 function simUncontrolled(){
   S._hideTransient=false;
-  const nI=parseInt($("numIter").value)||200;
+  const nI=parseInt($("numIter").value)||2000;
   const _isSaddle=(S.mapName==="henon_saddle");
 
   if(_isSaddle){
@@ -2937,7 +2935,7 @@ function simUncontrolled(){
 function simControlled(){
   S._hideTransient=false;
   if(!S.safePoints.length){$("statusBar").textContent="Compute safe set first!";return;}
-  const nI=parseInt($("numIter").value)||200;
+  const nI=parseInt($("numIter").value)||2000;
   const sp=S.safePoints;
   // Random initial condition from safe set
   const idx=Math.floor(Math.random()*sp.length);
@@ -3123,7 +3121,7 @@ function loadMap(name){
   }
   PC.setTex($("paramAlbl"),cf.ptex[0],cf.paramLabels[0]);PC.setTex($("paramBlbl"),cf.ptex[1],cf.paramLabels[1]);
   $("mapParamTitle").textContent=cf.holes?"Hole size":"Map parameters";
-  $("numIter").value=cf.iter||200;
+  $("numIter").value=cf.iter||2000;
   syncUI();computeSafeSet();
 }
 $("mapSelect").addEventListener("change",e=>{if(e.target.value==="lorenz_p"){e.target.value=S.mapName;PC.go("poincare");}else loadMap(e.target.value);});
@@ -3274,8 +3272,8 @@ $("hires2Btn").addEventListener("click",()=>computeHires(2001,$("hires2Btn")));
 $("numIter").addEventListener("change",()=>{
   if(S.orbits.unctrl)simUncontrolled();
 });
-$("x10Btn").addEventListener("click",()=>{const v=Math.min((parseInt($("numIter").value)||200)*10,3000);$("numIter").value=v;if(S.orbits.unctrl)simUncontrolled();});
-$("d10Btn").addEventListener("click",()=>{const v=Math.max(Math.round((parseInt($("numIter").value)||200)/10),3);$("numIter").value=v;if(S.orbits.unctrl)simUncontrolled();});
+$("x10Btn").addEventListener("click",()=>{const v=Math.min((parseInt($("numIter").value)||2000)*10,3000);$("numIter").value=v;if(S.orbits.unctrl)simUncontrolled();});
+$("d10Btn").addEventListener("click",()=>{const v=Math.max(Math.round((parseInt($("numIter").value)||2000)/10),3);$("numIter").value=v;if(S.orbits.unctrl)simUncontrolled();});
 $("ctrlOrbitBtn").addEventListener("click",()=>simControlled());
 $("unctrlOrbitBtn").addEventListener("click",()=>simUncontrolled());
 $("clearOrbitBtn").addEventListener("click",()=>{S.orbits={ctrl:null,unctrl:null};S.saddle=null;S._showSaddle=false;_unctrlIC=null;S._hideTransient=false;drawSafeSet();});
@@ -4303,17 +4301,13 @@ const MAP_CONFIG = {
 // The Hénon 3D map has no stored trajectories. Its orbits are computed here, the controlled one with the
 // safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
 MAP_CONFIG.mccann.axes=['R','C','P'];
+for(const k in MAP_CONFIG)MAP_CONFIG[k].camAz+=Math.PI/3;   // the first view, turned 60 degrees: the sets show their open side
 Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
   step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
   inBox:(x,y,z)=>Math.abs(x)<=2&&Math.abs(y)<=2&&Math.abs(z)<=2});
 const MAP_STEPS=1000,MAP_STEPS_U=200,DOT_CTRL="#dc2626";
 
-const META={
-  lorenz:{tex:["\\sigma=10","b=8/3","r=20"],plain:"σ = 10, b = 8/3, r = 20",ref:"Capeáns, Sabuco, Sanjuán & Yorke, Phil. Trans. R. Soc. A 375, 20160211 (2017)"},
-  mccann:{tex:["K=0.99","s=0.07","x_c=0.4","y_c=2.009"],plain:"K = 0.99, s = 0.07, xc = 0.4, yc = 2.009",ref:"Capeáns, Sabuco & Sanjuán, Ecol. Complex. 19, 1–8 (2014)"},
-  henon3d:{tex:["x'=bz","y'=cx+bz","z'=1+y-az^2"],plain:"x' = bz, y' = cx + bz, z' = 1 + y − az²",ref:"a = 1.1, b = 0.3, c = 1, box [−2, 2]³"}
-};
-
+const REF={lorenz:"Capeáns, Sabuco, Sanjuán & Yorke, Phil. Trans. R. Soc. A 375, 20160211 (2017)",mccann:"Capeáns, Sabuco & Sanjuán, Ecol. Complex. 19, 1–8 (2014)"};
 let scene,cam,R,vp,world,layers,grpBase,draco,ground=null,groundZ=0;
 let ready=false,active=false,raf=0,loadSeq=0;
 let currentMap='lorenz',cur=null,home=null,fitArgs=null,xoff=0,freeFrac=1;
@@ -4341,12 +4335,7 @@ function populate(mapKey){
   fillXU(mapKey);
 }
 function panelInfo(mapKey){
-  const cfg=MAP_CONFIG[mapKey],m=META[mapKey];
-  const pe=$('params');pe.textContent='';
-  if(window.katex)m.tex.forEach(t=>{const sp=document.createElement('span');sp.className='pm';PC.setTex(sp,t);pe.appendChild(sp);});
-  else pe.textContent=m.plain;
-  pe.dataset.k=window.katex?'1':'0';
-  $('ref').innerHTML=m.ref.replace('&','&amp;').replace(/^(Capeáns)(, Sabuco, Sanjuán &amp; Yorke)/,'$1<span class="r-long">$2</span><span class="r-short"> et al.</span>');   // on a phone the four authors would take a second line
+  const cfg=MAP_CONFIG[mapKey];
   PC.setTex($('dtLabel'),cfg.dtLabel?"n":"\\Delta t",cfg.dtLabel||"Δt");
   (cfg.axes||['x','y','z']).forEach((n,i)=>{$('cutAx').children[i].textContent=n;});   // plain letters in the maths font: one text node, nothing to misplace
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
@@ -5039,7 +5028,9 @@ ${G.eq("q","f")}
 ${traj}
 <h3>No safety function here</h3>
 <p>${g("U","U")} would be a function of three variables, which cannot be drawn as a surface, so only the safe sets of the pairs ${g("(\\xi_0,u_0)","(ξ₀, u₀)")} in the menu are given.</p>
-<h3>What you can change</h3>
+${REF[currentMap]?`<h3>Reference</h3>
+<p>${REF[currentMap].replace('&','&amp;')}.</p>
+`:''}<h3>What you can change</h3>
 <p>The system, the time between corrections and the pair ${g("(\\xi_0,u_0)","(ξ₀, u₀)")}, and which surfaces and trajectories are drawn. Drag to rotate, turn the wheel or pinch to zoom at the pointer, right-drag or use two fingers to move. <b>Reset view</b> or a double click returns to the start.</p>`};
 }
 
@@ -5064,7 +5055,7 @@ PC.register("3d",{
     boot();
   },
   show(){active=true;resize();cancelAnimationFrame(raf);loop();},
-  redraw(){if($('params').dataset.k!==(window.katex?'1':'0'))panelInfo(currentMap);},
+  redraw(){if(ready)panelInfo(currentMap);},
   hide(){active=false;cancelAnimationFrame(raf);},
   resize(){resize();}
 });
@@ -5531,6 +5522,7 @@ function setPView(v){
 }
 $('viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.view!==pView)setPView(b.dataset.view);});
 function guideP(){
+  const mob=PC.isMobile(),L=mob?'Top':'Left',R=mob?'Bottom':'Right';   // on a phone the two pictures are one above the other
   const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
   return{title:"Guide: Lorenz on a Poincaré section",html:`<h3>The system on screen</h3>
 <p>The Lorenz system</p>
@@ -5541,14 +5533,14 @@ ${G.lines(["\\dot x=\\sigma(y-x)","\\dot y=x(r-z)-y","\\dot z=xy-bz"])}
 ${G.eq("q","P")}
 <p>${G.bounds("q","P")} Both act on the plane. Between two crossings the system evolves on its own.</p>
 <h3>What is drawn and how it was obtained</h3>
-${pView==='U'?'<p><b>Safe set view.</b> ':'<p><b>Left.</b> '}The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
-${pView==='U'?puGuide():''}<p><b>Right.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
+${pView==='U'?'<p><b>Safe set view.</b> ':'<p><b>'+L+'.</b> '}The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
+${pView==='U'?puGuide():''}<p><b>${R}.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
 <h3>What you can change</h3>
-<p>The view, <b>Safe set</b> or <b>Safety function</b>. The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the right picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+<p>The view, <b>Safe set</b> or <b>Safety function</b>. The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the ${R.toLowerCase()} picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
 }
 function puGuide(){
   const g=PC.gt,G=PC.guideText,s=puStride(),NU=(N-1)/s+1,U=PSRC.data();
-  return `<p><b>Left, safety function view.</b> The safety function ${g("U(q)","U(q)")} on the same square: for each crossing point, the smallest control bound that keeps the trajectory away from ${g("C^{+}","C+")} and ${g("C^{-}","C−")} forever, whatever the disturbances. It is obtained from the same map ${g("P","P")}, with the images of the grid points already computed${s>1?`, on every ${s===2?"second":s+"th"} point (${NU} × ${NU})`:""}, by the recursion</p>
+  return `<p><b>${PC.isMobile()?'Top':'Left'}, safety function view.</b> The safety function ${g("U(q)","U(q)")} on the same square: for each crossing point, the smallest control bound that keeps the trajectory away from ${g("C^{+}","C+")} and ${g("C^{-}","C−")} forever, whatever the disturbances. It is obtained from the same map ${g("P","P")}, with the images of the grid points already computed${s>1?`, on every ${s===2?"second":s+"th"} point (${NU} × ${NU})`:""}, by the recursion</p>
 ${G.recur("q").replace(/f\(/g,"P(")}
 <p>starting from ${g("U_0=0","U₀ = 0")} until it stops changing. Height and colour show ${g("\\log_{10}U","log10 U")}. The safe set for a bound ${g("u_0","u₀")} is the region ${g("\\{U\\le u_0\\}","{U ≤ u₀}")}, the part of the surface below the blue plane, so one surface holds the safe sets of every ${g("u_0","u₀")}. Its lowest value${U?", here "+g("\\min U="+psig(U.umin,2),"min U = "+psig(U.umin,2))+",":""} is the smallest control bound for which a safe set exists. ${g("U","U")} depends on ${g("\\xi_0","ξ₀")} but not on ${g("u_0","u₀")}: a new ${g("u_0","u₀")} only moves the plane. <b>Top view</b> shows the surface from above.</p>`;
 }
