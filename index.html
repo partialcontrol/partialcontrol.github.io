@@ -250,6 +250,7 @@ input[type=range]:disabled{opacity:.35}
 .lay-len{display:flex;align-items:center;gap:12px;height:30px;padding:0 4px 0 12px;font-size:14px;color:var(--ink2)}
 .lay-len span{display:flex;align-items:center;gap:10px;flex:none}
 .lay-len i{width:18px;border-top:3px solid var(--trj,var(--ctrl))}
+.lay-len.cut i{border-top:2px dashed #3366bb}
 .lay-len input{flex:1;min-width:0}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
@@ -389,20 +390,22 @@ input[type=range]:disabled{opacity:.35}
 
   #sub3{top:8px;right:auto;left:50%;transform:translateX(-50%)}
   #sub3 button{font-size:13.5px;height:28px}
-  #t3-viewport{inset:0 0 auto 0;height:66%}
-  #t3-panel{top:66%;left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding:9px 12px 10px;overflow-y:auto;
+  #t3-viewer{--t3p:max(34%,264px)}
+  #t3-viewport{inset:0 0 auto 0;height:calc(100% - var(--t3p))}
+  #t3-panel{top:calc(100% - var(--t3p));left:0;right:0;bottom:0;width:auto;border-radius:16px 16px 0 0;padding:9px 12px 10px;overflow-y:auto;
     box-shadow:0 -1px 0 var(--line),0 -6px 20px rgba(28,36,48,.08);background:#fff;backdrop-filter:none}
   #t3-panel .sel-title{font-size:15.5px;padding:5px 6px}
   #t3-params{margin-top:5px;font-size:13px;min-height:19px}
   #t3-ref{font-size:12px;min-height:0;margin-top:1px}
   .t3-sel{margin-top:6px}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
-  .lay-len{order:9;grid-column:1/-1;font-size:13.5px;padding-left:9px}
+  .lay-len{order:9;font-size:13.5px;padding:0 2px 0 9px;gap:8px}
+  .lay-len span{gap:7px}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
   #t3-hint{display:none}
-  #t3-loading{inset:0 0 34% 0}
+  #t3-loading{inset:0 0 var(--t3p) 0}
 
   .p3-bar{padding:44px 10px 8px;gap:7px 9px;min-height:0}
   .p3-bar select{width:70px}
@@ -483,14 +486,15 @@ body.guide-push #guide{box-shadow:none}
 #guide .g-body{flex:1;min-height:0;overflow-y:auto;padding:4px 22px 28px}
 #guide h3{font-size:17px;margin:20px 0 7px}
 #guide p{font-size:16px;line-height:1.55;margin-bottom:11px;color:#2a3442}
-#guide .eq{text-align:center;margin:14px 0;font-size:18px}
+#guide .eq{text-align:center;margin:14px 0;font-size:18px;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}
+#guide .eq.sm{font-size:15px;white-space:nowrap}
 #guide .katex{font-size:1.06em}
 
 @media(max-width:820px){
   .plot-ctl{right:8px;bottom:8px;gap:5px}
   .plot-ctl .btn{padding:5px 10px;font-size:13px}
   #d2-zoomCtl{right:12px;bottom:42px}
-  #t3-ctl{bottom:calc(34% + 8px)}
+  #t3-ctl{bottom:calc(var(--t3p) + 8px)}
   #v2d .surf-lab .sl{font-size:12.5px}
   #v2d .surf-lab .xn,#v2d .surf-lab .yn,#v2d .surf-lab .zn{font-size:15px}
   #v2d .canvas-wrap .surf-bar{right:4px}
@@ -766,6 +770,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
+        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Height of the horizontal cut of the sets"></div>
         <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--trj,var(--ctrl))"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
@@ -912,6 +917,25 @@ const PC=(()=>{
     guideLayout();
   }
   function refreshGuide(){if(!gEl().hidden)guideFill();}
+  // a view calls this when it draws: the guide is written again only when what is on screen has changed
+  let gKey="";
+  function guideKey(k){if(k!==gKey){gKey=k;refreshGuide();}}
+  // ----- pieces of text shared by the guides -----
+  const gt=(tex,alt)=>'<span data-tex="'+tex+'">'+(alt||"")+'</span>';
+  const XI="\\textcolor{#c0392b}{\\xi_n}",UN="\\textcolor{#2471a3}{u_n}";
+  const guideText={
+    // the controlled map: q is the name of the state and f the name of the map
+    eq:(q,f)=>'<p class="eq">'+gt(q+"_{n+1}="+f+"("+q+"_n)+"+XI+"+"+UN,q+"(n+1) = "+f+"("+q+"(n)) + ξ(n) + u(n)")+'</p>',
+    bounds:(q,f)=>gt(XI,"ξ")+" is a disturbance that nobody chooses, with "+gt("\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}","|ξ| ≤ ξ₀")+", and "+gt(UN,"u")+" is the control, with "+
+      gt("\\textcolor{#2471a3}{|u_n|\\le u_0}","|u| ≤ u₀")+", applied knowing "+gt(f+"("+q+"_n)+\\xi_n",f+"("+q+") + ξ")+".",
+    aim:"Partial control looks for the smallest bound "+gt("u_0","u₀")+" that does the job, and it is often smaller than "+gt("\\xi_0","ξ₀")+".",
+    sculpt:"start with all the grid points of "+gt("Q","Q")+" and remove, again and again, those whose image cannot be returned to the set with "+
+      gt("|u_n|\\le u_0","|u| ≤ u₀")+" for some disturbance. What remains is the safe set",
+    // the recursion of the safety function
+    recur:q=>'<p class="eq sm">'+gt("\\displaystyle U_{k+1}("+q+")=\\max_{|\\xi|\\le\\xi_0}\\,\\min_{y\\in Q}\\,\\max\\bigl(|f("+q+")+\\xi-y|,\\,U_k(y)\\bigr)","U(k+1) = max over ξ of min over y of max(|f + ξ − y|, U(k)(y))")+'</p>',
+    // several equations, one per line and aligned at the equals sign
+    lines:arr=>'<p class="eq">'+gt("\\begin{aligned}"+arr.map(t=>t.replace("=","&=")).join("\\\\[3pt]")+"\\end{aligned}",arr.join("; "))+'</p>'
+  };
 
   function go(name){
     if(!routes[name])name="1d";
@@ -963,7 +987,7 @@ const PC=(()=>{
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else setTimeout(boot,0);
 
-  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,loadScript,redraw,refreshGuide,MF,THREE_URL,CTRL,UNCTRL,isMobile:()=>mq.matches,active:()=>cur};
+  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,loadScript,redraw,refreshGuide,guideKey,gt,guideText,MF,THREE_URL,CTRL,UNCTRL,isMobile:()=>mq.matches,active:()=>cur};
 })();
 </script>
 <script>
@@ -1490,7 +1514,7 @@ for(let i=0;i<data.length;i++){ctx.beginPath();ctx.arc(txf(i),tyf(data[i]),dr,0,
 ctx.fillStyle=col===PC.CTRL?"#1c2430":col;ctx.font="600 "+(w>500?15:12)+"px 'Source Sans 3',system-ui,sans-serif";ctx.fillText(lbl,w-P.r-ctx.measureText(lbl).width,14);}
 
 let _raf=0;
-function redraw(){if(S.mode==="safety"){S.ax=compAx(S.xmap,S.ymap,S.xmap.length,S.xmin,S.xmax);drawSafety();return;}recompute();if(S.mode==="safeset")drawMain();else if(S.mode==="iterations")drawIterations();
+function redraw(){PC.guideKey("1d|"+S.mapName+"|"+S.mode+"|"+S.regionQ.join());if(S.mode==="safety"){S.ax=compAx(S.xmap,S.ymap,S.xmap.length,S.xmin,S.xmax);drawSafety();return;}recompute();if(S.mode==="safeset")drawMain();else if(S.mode==="iterations")drawIterations();
 else if(S.mode==="controlled_activate")drawControlled();else drawCtrlIter();}
 function sched(){if(_raf)return;_raf=1;requestAnimationFrame(()=>{_raf=0;redraw();});}
 
@@ -2184,27 +2208,36 @@ function layout1d(){
 //  Guide
 // ---------------------------------------------------------------------------
 function guide1d(){
-  const sys=`<h3>The system</h3>
-<p>The black curve is a one-dimensional map <span data-tex="f(x)">f(x)</span> and the thick line on the axis is the region <span data-tex="Q">Q</span>. Without control, orbits leave <span data-tex="Q">Q</span> after a chaotic transient. Each iteration is</p>
-<p class="eq"><span data-tex="x_{n+1}=f(x_n)+\\textcolor{#c0392b}{\\xi_n}+\\textcolor{#2471a3}{u_n}">x(n+1) = f(x(n)) + ξ(n) + u(n)</span></p>
-<p>where <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> is a disturbance nobody chooses and <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span> is the control, applied knowing <span data-tex="f(x_n)+\\xi_n">f(x) + ξ</span>.</p>
-<p>The blue bars under the plot are the <b>safe set</b>: the points of <span data-tex="Q">Q</span> whose orbit can be kept in <span data-tex="Q">Q</span> forever with that control, whatever the disturbance does. It can exist even when <span data-tex="u_0<\\xi_0">u₀ &lt; ξ₀</span>.</p>`;
+  const g=PC.gt,G=PC.guideText,X=g("x","x"),Q=g("Q","Q"),U0=g("u_0","u₀"),XI0=g("\\xi_0","ξ₀");
+  const iv=[];for(let k=0;k<S.regionQ.length-1;k+=2){const a=S.regionQ[k],b=S.regionQ[k+1];if(!isNaN(a)&&!isNaN(b)&&a<b)iv.push("["+sig(a,4)+",\\,"+sig(b,4)+"]");}
+  const qTex="Q="+(iv.join("\\cup")||"\\varnothing"),custom=S.mapName==="Custom equation";
+  const sys=`<h3>The map on screen</h3>
+<p>The black curve is ${custom?"the map typed in the map panel":"the <b>"+S.mapName+"</b>"}, a one-dimensional map ${g("f(x)","f(x)")}, with the parameters ${g("A","A")} and ${g("B","B")} of the map panel. The thick line on the axis is the region ${g(qTex,"Q")}. An orbit bounces chaotically inside ${Q} for a while and then leaves it. The aim is to keep it inside forever.</p>
+<h3>The control problem</h3>
+${G.eq("x","f")}
+<p>${G.bounds("x","f")} ${G.aim}</p>`;
+  const safe=`The <b>blue bars</b> under the plot are the safe set for the ${XI0} and ${U0} of the panel: the points of ${Q} whose orbit can be kept in ${Q} forever, whatever the disturbance does. It is computed here with the Sculpting Algorithm on a grid of the interval (3,000 to 20,000 points, finer when ${U0} is small): ${G.sculpt}. If nothing remains, ${U0} is too small.`;
   const modes={
-    controlled_iterates:`<h3>What the plot shows: controlled orbits</h3>
-<p>An orbit that starts at <span data-tex="x_0">x₀</span>, drawn as a cobweb. After each iteration the control returns the point to the safe set, so the orbit never leaves <span data-tex="Q">Q</span>. <b>Minimum control</b> uses the smallest correction that works and <b>Random control</b> any correction that works. <b>Time series</b> plots the orbit, the disturbance and the control against <span data-tex="n">n</span>.</p>`,
-    iterations:`<h3>What the plot shows: uncontrolled orbits</h3>
-<p>The same kind of orbit with the disturbance and without control. It leaves <span data-tex="Q">Q</span> after a few iterations. Compare it with the controlled orbit from the same <span data-tex="x_0">x₀</span>.</p>`,
-    safeset:`<h3>What the plot shows: the safe set</h3>
-<p>The map and its safe set, with no orbit. Move <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span> and watch the bars grow, split or disappear. <b>Show f(safe set)</b> draws where the map sends the safe set.</p>`,
-    controlled_activate:`<h3>What the plot shows: one iteration at a time</h3>
-<p>Each press of <b>Next iteration</b> draws one step from the current point: the image <span data-tex="f(x_n)">f(x)</span>, the disturbance as a red arrow and the control as a blue arrow that returns the point to the safe set. It shows why a point of the safe set can always be brought back.</p>`,
-    safety:`<h3>What the plot shows: safety function</h3>
-<p><span data-tex="U(x)">U(x)</span> is the smallest control bound that keeps the orbit of <span data-tex="x">x</span> in <span data-tex="Q">Q</span> forever. The dashed lines mark <span data-tex="\\xi_0">ξ₀</span> (red) and <span data-tex="u_0">u₀</span> (blue). The safe set is where the curve lies under the <span data-tex="u_0">u₀</span> line, the shaded valleys, so a safe set exists only when <span data-tex="u_0\\ge\\min U">u₀ ≥ min U</span>. Moving <span data-tex="u_0">u₀</span> does not change the curve, only the level.</p>`};
+    controlled_iterates:`<h3>What is drawn: a controlled orbit</h3>
+<p>${safe}</p>
+<p>The <b>amber cobweb</b> is an orbit that starts at ${g("x_0","x₀")}. In each iteration the map acts (amber), then the disturbance moves the point (red step) and the control returns it to a blue bar (blue step), so the orbit never leaves ${Q}. <b>Minimum control</b> goes to the nearest point of the safe set and <b>Random control</b> to any point of it within reach. <b>Time series</b> plots the orbit, the disturbance and the control against ${g("n","n")}.</p>`,
+    iterations:`<h3>What is drawn: an uncontrolled orbit</h3>
+<p>The <b>black cobweb</b> is an orbit from ${g("x_0","x₀")} with the disturbance (red steps) and no control. After some iterations it leaves ${Q}, which is what the control avoids. Compare it with the controlled orbit from the same ${g("x_0","x₀")}.</p>`,
+    safeset:`<h3>What is drawn: the safe set</h3>
+<p>${safe}</p>
+<p>Move ${XI0} and ${U0} and watch the bars grow, split or disappear. <b>Show f(safe set)</b> draws where the map sends the safe set: every image lands where the control can return the point to the set, whatever the disturbance does.</p>`,
+    controlled_activate:`<h3>What is drawn: one iteration at a time</h3>
+<p>${safe}</p>
+<p>Each press of <b>Next iteration</b> draws one step from the current point: the image ${g("f(x_n)","f(x)")}, the disturbance as a red arrow and the control as a blue arrow that returns the point to a blue bar. It shows why a point of the safe set can always be brought back.</p>`,
+    safety:`<h3>What is drawn: the safety function</h3>
+<p>${g("U(x)","U(x)")} gives, for each point of ${Q}, the smallest control bound with which its orbit can be kept in ${Q} forever, for the ${XI0} of the panel. It is computed here on a grid of ${uGridN().toLocaleString("en-US")} points, starting from ${g("U_0=0","U₀ = 0")} and repeating</p>
+${G.recur("x")}
+<p>until it stops changing.</p>
+<p><b>Relation with the safe set.</b> The safe set for a bound ${U0} is the set of points with ${g("U(x)\\le u_0","U(x) ≤ u₀")}: the shaded valleys under the blue dashed line. One curve therefore holds the safe sets of every ${U0}, and ${g("\\min U","min U")} is the smallest bound for which a safe set exists. Moving ${U0} only moves the line. The red dashed line marks ${XI0}.</p>`};
   const vary=`<h3>What you can change</h3>
-<p>The view, with the five buttons. The bounds <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, with <b>Lock ratio</b> to move both together. The region <span data-tex="Q">Q</span>, up to three intervals. The starting point <span data-tex="x_0">x₀</span> and the number of iterations. The map and its parameters <span data-tex="A">A</span> and <span data-tex="B">B</span>, or your own equation. <b>Export</b> writes Python and MATLAB code of the computation.</p>`;
-  return{title:"Guide: 1D maps",html:sys+(modes[S.mode]||modes.safeset)+vary};
+<p>The view, with the five buttons. The bounds ${XI0} and ${U0}, with <b>Lock ratio</b> to move both together. The region ${Q}, up to three intervals. The starting point and the number of iterations. The map and its parameters, or your own equation. <b>Export</b> writes Python and MATLAB code of the computation.</p>`;
+  return{title:"Guide: "+(custom?"custom map":S.mapName),html:sys+(modes[S.mode]||modes.safeset)+vary};
 }
-["btnCtrlIter","btnIter","btnSafe","btnCheck","btnSafety"].forEach(id=>$(id).addEventListener("click",()=>setTimeout(PC.refreshGuide,0)));
 
 PC.register("1d",{
   guide:guide1d,
@@ -2607,7 +2640,8 @@ function drawSafeSet(){
   const big=w>560,MF=PC.MF,mt=PC.mtext;
   const P={l:big?62:46,r:14,t:Math.max(big?26:20,$("plotTitle").offsetHeight)+(big?12:8),b:big?44:36};
   const pw=w-P.l-P.r,ph=h-P.t-P.b;
-  S._plot={P,pw,ph,w,h};                                   // the surface seen from above uses the same rectangle
+  S._plot={P,pw,ph,w,h};
+  PC.guideKey("2d|"+[S.mapName,S.view,S.xi,S.xf,S.yi,S.yf,S.N].join());                                   // the surface seen from above uses the same rectangle
   if(S.view==="U"){surfSync();ensureU();uStatus();return;}     // the surface replaces this plot
   const vxi=S.vxi,vxf=S.vxf,vyi=S.vyi,vyf=S.vyf;
   const{xi,xf,yi,yf}=S;
@@ -3921,22 +3955,31 @@ $("zoomOut").addEventListener("click",()=>{S.vxi=S.xi;S.vyi=S.yi;S.vxf=S.xf;S.vy
 //  Guide
 // ---------------------------------------------------------------------------
 function guide2d(){
-  const sys=`<h3>The system</h3>
-<p>A map of the plane, <span data-tex="q=(x,y)\\mapsto f(q)">q = (x, y) → f(q)</span>, and a region <span data-tex="Q">Q</span>, the rectangle of the plot. Without control, orbits leave <span data-tex="Q">Q</span> after a chaotic transient. Each iteration is</p>
-<p class="eq"><span data-tex="q_{n+1}=f(q_n)+\\textcolor{#c0392b}{\\xi_n}+\\textcolor{#2471a3}{u_n}">q(n+1) = f(q(n)) + ξ(n) + u(n)</span></p>
-<p>where <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> is a disturbance nobody chooses and <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span> is the control, applied knowing <span data-tex="f(q_n)+\\xi_n">f(q) + ξ</span>. Both are bounded in Euclidean norm.</p>`;
-  const viewS=`<h3>What the plot shows: safe set</h3>
-<p>The blue points are the safe set: the points of <span data-tex="Q">Q</span> whose orbit can be kept in <span data-tex="Q">Q</span> forever with <span data-tex="|u_n|\\le u_0">|u| ≤ u₀</span>, whatever the disturbance does. The red and blue discs in the corner show the size of <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span> at the scale of the plot.</p>
-<p><b>Controlled</b> draws an orbit kept in the safe set (amber). <b>Uncontrolled</b> draws an orbit with the same kind of disturbance and no control (black), which escapes. <b>Chaotic saddle</b> draws the set where orbits of the map without disturbance stay (green).</p>
-<p><b>Zoom.</b> Drag a rectangle, turn the wheel or pinch. <b>Back</b> and <b>Full view</b> appear at the bottom of the plot once you zoom; a double click also returns to the full view.</p>`;
-  const viewU=`<h3>What the plot shows: safety function</h3>
-<p>The surface is <span data-tex="U(x,y)">U(x, y)</span>: for each point of <span data-tex="Q">Q</span>, the smallest control bound that keeps its orbit in <span data-tex="Q">Q</span> forever. The vertical scale is logarithmic and the colour repeats the height, so the valleys are the points that are easiest to keep.</p>
-<p>The translucent blue plane sits at <span data-tex="u_0">u₀</span>. The part of the surface below the plane is the safe set for that <span data-tex="u_0">u₀</span>. Move the <span data-tex="u_0">u₀</span> slider and the plane moves; when it drops below the whole surface, <span data-tex="u_0<\\min U">u₀ &lt; min U</span> and there is no safe set.</p>
-<p><b>View.</b> Drag to rotate, turn the wheel or pinch to zoom, right-drag or use two fingers to move. <b>Top view</b> looks from above, on the same axes as the Safe set view, so the two pictures can be compared. <b>Reset view</b> returns to the start.</p>
-<p><b>Computation.</b> <span data-tex="U">U</span> is obtained on a grid with the algorithm of Capeáns, Sabuco and Sanjuán (2019). It takes a few seconds and is repeated when the map, <span data-tex="Q">Q</span> or <span data-tex="\\xi_0">ξ₀</span> change, not when <span data-tex="u_0">u₀</span> changes.</p>`;
+  const g=PC.gt,G=PC.guideText,cf=MAP_CONFIGS[S.mapName],Q=g("Q","Q"),U0=g("u_0","u₀"),XI0=g("\\xi_0","ξ₀");
+  const eqs=G.lines(cf.tex),box=g("["+fmtB(S.xi)+",\\,"+fmtB(S.xf)+"]\\times["+fmtB(S.yi)+",\\,"+fmtB(S.yf)+"]","the rectangle of the plot");
+  const sys=`<h3>The map on screen</h3>`+(cf.holes?
+`<p>The Hénon map</p>
+${eqs}
+<p>which has a chaotic attractor. The region ${Q} is the rectangle ${box} without seven discs of radius ${g("r","r")}, the white holes, centred on a period-7 orbit. Leaving ${Q} means falling into a hole, so here the control keeps the orbit moving on the attractor but always away from the holes.</p>`:
+`<p>The <b>${cf.label} map</b></p>
+${eqs}
+<p>with the parameters ${cf.ptex.map(t=>g(t)).join(" and ")} of the panel. The region ${Q} is the rectangle of the plot, ${box}. An orbit moves chaotically inside ${Q} for a while and then leaves it. The aim is to keep it inside forever.</p>`)+`
+<h3>The control problem</h3>
+${G.eq("q","f")}
+<p>Here ${g("q=(x,y)","q = (x, y)")}. ${G.bounds("q","f")} Both are bounded in Euclidean norm: the red and blue discs in the corner of the plot show their size. ${G.aim}</p>`;
+  const viewS=`<h3>What is drawn: the safe set</h3>
+<p>The <b>blue points</b> are the safe set for the ${XI0} and ${U0} of the panel: the points of ${Q} whose orbit can be kept in ${Q} forever, whatever the disturbance does. It is computed here with the Sculpting Algorithm on a grid of ${S.N} × ${S.N} points of ${Q}: ${G.sculpt}. If nothing remains, ${U0} is too small.</p>
+<p><b>Controlled</b> draws an orbit (amber) in which, after each iteration and its disturbance, the control returns the point to the safe set. <b>Uncontrolled</b> draws an orbit with the disturbance and no control (black), until it leaves ${Q}. <b>Chaotic saddle</b> (green) draws the points that stay in ${Q} with no disturbance and no control.</p>
+<p><b>Zoom.</b> Drag a rectangle, turn the wheel or pinch. <b>Back</b> and <b>Full view</b> appear at the bottom of the plot once you zoom.</p>`;
+  const nU=uParams().N;
+  const viewU=`<h3>What is drawn: the safety function</h3>
+<p>The surface is ${g("U(x,y)","U(x, y)")}: for each point of ${Q}, the smallest control bound with which its orbit can be kept in ${Q} forever, for the ${XI0} of the panel. Height and colour are ${g("\\log_{10}U","log U")}, so the valleys are the points that are easiest to keep. It is computed here on a grid of ${nU} × ${nU} points, as the limit of the recursion of Capeáns, Sabuco and Sanjuán (2019), starting from ${g("U_0=0","U₀ = 0")}:</p>
+${G.recur("q")}
+<p><b>Relation with the safe set.</b> The safe set for a bound ${U0} is the set of points with ${g("U\\le u_0","U ≤ u₀")}. The translucent blue plane is at the ${U0} of the panel, so the part of the surface below it is the safe set of the other view: press <b>Top view</b> and compare. One surface holds the safe sets of every ${U0}, and ${g("\\min U","min U")} is the smallest bound for which a safe set exists. Moving ${U0} only moves the plane; the surface is computed again when the map, ${Q} or ${XI0} change.</p>
+<p><b>View.</b> Drag to rotate, turn the wheel or pinch to zoom, right-drag or use two fingers to move. <b>Reset view</b> returns to the start.</p>`;
   const vary=`<h3>What you can change</h3>
-<p>The map and its parameters. The bounds <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, with <b>Lock ratio</b> to move both together. The limits of <span data-tex="Q">Q</span>, typed on the axes of the safe set plot. The grid: a finer grid resolves thinner pieces of the set and takes longer.</p>`;
-  return{title:"Guide: 2D maps",html:sys+(S.view==="U"?viewU:viewS)+vary};
+<p>The map and its parameters. The bounds ${XI0} and ${U0}, with <b>Lock ratio</b> to move both together. The limits of ${Q}, typed on the axes of the safe set plot. The grid: a finer one resolves thinner pieces of the set and takes longer.</p>`;
+  return{title:"Guide: "+(cf.holes?"Hénon map with holes":cf.label+" map"),html:sys+(S.view==="U"?viewU:viewS)+vary};
 }
 
 PC.register("2d",{
@@ -4224,6 +4267,7 @@ let scene,cam,R,vp,world,layers,grpBase,draco,ground=null,groundZ=0;
 let ready=false,active=false,raf=0,loadSeq=0;
 let currentMap='lorenz',cur=null,home=null,fitArgs=null,xoff=0,freeFrac=1;
 let tgt,camDist=110,camAz=-0.7,camEl=0.45;
+let cutPlane,grpCut,cut=null;
 let trajLoading=false,trajIdx=-1,trajBad=new Set(),seed=Date.now()%2147483647,fitNext=true;
 const vis={safe:true,asym:true,traj:false,unctrl:false};
 
@@ -4267,6 +4311,8 @@ function applyVis(){
   [layers.safe,layers.asym].forEach(grp=>grp.children.forEach(child=>{
     if(child.material){const baseOp=trajActive?0.7:1.0;
       child.material.opacity=baseOp;child.material.transparent=baseOp<1;child.material.depthWrite=baseOp>=0.9;child.material.needsUpdate=true;}}));
+  grpCut.children.forEach(m=>{if(m.userData.cap){m.material.opacity=trajActive?0.7:1.0;m.material.depthWrite=!trajActive;}});
+  applyCut();
 }
 function tog(key){
   if(key==='safe'){vis.safe=!vis.safe;if(vis.safe)vis.asym=true;}
@@ -4305,6 +4351,8 @@ function setup(){
   R.shadowMap.enabled=true;
   R.shadowMap.type=THREE.PCFSoftShadowMap;
   R.outputEncoding=THREE.sRGBEncoding;
+  R.localClippingEnabled=true;
+  cutPlane=new THREE.Plane(new THREE.Vector3(0,0,-1),1e6);   // keeps what lies below the plane
   threadRes.value=new THREE.Vector2(vw0/2,vh0/2);
   R.toneMapping=THREE.ACESFilmicToneMapping;
   R.toneMappingExposure=1.1;
@@ -4328,6 +4376,7 @@ function setup(){
   world=new THREE.Group();scene.add(world);
   grpBase=new THREE.Group();world.add(grpBase);
   Object.values(layers).forEach(g=>world.add(g));
+  grpCut=new THREE.Group();world.add(grpCut);
   tgt=new THREE.Vector3(0,0,0);
   camDist=MAP_CONFIG[currentMap].camDist;
   updateCam();bindControls();
@@ -4468,7 +4517,7 @@ function mkMesh(verts,faces,normals,color,opacity){
   g.setAttribute('position',new THREE.BufferAttribute(verts,3));
   g.setIndex(new THREE.BufferAttribute(faces,1));
   g.setAttribute('normal',new THREE.BufferAttribute(normals,3));
-  const m=new THREE.MeshPhongMaterial({color,opacity,transparent:opacity<0.99,side:THREE.DoubleSide,depthWrite:opacity>0.9,
+  const m=new THREE.MeshPhongMaterial({color,opacity,transparent:opacity<0.99,side:THREE.DoubleSide,depthWrite:opacity>0.9,clippingPlanes:[cutPlane],clipShadows:true,
     shininess:50,specular:new THREE.Color(0x333333),dithering:true});
   const mesh=new THREE.Mesh(g,m);
   mesh.castShadow=true;mesh.receiveShadow=true;
@@ -4484,6 +4533,25 @@ function mkLabel(text,pos,size){
   sp.position.set(pos[0],pos[1],pos[2]);
   sp.scale.set(size,size*0.5,1);
   return sp;
+}
+// Horizontal cut. The sets are drawn only below a plane, and the hole left in each surface is closed with a flat
+// face, its section at that height. The face is found with the stencil buffer: seen through the cut surface,
+// a pixel lies inside the set when the back and front faces behind it do not cancel.
+const CUT_SAFE=0x3366bb,CUT_ASYM=0xcc2211;   // the cut faces have the plain colours of the legend, with no shading
+function mkCap(geom,color,order,key,cx,cy,size,zOff){
+  [[THREE.BackSide,THREE.IncrementWrapStencilOp],[THREE.FrontSide,THREE.DecrementWrapStencilOp]].forEach(([side,op])=>{
+    const m=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({side,clippingPlanes:[cutPlane],depthWrite:false,depthTest:false,colorWrite:false,
+      transparent:true,stencilWrite:true,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:op,stencilZFail:op,stencilZPass:op}));
+    m.position.z=zOff;m.renderOrder=order;m.userData.key=key;grpCut.add(m);});
+  const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshBasicMaterial({color:new THREE.Color(color).convertSRGBToLinear(),toneMapped:false,side:THREE.DoubleSide,transparent:true,
+    stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
+  cap.position.set(cx,cy,0);cap.renderOrder=order+0.5;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,cap:true};grpCut.add(cap);
+}
+function applyCut(){
+  if(!cut)return;
+  const f=$('cut').value/100,on=f<1,z=cut.z0+(cut.z1-cut.z0)*f+cut.zOff;
+  cutPlane.constant=on?z*cut.sc:1e6;
+  grpCut.children.forEach(m=>{m.visible=on&&vis[m.userData.key];if(m.userData.cap)m.position.z=z;});
 }
 function clearGroup(g){
   while(g.children.length){
@@ -4596,8 +4664,8 @@ function applyLen(){
 function loadAndBuild(onDone){
   const seq=++loadSeq,cfg=MAP_CONFIG[currentMap];
   showLoading('Loading safe set','Downloading the surfaces');
-  [layers.safe,layers.asym,layers.traj,layers.unctrl,grpBase].forEach(clearGroup);
-  ground=null;cur=null;
+  [layers.safe,layers.asym,layers.traj,layers.unctrl,grpBase,grpCut].forEach(clearGroup);
+  ground=null;cur=null;cut=null;
   const dt=$('selDt').value,xu=$('selXU').value.split(','),urls=cfg.getURLs(dt,xu);
   const bar=$('loadBar'),prog=[0,0];
   const ld=(url,i)=>new Promise((resolve,reject)=>draco.load(url,resolve,p=>{
@@ -4703,6 +4771,10 @@ function build(safeGeom,asymGeom,cfg){
       grpBase.add(mkLabel(lbl,[pos[0]+2,pos[1]-1,pos[2]+2+zOff],4));
     });
   }
+  let zMax=-1e9;for(let i=2;i<sv.length;i+=3)zMax=Math.max(zMax,sv[i]);
+  cut={z0:zMin,z1:zMax,zOff,sc};
+  mkCap(mSafe.geometry,CUT_SAFE,1,'safe',cx,cy,cfg.groundSize,zOff);
+  mkCap(mAsym.geometry,CUT_ASYM,2,'asym',cx,cy,cfg.groundSize,zOff);
   cur={av,nv,zOff,cfg,eq,sv,sf,idx:null};
   applyVis();
 }
@@ -4830,6 +4902,7 @@ function onParamChange(){
   const hadTraj=vis.traj,hadUnctrl=vis.unctrl;
   vis.traj=false;vis.unctrl=false;trajIdx=-1;trajBad=new Set();applyVis();
   loadAndBuild(()=>{if(hadTraj)loadControlledTrajectory();if(hadUnctrl)recomputeU();});
+  PC.refreshGuide();
 }
 function onMapChange(){
   const newMap=$('selMap').value;
@@ -4839,7 +4912,7 @@ function onMapChange(){
   populate(currentMap);panelInfo(currentMap);PC.refreshGuide();
   vis.traj=false;vis.unctrl=false;trajIdx=-1;trajBad=new Set();applyVis();
   if(!ready)return;
-  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;
+  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;$('cut').value=100;
   loadAndBuild();
 }
 
@@ -4856,20 +4929,49 @@ function boot(){
 
 // ------------------------------ guide ------------------------------
 function guide3d(){
-  const cfg=MAP_CONFIG[currentMap],step=cfg.dtLabel?'every <span data-tex="n">n</span> iterations of the map':'once every <span data-tex="\\Delta t">Δt</span> of the flow';
-  return{title:"Guide: 3D systems",html:`<h3>The system</h3>
-<p>Three systems with three variables: the Lorenz system, the McCann-Yodzis food chain model and a Hénon map with delay. In all of them trajectories leave a region of phase space after a chaotic transient. The control acts ${step}, and between two controls the system evolves on its own:</p>
-<p class="eq"><span data-tex="q_{n+1}=f(q_n)+\\textcolor{#c0392b}{\\xi_n}+\\textcolor{#2471a3}{u_n}">q(n+1) = f(q(n)) + ξ(n) + u(n)</span></p>
-<p>with a disturbance <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> and a control <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span>, both vectors of three components.</p>
-<h3>What the picture shows</h3>
-<p>The <b>blue</b> surface encloses the safe set: the points from which the trajectory can be kept in the region forever with <span data-tex="|u_n|\\le u_0">|u| ≤ u₀</span>. The <b>red</b> surface is the asymptotic safe set, the part of the safe set where controlled trajectories end up after the first controls.</p>
-`+(cfg.isMap?`<p><b>Controlled trajectory</b> and <b>Uncontrolled trajectory</b> draw orbits of the map as points, red with control and black without it, joined by faint lines that only show the order. Each step is <span data-tex="n">n</span> iterations of the map, then the disturbance and, in the controlled orbit, the smallest control that returns the point to the safe set. They are computed here from the blue surface. The round arrows draw a new orbit and <b>Length</b> sets how much of the controlled one is drawn.</p>
-`:`<p><b>Controlled trajectory</b> draws a trajectory kept with those bounds. <b>Uncontrolled trajectory</b> draws one with the same kind of disturbance and no control, which leaves the region. The surfaces turn translucent while a trajectory is shown, and the round arrows draw a new one. The controlled trajectory is long and keeps returning to the same places, so only its first part is drawn: <b>Length</b> sets how much.</p>
-`)+`<p>The sets were computed in advance on fine three-dimensional grids, only for the values in the menus.</p>
+  const g=PC.gt,G=PC.guideText,cfg=MAP_CONFIG[currentMap],U0=g("u_0","u₀"),XI0=g("\\xi_0","ξ₀");
+  const dt=$('selDt').value,xu=$('selXU').value.split(','),DT=g("\\Delta t","Δt");
+  const vals=g("\\xi_0="+(+xu[0]),"ξ₀ = "+(+xu[0]))+" and "+g("u_0="+(+xu[1]),"u₀ = "+(+xu[1]));
+  // what each system is, what the control is for, and how its sets were obtained
+  const SYS={
+    lorenz:{title:"Lorenz system",
+      what:`<p>The Lorenz system</p>
+${G.lines(["\\dot x=\\sigma(y-x)","\\dot y=x(r-z)-y","\\dot z=xy-bz"])}
+<p>with ${g("\\sigma=10")}, ${g("b=8/3")} and ${g("r=20")}. For these values chaos is transient: a trajectory wanders around the two fixed points ${g("C^{+}","C+")} and ${g("C^{-}","C−")}, the grey balls, for a while and then spirals into one of them. The aim is to keep it wandering forever.</p>`,
+      keep:`the points from which the trajectory can be kept away from ${g("C^{+}","C+")} and ${g("C^{-}","C−")} forever`,
+      grid:`a grid of 2001 points per axis over the region ${g("Q","Q")} of phase space where the trajectory is to stay`,end:"it ends at one of the fixed points"},
+    mccann:{title:"McCann-Yodzis model",
+      what:`<p>A food chain of three species, the McCann-Yodzis model: a resource ${g("R","R")}, a consumer ${g("C","C")} and a predator ${g("P","P")}, with the parameters shown in the panel. For these values the three populations oscillate chaotically for a while and then the predator becomes extinct. The aim is to keep the three species alive forever.</p>`,
+      keep:"the states from which the extinction of the predator can be avoided forever",
+      grid:`a fine three-dimensional grid over the region ${g("Q","Q")} of phase space where the populations are to stay`,end:"it ends with the extinction of the predator"},
+    henon3d:{title:"Hénon 3D map",
+      what:`<p>A three-dimensional map, a Hénon map with delay,</p>
+${G.lines(["x'=bz","y'=cx+bz","z'=1+y-az^2"])}
+<p>with ${g("a=1.1")}, ${g("b=0.3")} and ${g("c=1")}. The region ${g("Q","Q")} is the cube ${g("[-2,2]^3")}. The aim is to keep the orbit inside the cube forever.</p>`,
+      keep:`the points of the cube whose orbit can be kept in it forever`,
+      grid:"a fine three-dimensional grid of the cube"}
+  }[currentMap];
+  const problem=cfg.isMap?
+`<p>The control acts every ${g("n","n")} iterations of the map, here ${g("n="+dt,"n = "+dt)}: ${g("f","f")} is the map applied ${g("n","n")} times, and then the state receives a disturbance and a correction,</p>`:
+`<p>The flow is turned into a map: ${g("f(q)","f(q)")} is the point reached from ${g("q","q")} after a time ${g("\\Delta t="+dt,"Δt = "+dt)}. Once every ${DT} the state receives a disturbance and a correction,</p>`;
+  const traj=cfg.isMap?
+`<p><b>Controlled trajectory</b> and <b>Uncontrolled trajectory</b> draw orbits as points, red with control and black without it, one point per control step, joined by faint lines that only show the order. They are computed here: ${g("n","n")} iterations, the disturbance and, in the controlled orbit, the smallest control that returns the point inside the blue surface. The round arrows draw a new orbit and <b>Length</b> sets how much of the controlled one is drawn.</p>`:
+`<p><b>Controlled trajectory</b> (amber) was computed in advance with these bounds. Every ${DT} the control puts the state back in the safe set: zoom in and the corrections appear as small jumps of the thread. It keeps returning to the same places, so only its first part is drawn; <b>Length</b> sets how much. <b>Uncontrolled trajectory</b> (black) has the same kind of disturbance and no control; it is integrated here and ${SYS.end}. The round arrows draw a new one.</p>`;
+  return{title:"Guide: "+SYS.title,html:`<h3>The system on screen</h3>
+${SYS.what}
+<h3>The control problem</h3>
+${problem}
+${G.eq("q","f")}
+<p>with ${g("\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}","|ξ| ≤ ξ₀")} and ${g("\\textcolor{#2471a3}{|u_n|\\le u_0}","|u| ≤ u₀")}, both vectors of the three variables. Here ${vals}: the control is smaller than the disturbance. Between two corrections the system evolves on its own.</p>
+<h3>What is drawn and how it was obtained</h3>
+<p><b>Blue surface: the safe set</b> for these bounds, ${SYS.keep}, whatever the disturbance does. It was computed in advance with the Sculpting Algorithm on ${SYS.grid}: ${G.sculpt}. The surface is the boundary of that set, smoothed for drawing.</p>
+<p><b>Red surface: the asymptotic safe set</b>, the part of the safe set that controlled trajectories visit once the first corrections have been made.</p>
+<p><b>Cut</b> removes what lies above a horizontal plane, to look inside the sets. The flat faces in plain blue and red are the sections of the two sets at that height.</p>
+${traj}
 <h3>No safety function here</h3>
-<p>Safety functions are not shown for these systems. <span data-tex="U">U</span> would be a function of three variables, which cannot be drawn as a surface, so only the safe sets for the listed pairs <span data-tex="(\\xi_0,u_0)">(ξ₀, u₀)</span> are given.</p>
+<p>${g("U","U")} would be a function of three variables, which cannot be drawn as a surface, so only the safe sets of the pairs ${g("(\\xi_0,u_0)","(ξ₀, u₀)")} in the menu are given.</p>
 <h3>What you can change</h3>
-<p>The system, the time between controls and the pair <span data-tex="(\\xi_0,u_0)">(ξ₀, u₀)</span>, and which surfaces and trajectories are drawn. Drag to rotate, turn the wheel or pinch to zoom at the pointer, right-drag or use two fingers to move. <b>Reset view</b> or a double click returns to the start.</p>`};
+<p>The system, the time between corrections and the pair ${g("(\\xi_0,u_0)","(ξ₀, u₀)")}, and which surfaces and trajectories are drawn. Drag to rotate, turn the wheel or pinch to zoom at the pointer, right-drag or use two fingers to move. <b>Reset view</b> or a double click returns to the start.</p>`};
 }
 
 PC.register("3d",{
@@ -4885,6 +4987,7 @@ PC.register("3d",{
     $('bUnctrl').addEventListener('click',()=>tog('unctrl'));
     $('bRecomp').addEventListener('click',loadControlledTrajectory);
     $('len').addEventListener('input',applyLen);
+    $('cut').addEventListener('input',applyCut);
     $('bRecompU').addEventListener('click',recomputeU);
     $('reset').addEventListener('click',resetView);
     $('retry').addEventListener('click',()=>{if(ready)loadAndBuild();else boot();});
@@ -5308,7 +5411,7 @@ var nc=cPts?cPts.length/6:0;
 $('ti').textContent=nc+' crossings of the section';
 drawSS();
 draw3D();
-setP(100,'Done in '+((t3-t0)/1e3).toFixed(1)+' s');
+setP(100,'Done in '+((t3-t0)/1e3).toFixed(1)+' s');PC.refreshGuide();
 $('go').disabled=false;$('go').textContent='Recompute';
 }
 
@@ -5317,15 +5420,18 @@ $('go').disabled=false;$('go').textContent='Recompute';
 // ------------------------------ view and guide ------------------------------
 $('reset').addEventListener('click',function(){az=-40*Math.PI/180;el=25*Math.PI/180;vD=55;tx=0;ty=0;tz=19;if(fTraj)draw3D();});
 function guideP(){
-  return{title:"Guide: Lorenz on a Poincaré section",html:`<h3>The system</h3>
-<p>The Lorenz system with <span data-tex="\\sigma=10">σ = 10</span>, <span data-tex="b=8/3">b = 8/3</span> and <span data-tex="r=20">r = 20</span>. Its trajectories wander chaotically for a while and then fall to one of the two fixed points <span data-tex="C^{+}">C+</span> and <span data-tex="C^{-}">C−</span>. Here the control is applied only when the trajectory crosses the plane <span data-tex="z=19">z = 19</span> downwards. The map that takes one crossing to the next is a map of the plane, so the problem becomes two-dimensional:</p>
-<p class="eq"><span data-tex="q_{n+1}=P(q_n)+\\textcolor{#c0392b}{\\xi_n}+\\textcolor{#2471a3}{u_n}">q(n+1) = P(q(n)) + ξ(n) + u(n)</span></p>
-<p>where <span data-tex="q=(x,y)">q = (x, y)</span> is the crossing point, with <span data-tex="\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}">|ξ| ≤ ξ₀</span> and <span data-tex="\\textcolor{#2471a3}{|u_n|\\le u_0}">|u| ≤ u₀</span>.</p>
-<h3>What the plots show</h3>
-<p><b>Left.</b> The safe set on the section, in blue: the crossing points from which the trajectory can be kept away from the fixed points forever. The discs show the size of <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>. Everything is computed in your browser: first the Poincaré map on a grid of points of the section, then the safe set.</p>
-<p><b>Right.</b> A controlled trajectory in phase space. It is corrected only at its crossings of the section, and it keeps moving around both fixed points without falling to either.</p>
+  const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
+  return{title:"Guide: Lorenz on a Poincaré section",html:`<h3>The system on screen</h3>
+<p>The Lorenz system with ${g("\\sigma=10")}, ${g("b=8/3")} and ${g("r=20")}. Its trajectories wander around the two fixed points ${Cp} and ${Cm} for a while and then spiral into one of them. The aim is to keep the trajectory wandering forever, correcting it as seldom as possible.</p>
+<h3>The control problem</h3>
+<p>The trajectory is corrected only when it crosses the plane ${g("z=19")}, which contains ${Cp} and ${Cm}, going down. The map ${g("P","P")} that takes one crossing point ${g("q=(x,y)","q = (x, y)")} to the next is a map of the plane, so the problem becomes two-dimensional:</p>
+${G.eq("q","P")}
+<p>${G.bounds("q","P")} Both act on the plane. Between two crossings the system evolves on its own.</p>
+<h3>What is drawn and how it was obtained</h3>
+<p><b>Left.</b> The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
+<p><b>Right.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
 <h3>What you can change</h3>
-<p>The grid, <span data-tex="\\xi_0">ξ₀</span> and <span data-tex="u_0">u₀</span>, and then press <b>Compute</b>. A finer grid takes longer. In the right plot, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+<p>The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the right picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
 }
 
 function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();}
