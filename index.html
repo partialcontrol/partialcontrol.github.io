@@ -4333,7 +4333,7 @@ function panelInfo(mapKey){
   $('rowTraj').hidden=!cfg.hasTraj;$('rowUnctrl').hidden=!cfg.hasTraj;$('rowLen').hidden=!cfg.hasTraj;
   $('panel').style.setProperty('--trj',cfg.isMap?DOT_CTRL:'');           // colour of the controlled orbit in the panel
 }
-const GLASS=Number((location.search.match(/glass=([\d.]+)/)||[])[1])||0.34,GLASS_A=Number((location.search.match(/glassa=([\d.]+)/)||[])[1])||0.5;   // opacity of the glass: safe set and asymptotic safe set
+const GLASS=Number((location.search.match(/glass=([\d.]+)/)||[])[1])||0.42,GLASS_A=Number((location.search.match(/glassa=([\d.]+)/)||[])[1])||0.58;   // opacity of the glass: safe set and asymptotic safe set
 function applyVis(){
   if(layers)Object.keys(vis).forEach(k=>{layers[k].visible=vis[k];});
   [['bSafe','safe'],['bAsym','asym'],['bTraj','traj'],['bUnctrl','unctrl']].forEach(([id,k])=>{
@@ -4522,7 +4522,7 @@ function resize(){
   const pw=PC.isMobile()?0:Math.min(vw*0.45,$('panel').offsetWidth+24);
   xoff=-pw/2;freeFrac=(vw-pw)/vw;
   cam.aspect=vw/vh;cam.setViewOffset(vw,vh,xoff,0,vw,vh);R.setSize(vw,vh);
-  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=(PC.isMobile()?1.5:2.6)*pr;dotPx.value=6*pr;
+  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=(PC.isMobile()?1.2:2.6)*pr;dotPx.value=6*pr;
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
