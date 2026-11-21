@@ -4345,9 +4345,13 @@ function applyVis(){
   // one with no colour that finds its nearest wall, and one that draws only that wall. A wall in front of the
   // trajectory veils it, and where nothing lies in front the trajectory is clean.
   const glass=vis.traj||vis.unctrl;
-  [[layers.asym,3,GLASS_A],[layers.safe,3.2,GLASS]].forEach(([grp,order,op])=>grp.children.forEach(ch=>{const m=ch.material;if(!m)return;
+  [[layers.asym,3,GLASS_A,64],[layers.safe,3.2,GLASS,32]].forEach(([grp,order,op,bit])=>grp.children.forEach(ch=>{const m=ch.material;if(!m)return;
     if(ch.userData.depthOnly){ch.visible=glass;ch.renderOrder=order;return;}
-    m.opacity=glass?op:1;m.transparent=glass;m.depthWrite=!glass;m.polygonOffset=glass;m.polygonOffsetFactor=-1;m.polygonOffsetUnits=-2;
+    m.opacity=glass?op:1;m.transparent=glass;m.depthWrite=!glass;
+    // the wall is drawn a hair in front of the depth found for it, by a fixed amount and not one that grows with the slope,
+    // so that a second sheet close behind does not pass too; and each pixel takes the glass of a set only once
+    m.polygonOffset=glass;m.polygonOffsetFactor=0;m.polygonOffsetUnits=-2;
+    m.stencilWrite=glass;m.stencilFunc=THREE.NotEqualStencilFunc;m.stencilRef=bit;m.stencilFuncMask=bit;m.stencilWriteMask=bit;m.stencilZPass=THREE.ReplaceStencilOp;
     ch.renderOrder=glass?order+0.1:0;m.needsUpdate=true;}));
   applyCut();
 }
