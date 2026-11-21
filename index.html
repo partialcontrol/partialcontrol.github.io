@@ -403,7 +403,7 @@ input[type=range]:disabled{opacity:.35}
   .t3-sel{margin-top:6px}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
   .lay-len{order:9;grid-column:1/-1;font-size:14px;padding:0 2px 0 9px;gap:10px}
-  .lay-len.cut{order:8}
+  .lay-len.cut{order:0}
   .lay-len>span{gap:8px;min-width:76px}
   .cut-ax button{width:34px;height:26px;font-size:19px;line-height:26px}
   .cut-ax button.act::after{left:10px;right:10px}
@@ -810,7 +810,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="t3-layers">
         <button id="t3-bSafe" class="lay on" aria-pressed="true"><i class="sw" style="--c:#3366bb"></i><span>Safe set</span></button>
         <button id="t3-bAsym" class="lay on" aria-pressed="true"><i class="sw" style="--c:#cc2211"></i><span>Asymptotic<span class="long"> safe set</span></span></button>
-        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><div class="cut-ax" id="t3-cutAx" role="group" aria-label="Axis of the cut"><button data-ax="0" aria-pressed="false">x</button><button data-ax="1" aria-pressed="false">y</button><button data-ax="2" class="on" aria-pressed="true">z</button></div><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Position of the cut along the chosen axis"></div>
+        <div class="lay-len cut" id="t3-rowCut"><span><i></i>Cut</span><div class="cut-ax" id="t3-cutAx" role="group" aria-label="Axis of the cut"><button data-ax="0" class="on" aria-pressed="true">x</button><button data-ax="1" aria-pressed="false">y</button><button data-ax="2" aria-pressed="false">z</button></div><input type="range" id="t3-cut" min="0" max="100" step="0.5" value="100" aria-label="Position of the cut along the chosen axis"></div>
         <div class="lay-row" id="t3-rowTraj"><button id="t3-bTraj" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--trj,var(--ctrl))"></i><span>Controlled<span class="long"> trajectory</span></span></button><button id="t3-bRecomp" class="ico" title="New controlled trajectory" aria-label="New controlled trajectory">&#x21bb;</button></div>
         <div class="lay-len" id="t3-rowLen"><span><i></i>Length</span><input type="range" id="t3-len" min="1" max="100" step="1" value="10" aria-label="Length of the controlled trajectory that is drawn"></div>
         <div class="lay-row" id="t3-rowUnctrl"><button id="t3-bUnctrl" class="lay" aria-pressed="false"><i class="sw ln" style="--c:var(--unctrl)"></i><span>Uncontrolled<span class="long"> trajectory</span></span></button><button id="t3-bRecompU" class="ico" title="New uncontrolled trajectory" aria-label="New uncontrolled trajectory">&#x21bb;</button></div>
@@ -4300,7 +4300,7 @@ let scene,cam,R,vp,world,layers,grpBase,draco,ground=null,groundZ=0;
 let ready=false,active=false,raf=0,loadSeq=0;
 let currentMap='lorenz',cur=null,home=null,fitArgs=null,xoff=0,freeFrac=1;
 let tgt,camDist=110,camAz=-0.7,camEl=0.45;
-let cutPlanes,grpCut,cut=null,cutAxis=2;const cutVal=[100,100,100];   // one cut per axis, as a percentage of the size of the safe set
+let cutPlanes,grpCut,cut=null,cutAxis=0;const cutVal=[100,100,100];   // one cut per axis, as a percentage of the size of the safe set
 let trajLoading=false,trajIdx=-1,trajBad=new Set(),seed=Date.now()%2147483647,fitNext=true;
 const vis={safe:true,asym:true,traj:false,unctrl:false};
 
@@ -4349,12 +4349,7 @@ function applyVis(){
   applyCut();
 }
 function tog(key){
-  if(key==='safe'){vis.safe=!vis.safe;if(vis.safe)vis.asym=true;}
-  else if(key==='asym'){
-    if(!vis.asym){vis.asym=true;vis.safe=false;}
-    else if(!vis.safe){vis.asym=false;}
-    else{vis.safe=false;}
-  }else vis[key]=!vis[key];
+  vis[key]=!vis[key];   // every layer is switched on its own: the safe set can be seen without the asymptotic one
   if(key==='traj'&&vis.traj&&layers&&layers.traj.children.length===0)loadControlledTrajectory();
   if(key==='unctrl'&&vis.unctrl&&layers&&layers.unctrl.children.length===0)recomputeU();
   applyVis();
@@ -4958,7 +4953,7 @@ function onMapChange(){
   populate(currentMap);panelInfo(currentMap);PC.refreshGuide();
   vis.traj=false;vis.unctrl=false;trajIdx=-1;trajBad=new Set();applyVis();
   if(!ready)return;
-  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;cutVal.fill(100);syncCut();
+  camAz=cfg.camAz;camEl=cfg.camEl;tgt.set(0,0,0);fitNext=true;cutVal.fill(100);cutAxis=0;syncCut();
   loadAndBuild();
 }
 
