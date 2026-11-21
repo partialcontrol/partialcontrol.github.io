@@ -4595,6 +4595,11 @@ function mkCap(geom,color,key,ax,size,zOff){
     side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),   // listed with the transparent objects only to be drawn in order
     stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
   if(ax===0)cap.rotation.y=Math.PI/2;else if(ax===1)cap.rotation.x=Math.PI/2;
+  // The walls of the asymptotic set are drawn a fixed distance in front of where they are (see mAsym), so its section
+  // has to come forward a little more: otherwise the inner walls of a thin tube hide it and the tube looks hollow.
+  // This also keeps it in front of the section of the safe set, which lies on the same plane.
+  if(key==='asym')cap.material.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>',
+    '#include <project_vertex>\n\tvec4 pcFront=projectionMatrix*vec4(mvPosition.xyz+vec3(0.0,0.0,CAP_FRONT),1.0);\n\tgl_Position.z=pcFront.z/pcFront.w*gl_Position.w;'.replace('CAP_FRONT',(1.6*ASYM_FRONT).toFixed(3)));};
   cap.receiveShadow=true;cap.renderOrder=order+0.1;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,ax,cap:true};grpCut.add(cap);
 }
 function applyCut(){
