@@ -4522,7 +4522,7 @@ function resize(){
   const pw=PC.isMobile()?0:Math.min(vw*0.45,$('panel').offsetWidth+24);
   xoff=-pw/2;freeFrac=(vw-pw)/vw;
   cam.aspect=vw/vh;cam.setViewOffset(vw,vh,xoff,0,vw,vh);R.setSize(vw,vh);
-  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=(PC.isMobile()?1.2:2.6)*pr;dotPx.value=6*pr;
+  const pr=R.getPixelRatio();threadRes.value.set(vw*pr/2,vh*pr/2);threadPx.value=(PC.isMobile()?1.2:1.5)*pr;dotPx.value=6*pr;
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
