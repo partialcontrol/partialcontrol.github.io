@@ -157,8 +157,6 @@ input[type=range]:disabled{opacity:.35}
 #v1d .iter-row .lbl{margin:0 2px 0 0}
 #v1d .iter-row input{width:64px;flex:none}
 #v1d .iter-row .btn-sm{padding:5px 8px}
-#v1d #d1-tsToggleWrap{flex:1 0 100%}
-#v1d #d1-tsToggleWrap .btn{width:100%}
 #v1d .radio-row{display:flex;align-items:center;gap:7px;font-size:15px;cursor:pointer;margin-bottom:4px;width:fit-content}
 #v1d .radio-row input{accent-color:var(--safe);width:15px;height:15px}
 #v1d .mob-q-inline{display:none}
@@ -639,6 +637,7 @@ body.guide-push #guide{box-shadow:none}
       <div class="mob-body">
         <div id="d1-modes" class="modes mb">
           <button id="d1-btnCtrlIter" class="btn btn-ctrl">Controlled orbits</button>
+          <button id="d1-btnTS" class="btn btn-inactive">Time series</button>
           <button id="d1-btnIter" class="btn btn-inactive">Uncontrolled orbits</button>
           <button id="d1-btnCheck" class="btn btn-inactive">Check the safe set</button>
         </div>
@@ -649,11 +648,6 @@ body.guide-push #guide{box-shadow:none}
             <input id="d1-numIter" type="text" value="200" aria-label="Number of iterations">
             <button id="d1-d10Btn" class="btn btn-sm">÷10</button>
             <button id="d1-x10Btn" class="btn btn-sm">×10</button>
-            <div id="d1-tsToggleWrap" style="display:none"><button id="d1-tsToggle" class="btn btn-sm">Time series</button></div>
-          </div>
-          <div id="d1-ctrlStratWrap" style="display:none">
-            <label class="radio-row"><input type="radio" name="d1-strat" value="min" checked> Minimum control <span class="info-btn">i<span class="info-tip">At each iteration, the smallest possible control is chosen to keep the state inside the safe set.</span></span></label>
-            <label class="radio-row"><input type="radio" name="d1-strat" value="random"> Random control ≤ u₀ <span class="info-btn">i<span class="info-tip">A random control is chosen among all the controls that keep the state inside the safe set.</span></span></label>
           </div>
           <div id="d1-againQRow" class="mob-again-q-row" style="display:none">
             <div class="mob-q-inline"><span>Q</span>
@@ -1139,7 +1133,7 @@ if(!isFinite(yn)){yn=0;yx=1;}return{a:xn-Math.abs(xx-xn)/10,b:xx+Math.abs(xx-xn)
 
 let S={mapName:"Tent map",xmap:[],ymap:[],xmin:0,xmax:1,dist:0.02,ctrl:0.015,
 rateLocked:false,rate:0.75,regionQ:[0,1,NaN,NaN,NaN,NaN],mode:"controlled_iterates",
-showQ:true,showFsafe:false,showTS:false,x0:0.33,numIter:200,strategy:"min",
+showQ:true,showFsafe:false,showTS:false,x0:0.33,numIter:200,strategy:"random",
 ss:[],safex:[],mgx:null,mgy:null,mgs:null,mgN:0,ax:{a:-.1,b:1.1,c:-.3,d:1.1},gridx:.001,
 eqEnabled:false,paramA:0,paramB:0,usesA:true,usesB:true};
 
@@ -1574,12 +1568,13 @@ $("numIter").value=S.numIter;$("paramAval").textContent=sig(S.paramA,3);$("param
 const ms={iterations:"btnIter",controlled_activate:"btnCheck",controlled_iterates:"btnCtrlIter"};
 const cs={iterations:"btn-unctrl",controlled_activate:"btn-blue",controlled_iterates:"btn-ctrl"};
 for(const[m,id]of Object.entries(ms))$(id).className="btn "+(S.mode===m?cs[m]:"btn-inactive");
+{const ts=S.showTS&&S.mode==="controlled_iterates";$("btnTS").className="btn "+(ts?"btn-ctrl":"btn-inactive");if(ts)$("btnCtrlIter").className="btn btn-inactive";}
 $("viewSeg").querySelectorAll("button").forEach(x=>x.classList.toggle("on",(x.dataset.view==="U")===(S.mode==="safety")));$("uCtl").hidden=S.mode!=="safety";$("logBtn").textContent=S.uLog?"Linear view":"Log view";
 $("parSection").style.opacity=S.eqEnabled?1:.3;$("iterSection").style.display=(S.mode==="safeset"||S.mode==="safety")?"none":"block";
 $("x0Wrap").style.display=(S.mode==="safeset"||S.mode==="safety")?"none":"flex";
 $("numIterWrap").style.display=S.mode==="controlled_iterates"?"flex":"none";
-$("tsToggleWrap").style.display=S.mode==="controlled_iterates"?"block":"none";
-$("ctrlStratWrap").style.display=(S.mode==="controlled_activate"||S.mode==="controlled_iterates")?"block":"none";
+
+
 const showAgainQ=S.mode!=="safeset";
 $("againQRow").style.display=showAgainQ?"flex":"none";
 $("againQRow").classList.toggle("vis",showAgainQ);
@@ -1591,7 +1586,7 @@ const tsOn=S.showTS&&S.mode==="controlled_iterates";
 $("normalView").style.display=tsOn?"none":"flex";
 $("tsView").style.display=tsOn?"grid":"none";
 $("centerArea").classList.toggle("ts-active",tsOn);
-$("tsToggle").textContent=S.showTS?"Phase space":"Time series";
+
 const ed=!S.eqEnabled;["eq1","eq2","l1","l2","l3","l4"].forEach(id=>$(id).disabled=ed);
 $("paramAslider").disabled=ed||!S.usesA;$("parA").style.display=S.usesA?"":"none";
 $("paramBslider").disabled=ed||!S.usesB;$("parB").style.display=S.usesB?"":"none";
@@ -1643,12 +1638,12 @@ $("x0slider").addEventListener("input",e=>{S.x0=+e.target.value;S._checkRand=und
 $("numIter").addEventListener("change",e=>{const v=parseInt(e.target.value);if(v>0){S.numIter=v;redraw();}});
 $("x10Btn").addEventListener("click",()=>{const v=Math.min(S.numIter*10,20000);if(v!==S.numIter){S.numIter=v;$("numIter").value=S.numIter;redraw();}});
 $("d10Btn").addEventListener("click",()=>{const v=Math.max(Math.round(S.numIter/10),2);if(v!==S.numIter){S.numIter=v;$("numIter").value=S.numIter;redraw();}});
-document.querySelectorAll("input[name='d1-strat']").forEach(r=>r.addEventListener("change",e=>{S.strategy=e.target.value;redraw();}));
+
 $("showQ").addEventListener("change",e=>{S.showQ=e.target.checked;redraw();});
 $("showFsafe").addEventListener("change",e=>{S.showFsafe=e.target.checked;redraw();});
 $("againBtn").addEventListener("click",()=>{S._advanceCheck=true;redraw();});
-$("tsToggle").addEventListener("click",()=>{S.showTS=!S.showTS;syncUI();redraw();});
-$("resetBtn").addEventListener("click",()=>{S.rateLocked=false;S._lockedRate=undefined;S.numIter=200;S.strategy="min";loadMap(S.mapName);for(let i=0;i<6;i++){$("q"+i).value=isNaN(S.regionQ[i])?"":sig(S.regionQ[i],4);}if(typeof syncMobQ==='function')syncMobQ();});
+$("btnTS").addEventListener("click",()=>{S.mode="controlled_iterates";S.showTS=true;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
+$("resetBtn").addEventListener("click",()=>{S.rateLocked=false;S._lockedRate=undefined;S.numIter=200;S.strategy="random";loadMap(S.mapName);for(let i=0;i<6;i++){$("q"+i).value=isNaN(S.regionQ[i])?"":sig(S.regionQ[i],4);}if(typeof syncMobQ==='function')syncMobQ();});
 $("saveBtn").addEventListener("click",()=>{
 // Get current equations - convert JS math to MATLAB syntax
 const eq1raw=$("eq1").value, eq2raw=$("eq2").value;
@@ -2246,11 +2241,11 @@ function layout1d(){
   [$("leftPanel"),$("rightPanel")].forEach((p,i)=>{const body=p.querySelector(".mob-body");L1_ORDER[k][i].forEach(id=>body.appendChild($(id)));});
 }
 // Safe set or safety function, as in the 2D maps. A mode of the right panel returns to the safe set.
-let _mode1d="controlled_iterates";
+let _mode1d="controlled_iterates",_ts1d=false;
 $("viewSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const U=b.dataset.view==="U";
   if(U===(S.mode==="safety"))return;
-  if(U){_mode1d=S.mode;S.mode="safety";}else S.mode=_mode1d;
-  S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
+  if(U){_mode1d=S.mode;_ts1d=S.showTS;S.mode="safety";S.showTS=false;}else{S.mode=_mode1d;S.showTS=_ts1d;}
+  S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
 $("logBtn").addEventListener("click",()=>{S.uLog=!S.uLog;syncUI();redraw();});
 
 // ---------------------------------------------------------------------------
@@ -2285,7 +2280,7 @@ ${G.eq("x","f")}
   const modes={
     controlled_iterates:`<h3>What is drawn: a controlled orbit</h3>
 <p>${safe}</p>
-<p>The <b>amber cobweb</b> is an orbit that starts at ${g("x_0","x₀")}. In each iteration the map acts (amber), then the disturbance moves the point (red step) and the control returns it to a blue bar (blue step), so the orbit never leaves ${Q}. <b>Minimum control</b> goes to the nearest point of the safe set and <b>Random control</b> to any point of it within reach. <b>Time series</b> plots the orbit, the disturbance and the control against ${g("n","n")}.</p>`,
+<p>The <b>amber cobweb</b> is an orbit that starts at ${g("x_0","x₀")}. In each iteration the map acts (amber), then the disturbance moves the point (red step) and the control returns it to a blue bar (blue step), so the orbit never leaves ${Q}. The control takes the point to a random point of the safe set within its reach. <b>Time series</b> plots the same orbit, the disturbance and the control against ${g("n","n")}.</p>`,
     iterations:`<h3>What is drawn: an uncontrolled orbit</h3>
 <p>The <b>black cobweb</b> is an orbit from ${g("x_0","x₀")} with the disturbance (red steps) and no control. After some iterations it leaves ${Q}, which is what the control avoids. Compare it with the controlled orbit from the same ${g("x_0","x₀")}.</p>`,
     controlled_activate:`<h3>What is drawn: one iteration at a time</h3>
@@ -2297,7 +2292,7 @@ ${G.recur("x")}
 <p>until it stops changing.</p>
 <p><b>Relation with the safe set.</b> The safe set for a bound ${U0} is the set of points with ${g("U(x)\\le u_0","U(x) ≤ u₀")}: the shaded valleys under the blue dashed line. One curve therefore holds the safe sets of every ${U0}, and ${g("\\min U","min U")} is the smallest bound for which a safe set exists. Moving ${U0} only moves the line. The red dashed line marks ${XI0}.</p>`};
   const vary=`<h3>What you can change</h3>
-<p>The view, with the four buttons. The bounds ${XI0} and ${U0}, with <b>Lock ratio</b> to move both together. The region ${Q}, up to three intervals. The starting point and the number of iterations. The map and its parameters, or your own equation. <b>Export</b> writes Python and MATLAB code of the computation.</p>`;
+<p>The view, with the buttons of the modes. The bounds ${XI0} and ${U0}, with <b>Lock ratio</b> to move both together. The region ${Q}, up to three intervals. The starting point and the number of iterations. The map and its parameters, or your own equation. <b>Export</b> writes Python and MATLAB code of the computation.</p>`;
   return{title:"Guide: "+(custom?"custom map":S.mapName),html:sys+(modes[S.mode]||modes.controlled_iterates)+vary};
 }
 
