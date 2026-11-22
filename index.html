@@ -166,9 +166,6 @@ input[type=range]:disabled{opacity:.35}
 #v1d .lim-pair{display:flex;align-items:center;gap:4px;flex:1;min-width:0}
 #v1d .lim-pair span,#v1d .eq-lbl{font-size:15px;color:var(--ink2);flex:none;white-space:nowrap}
 #v1d .eq-row{display:flex;align-items:center;gap:5px;margin-bottom:9px}
-#v1d .prow{display:flex;gap:5px;align-items:center}
-#v1d .prow input[type=text]{width:46px;flex:none;padding:4px 3px;text-align:center;font-size:13.5px}
-#v1d .prow input[type=range]{flex:1}
 #v1d .btn-export svg{vertical-align:-2px;margin-right:6px}
 
 /* ---------- 2D ---------- */
@@ -199,6 +196,10 @@ input[type=range]:disabled{opacity:.35}
 #v2d .mob-param-label .val,#v1d .mob-param-label .val{font-variant-numeric:tabular-nums}
 #v2d .mob-param-label input[type=text],#v1d .mob-param-label input[type=text]{width:84px;flex:none;padding:3px 7px}
 #v1d .dc .ratio-row{margin-top:6px}
+/* the disturbance and the control side by side, as the map parameters */
+#v1d .dc-rows,#v2d .dc-rows{display:flex;gap:14px}
+#v1d .dc-rows .param-row,#v2d .dc-rows .param-row{flex:1;min-width:0;margin:0}
+#v1d .dc-rows .mob-param-label input[type=text],#v2d .dc-rows .mob-param-label input[type=text]{flex:1;width:auto;min-width:0}
 #v2d .ratio-row{display:flex;align-items:center;gap:8px;margin-top:6px}
 #v2d .ratio-row input{width:70px;flex:none;border-width:2px}
 #v2d .orow{display:flex;align-items:center;gap:5px;margin-bottom:7px}
@@ -259,8 +260,6 @@ input[type=range]:disabled{opacity:.35}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
 .ico:hover{border-color:#aab4c2;color:var(--ink)}
-#t3-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);padding:6px 16px;border-radius:20px;font-size:14px;color:var(--ink2);
-  background:rgba(255,255,255,.8);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);white-space:nowrap;pointer-events:none}
 #t3-loading{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg);z-index:20;transition:opacity .5s ease;text-align:center}
 #t3-loading.done{opacity:0;pointer-events:none}
 #t3-loading h3{font-size:19px;margin-bottom:5px}
@@ -377,8 +376,11 @@ input[type=range]:disabled{opacity:.35}
   #v2d .statusline{font-size:12.5px;height:17px;line-height:17px}
   #v2d .sec-title{font-size:14px;margin-bottom:3px}
   #v2d .mob-param-label,#v1d .mob-param-label{min-height:24px}
-  #v1d .dc-rows{display:flex;gap:12px}
-  #v1d .dc-rows .param-row{flex:1;min-width:0;margin:0}
+  #v1d .dc-rows{gap:12px}
+  /* on a phone the 2D panel has two narrow columns: there the disturbance and the control stay one above the other */
+  #v2d .dc-rows{display:block}
+  #v2d .dc-rows .param-row{margin-bottom:2px}
+  #v2d .dc-rows .mob-param-label input[type=text]{flex:none;width:64px}
   #v2d .mob-param-label input[type=text],#v1d .mob-param-label input[type=text]{width:64px}
   #v2d .ratio-row{gap:5px;margin-top:2px;flex-wrap:wrap}
   #v2d .ratio-row input{flex:1;width:auto;min-width:0}
@@ -410,7 +412,6 @@ input[type=range]:disabled{opacity:.35}
   .lay{height:34px;font-size:13.5px;padding:0 8px;gap:7px}
   .lay .long{display:none}
   .ico{width:34px;height:34px}
-  #t3-hint{display:none}
   #t3-loading{inset:0 0 var(--t3p) 0}
 
   .p3-bar{padding:8px 10px;gap:7px 9px;min-height:0}
@@ -438,7 +439,7 @@ input[type=range]:disabled{opacity:.35}
 @media(min-width:821px) and (max-height:800px){
   .panel{padding:9px 12px}
   .section{padding:6px 10px 7px}
-  .mb{margin-bottom:7px}
+  .mb{margin-bottom:5px}
   input[type=range]{height:20px}
   .btn{padding:6px 12px}
   #v1d .modes .btn{padding:6px 12px}
@@ -449,6 +450,10 @@ input[type=range]:disabled{opacity:.35}
   #v2d .orow,#v2d .grow{margin-bottom:5px}
   .sec-title{margin-bottom:3px}
   .sel-title{padding:5px 8px}
+  /* text boxes a little lower, so that the whole panel fits on a laptop screen with no scroll bar */
+  input[type=text]{padding-top:3px;padding-bottom:3px}
+  .lock-btn{padding-top:3px;padding-bottom:3px}
+  #v1d .dc .ratio-row,#v2d .ratio-row{margin-top:4px}
 }
 @media(prefers-reduced-motion:reduce){*{transition:none!important}.spinner{animation-duration:2s}}
 
@@ -733,6 +738,7 @@ body.guide-push #guide{box-shadow:none}
         <div class="mob-col-right">
           <div class="section">
             <span class="sec-title">Disturbance and control</span>
+            <div class="dc-rows">
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl xi"><span data-tex="\xi_0">ξ₀</span> =</span><input id="d2-distInput" class="xi" type="text" value="0.11" aria-label="Disturbance bound"></div>
               <input id="d2-distSlider" type="range" class="sl-xi" min="0" max="1" step="0.001" value="0.11" aria-label="Disturbance bound">
@@ -740,6 +746,7 @@ body.guide-push #guide{box-shadow:none}
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl u"><span data-tex="u_0">u₀</span> =</span><input id="d2-ctrlInput" class="u" type="text" value="0.1" aria-label="Control bound"></div>
               <input id="d2-ctrlSlider" type="range" class="sl-u" min="0" max="1" step="0.001" value="0.1" aria-label="Control bound">
+            </div>
             </div>
             <div class="ratio-row">
               <span data-tex="u_0/\xi_0=">u₀/ξ₀ =</span>
@@ -825,7 +832,6 @@ body.guide-push #guide{box-shadow:none}
       </div>
       <p class="t3-note">Safe sets only. Safety functions are not shown in 3D: a function of three variables cannot be drawn as a surface.</p>
     </div>
-    <div id="t3-hint">Drag to rotate, scroll to zoom, right-drag to move</div>
     <div class="plot-ctl" id="t3-ctl"><button id="t3-reset" class="btn">Reset view</button></div>
     <div id="t3-loading"><div>
       <div class="spinner" id="t3-spin"></div>
@@ -4453,7 +4459,7 @@ const MAP_CONFIG = {
 // safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
 MAP_CONFIG.mccann.axes=['R','C','P'];MAP_CONFIG.mccann.startSmall=true;   // opens with its smallest disturbance, the finest set
 // the first view of each system (azimuth and elevation in degrees), as chosen by the author: the sets show their open side
-const VIEW0={lorenz:[24,21],mccann:[24,23],henon3d:[35,14]};
+const VIEW0={lorenz:[24,21],mccann:[24,23],henon3d:[8,14]};
 for(const k in VIEW0){MAP_CONFIG[k].camAz=VIEW0[k][0]*Math.PI/180;MAP_CONFIG[k].camEl=VIEW0[k][1]*Math.PI/180;}
 Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
   step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
@@ -4694,7 +4700,8 @@ function resize(){
   // an untouched view is framed again for the new size; a view the user has moved is left alone
   if(home&&fitArgs){
     const at=camDist===home.dist&&camAz===home.az&&camEl===home.el&&tgt.equals(home.tgt);
-    home.dist=fitDistance(...fitArgs);if(at){camDist=home.dist;updateCam();}
+    const fr=frameHome(...fitArgs);home.dist=fr.dist;home.tgt.copy(fr.tgt);
+    if(at){camDist=home.dist;tgt.copy(home.tgt);updateCam();}
   }
 }
 
@@ -4708,6 +4715,33 @@ function fitDistance(verts,faces,zOff,az,el,cx,cy,sc){
     const zc=x*ce*ca+y*ce*sa+z*se,xc=Math.abs(-x*sa+y*ca),yc=Math.abs(-x*se*ca-y*se*sa+z*ce);
     const d=Math.max(zc+yc/th,zc+xc/tw);if(d>D)D=d;}
   return Math.max(0.5,Math.min(250,D*sc*1.12));
+}
+
+// The first view: the distance at which the whole safe set fits, and the point the camera looks at, chosen so that the
+// picture of the safe set has its centre at PLACE: a little above the middle of the screen and, on a wide screen, a
+// little to the left of the middle of the part the panel leaves free (fractions of its height and of that width),
+// as the author placed them
+const PLACE=[-0.07,0.075];
+function frameHome(verts,faces,zOff,az,el,cx,cy,sc,base){
+  const D=fitDistance(verts,faces,zOff,az,el,cx,cy,sc);
+  const ce=Math.cos(el),se=Math.sin(el),ca=Math.cos(az),sa=Math.sin(az),th=Math.tan(cam.fov*Math.PI/360);
+  const[vw,vh]=vpSize(),f=(vh/2)/th;   // pixels per unit of tangent
+  const uT=PC.isMobile()?0:PLACE[0]*freeFrac*vw/f,vT=PLACE[1]*vh/f;
+  const step=Math.max(1,Math.floor(faces.length/30000));
+  let a=0,b=0;
+  for(let it=0;it<4;it++){
+    let u0=1e9,u1=-1e9,v0=1e9,v1=-1e9;
+    for(let k=0;k<faces.length;k+=step){
+      const i=faces[k]*3,x=(verts[i]-cx)*sc,y=(verts[i+1]-cy)*sc,z=(verts[i+2]+zOff)*sc;
+      const zc=x*ce*ca+y*ce*sa+z*se,dd=D-zc;if(dd<=0)continue;
+      const u=(-x*sa+y*ca-a)/dd,v=(-x*se*ca-y*se*sa+z*ce-b)/dd;
+      if(u<u0)u0=u;if(u>u1)u1=u;if(v<v0)v0=v;if(v>v1)v1=v;}
+    // a tall set is raised only as far as leaves a tenth of the half height free above it
+    const v=Math.min(vT,0.9*th-(v1-v0)/2);
+    a+=((u0+u1)/2-uT)*D;b+=((v0+v1)/2-v)*D;
+  }
+  const t=base.clone();t.x+=-sa*a-se*ca*b;t.y+=ca*a-se*sa*b;t.z+=ce*b;
+  return{dist:D,tgt:t};
 }
 
 // ------------------------------ helpers ------------------------------
@@ -4926,7 +4960,6 @@ function build(safeGeom,asymGeom,cfg){
   cx/=nv;cy/=nv;cz/=nv;
   const zOff=-cz,sc=80/cfg.groundSize;
   world.scale.setScalar(sc);
-  tgt.set(cx*sc,cy*sc,0);
 
   // ground plane
   let zMin=1e9;
@@ -4964,11 +4997,11 @@ function build(safeGeom,asymGeom,cfg){
     safeFaces=kept;
   })();
   // frame the safe set: on first load and when the system changes; a change of parameters keeps the current view
-  fitArgs=[sv,safeFaces,zOff,cfg.camAz,cfg.camEl,cx,cy,sc];
-  const fit=fitDistance(...fitArgs);
-  if(fitNext){camDist=fit;fitNext=false;}
+  fitArgs=[sv,safeFaces,zOff,cfg.camAz,cfg.camEl,cx,cy,sc,new THREE.Vector3(cx*sc,cy*sc,0)];
+  const fr=frameHome(...fitArgs);
+  if(fitNext){camDist=fr.dist;tgt.copy(fr.tgt);fitNext=false;}
   updateCam();
-  home={tgt:tgt.clone(),dist:fit,az:cfg.camAz,el:cfg.camEl};
+  home={tgt:fr.tgt.clone(),dist:fr.dist,az:cfg.camAz,el:cfg.camEl};
   const safeColor=(/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)||PC.isMobile())?0x2860cc:0x3366bb;
   const mSafe=mkMesh(sv,safeFaces,sn,safeColor,1.0);
   mSafe.position.z=zOff;layers.safe.add(mSafe);
