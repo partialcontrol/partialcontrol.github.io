@@ -4140,32 +4140,57 @@ function meshIndex(verts,faces){
 // The move of a vertex depends only on where it is, so the vertices that a file repeats at one point stay together
 // and the surface stays closed. Returns the number of vertices moved.
 function meshSnap(av,sv,sf,tol,eps){
-  const nf=sf.length/3,q=[0,0,0];
-  let vol=0;   // which way is out: the sign of the volume enclosed, with the triangles as they are wound
+  const nf=sf.length/3,nb=sv.length/3,q=[0,0,0];
+  // One pass over S: its box, which way is out (the sign of the volume enclosed, with the triangles as they are
+  // wound) and its large triangles, those with a side longer than 5 tol
+  let vol=0,sx0=1e30,sy0=1e30,sz0=1e30,sx1=-1e30,sy1=-1e30,sz1=-1e30;
+  const big=new Uint8Array(nf),big2=25*tol*tol;
   for(let f=0;f<nf;f++){const a=sf[f*3]*3,b=sf[f*3+1]*3,d=sf[f*3+2]*3;
-    vol+=sv[a]*(sv[b+1]*sv[d+2]-sv[b+2]*sv[d+1])+sv[a+1]*(sv[b+2]*sv[d]-sv[b]*sv[d+2])+sv[a+2]*(sv[b]*sv[d+1]-sv[b+1]*sv[d]);}
+    const ax=sv[a],ay=sv[a+1],az=sv[a+2],bx=sv[b],by=sv[b+1],bz=sv[b+2],dx=sv[d],dy=sv[d+1],dz=sv[d+2];
+    vol+=ax*(by*dz-bz*dy)+ay*(bz*dx-bx*dz)+az*(bx*dy-by*dx);
+    const ux=bx-ax,uy=by-ay,uz=bz-az,wx=dx-ax,wy=dy-ay,wz=dz-az,tx=dx-bx,ty=dy-by,tz=dz-bz;
+    if(ux*ux+uy*uy+uz*uz>big2||wx*wx+wy*wy+wz*wz>big2||tx*tx+ty*ty+tz*tz>big2)big[f]=1;}
+  for(let v=0;v<nb*3;v+=3){const x=sv[v],y=sv[v+1],z=sv[v+2];
+    if(x<sx0)sx0=x;if(x>sx1)sx1=x;if(y<sy0)sy0=y;if(y>sy1)sy1=y;if(z<sz0)sz0=z;if(z>sz1)sz1=z;}
   const out=vol>=0?1:-1;
-  let m=av.length/3,todo=new Int32Array(m),moved=0;
-  for(let i=0;i<m;i++)todo[i]=i;
+  // the vertices that can be within tol of S at all
+  let m=0,moved=0;const todo=new Int32Array(av.length/3);
+  for(let i=0,v=0;v<av.length;i++,v+=3){const x=av[v],y=av[v+1],z=av[v+2];
+    if(x>=sx0-tol&&x<=sx1+tol&&y>=sy0-tol&&y<=sy1+tol&&z>=sz0-tol&&z<=sz1+tol)todo[m++]=i;}
+  // A coarse map of where those vertices are, to leave out at once the triangles of S with none nearby. Its boxes have
+  // side 8 tol and a vertex marks the boxes that the cube of half side 4 tol around it touches. So a triangle with a
+  // vertex within tol of it and no side longer than 5 tol has a corner in a marked box (no point of such a triangle
+  // is farther than 5 tol/sqrt 3 from its nearest corner, and tol + 5 tol/sqrt 3 < 4 tol).
+  let H=8*tol,gx,gy,gz;
+  for(;;H*=1.25){gx=Math.floor((sx1-sx0)/H)+2;gy=Math.floor((sy1-sy0)/H)+2;gz=Math.floor((sz1-sz0)/H)+2;if(gx*gy*gz<=1e6)break;}
+  const ih=1/H,hh=H/2,ox=sx0-hh,oy=sy0-hh,oz=sz0-hh,mark=new Uint8Array(gx*gy*gz),near=new Uint8Array(nb),act=new Int32Array(nf);
+  const gi=v=>{const g=Math.floor((v-ox)*ih);return g<0?0:g>=gx?gx-1:g;},gj=v=>{const g=Math.floor((v-oy)*ih);return g<0?0:g>=gy?gy-1:g;},gk=v=>{const g=Math.floor((v-oz)*ih);return g<0?0:g>=gz?gz-1:g;};
   // Most vertices lie on S, so the search goes in rounds of growing radius, each with the vertices the one before left.
-  // In a round the vertices are sorted into boxes and every triangle of S is offered to the vertices in the boxes
-  // it reaches; each vertex keeps the nearest point offered.
+  // In a round the vertices are sorted into boxes and every triangle of S with vertices nearby is offered to those in
+  // the boxes it reaches; each vertex keeps the nearest point offered.
   for(const r of [tol/4,tol/2,tol]){
     if(!m)break;
     let x0=1e30,y0=1e30,z0=1e30,x1=-1e30,y1=-1e30,z1=-1e30;
+    mark.fill(0);
     for(let t=0;t<m;t++){const v=todo[t]*3,x=av[v],y=av[v+1],z=av[v+2];
-      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z;}
+      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z;
+      const i0=gi(x-hh),i1=gi(x+hh),j0=gj(y-hh)*gx,j1=gj(y+hh)*gx,k0=gk(z-hh)*gx*gy,k1=gk(z+hh)*gx*gy;
+      mark[k0+j0+i0]=1;mark[k0+j0+i1]=1;mark[k0+j1+i0]=1;mark[k0+j1+i1]=1;mark[k1+j0+i0]=1;mark[k1+j0+i1]=1;mark[k1+j1+i0]=1;mark[k1+j1+i1]=1;}
+    for(let i=0,v=0;i<nb;i++,v+=3)near[i]=mark[(gk(sv[v+2])*gy+gj(sv[v+1]))*gx+gi(sv[v])];
+    let na=0;
+    for(let f=0,e=0;f<nf;f++,e+=3)if(near[sf[e]]|near[sf[e+1]]|near[sf[e+2]]|big[f])act[na++]=f;
     let c=Math.max(1.5*tol,4*r),nx,ny,nz;
-    for(;;c*=1.15){nx=Math.floor((x1-x0)/c)+1;ny=Math.floor((y1-y0)/c)+1;nz=Math.floor((z1-z0)/c)+1;if(nx*ny*nz<=2e6)break;}
+    for(;;c*=1.15){nx=Math.floor((x1-x0)/c)+1;ny=Math.floor((y1-y0)/c)+1;nz=Math.floor((z1-z0)/c)+1;if(nx*ny*nz<=2.5e5)break;}
     const ic=1/c,mx=nx-1,my=ny-1,mz=nz-1,nc=nx*ny*nz,cnt=new Int32Array(nc+1),at=new Int32Array(m);
     const ci=v=>{const g=Math.floor((v-x0)*ic);return g<0?0:g>mx?mx:g;},cj=v=>{const g=Math.floor((v-y0)*ic);return g<0?0:g>my?my:g;},ck=v=>{const g=Math.floor((v-z0)*ic);return g<0?0:g>mz?mz:g;};
     for(let t=0;t<m;t++){const v=todo[t]*3,cc=(ck(av[v+2])*ny+cj(av[v+1]))*nx+ci(av[v]);at[t]=cc;cnt[cc+1]++;}
     for(let i=0;i<nc;i++)cnt[i+1]+=cnt[i];
-    // the vertices in the order of their boxes: position, index, and the nearest point found so far (squared distance, triangle, point)
-    const X=new Float32Array(m),Y=new Float32Array(m),Z=new Float32Array(m),ID=new Int32Array(m),fill=cnt.slice(0,nc);
-    const D=new Float64Array(m).fill(r*r),F=new Int32Array(m).fill(-1),QX=new Float32Array(m),QY=new Float32Array(m),QZ=new Float32Array(m);
-    for(let t=0;t<m;t++){const s=fill[at[t]]++,v=todo[t]*3;X[s]=av[v];Y[s]=av[v+1];Z[s]=av[v+2];ID[s]=todo[t];}
-    for(let f=0;f<nf;f++){const a=sf[f*3]*3,b=sf[f*3+1]*3,d=sf[f*3+2]*3;
+    // The vertices in the order of their boxes. P holds, for each, its position and the squared distance to the nearest
+    // point found so far, side by side: the loop below reads them in a row, and memory read in a row is read fast.
+    // F and Q: the triangle that point is on, and the point
+    const P=new Float32Array(4*m),ID=new Int32Array(m),fill=cnt.slice(0,nc),F=new Int32Array(m).fill(-1),Q=new Float32Array(3*m),r2=Math.fround(r*r);
+    for(let t=0;t<m;t++){const s=fill[at[t]]++,v=todo[t]*3;P[4*s]=av[v];P[4*s+1]=av[v+1];P[4*s+2]=av[v+2];P[4*s+3]=r2;ID[s]=todo[t];}
+    for(let n=0;n<na;n++){const f=act[n],a=sf[f*3]*3,b=sf[f*3+1]*3,d=sf[f*3+2]*3;
       const ax=sv[a],ay=sv[a+1],az=sv[a+2],bx=sv[b],by=sv[b+1],bz=sv[b+2],dx=sv[d],dy=sv[d+1],dz=sv[d+2];
       const lx=Math.min(ax,bx,dx),hx=Math.max(ax,bx,dx);if(hx+r<x0||lx-r>x1)continue;
       const ly=Math.min(ay,by,dy),hy=Math.max(ay,by,dy);if(hy+r<y0||ly-r>y1)continue;
@@ -4174,22 +4199,67 @@ function meshSnap(av,sv,sf,tol,eps){
       if(!(p2>0))continue;   // a triangle with no area
       const i0=ci(lx-r),i1=ci(hx+r),j0=cj(ly-r),j1=cj(hy+r),k0=ck(lz-r),k1=ck(hz+r);
       for(let k=k0;k<=k1;k++)for(let j=j0;j<=j1;j++){const row=(k*ny+j)*nx;
-        for(let t=cnt[row+i0],e=cnt[row+i1+1];t<e;t++){const x=X[t],y=Y[t],z=Z[t],bd=D[t];
+        for(let t=cnt[row+i0],e=cnt[row+i1+1];t<e;t++){const o=4*t,x=P[o],y=P[o+1],z=P[o+2],bd=P[o+3];
           const ex=x<lx?lx-x:x>hx?x-hx:0,ey=y<ly?ly-y:y>hy?y-hy:0,ez=z<lz?lz-z:z>hz?z-hz:0;
           if(ex*ex+ey*ey+ez*ez>=bd)continue;                       // its box is no nearer than the best found
           const g=(x-ax)*px+(y-ay)*py+(z-az)*pz;if(g*g>=bd*p2)continue;   // nor its plane
-          const dd=triClosest(sv,sf,f,x,y,z,q);if(dd<bd){D[t]=dd;F[t]=f;QX[t]=q[0];QY[t]=q[1];QZ[t]=q[2];}}}}
+          const dd=triClosest(sv,sf,f,x,y,z,q);if(dd<bd){P[o+3]=dd;F[t]=f;Q[3*t]=q[0];Q[3*t+1]=q[1];Q[3*t+2]=q[2];}}}}
     let left=0;
     for(let t=0;t<m;t++){const f=F[t];
       if(f<0){todo[left++]=ID[t];continue;}
-      const dist=Math.sqrt(D[t]),w=dist<=tol/2?1:2*(1-dist/tol),v=ID[t]*3,x=X[t],y=Y[t],z=Z[t];
+      const dist=Math.sqrt(P[4*t+3]),w=dist<=tol/2?1:2*(1-dist/tol),v=ID[t]*3,x=P[4*t],y=P[4*t+1],z=P[4*t+2];
       const a=sf[f*3]*3,b=sf[f*3+1]*3,g=sf[f*3+2]*3;
       const ux=sv[b]-sv[a],uy=sv[b+1]-sv[a+1],uz=sv[b+2]-sv[a+2],wx=sv[g]-sv[a],wy=sv[g+1]-sv[a+1],wz=sv[g+2]-sv[a+2];
-      const ox=uy*wz-uz*wy,oy=uz*wx-ux*wz,oz=ux*wy-uy*wx,ol=out*eps/Math.hypot(ox,oy,oz);
-      av[v]=x+w*(QX[t]+ox*ol-x);av[v+1]=y+w*(QY[t]+oy*ol-y);av[v+2]=z+w*(QZ[t]+oz*ol-z);moved++;}
+      const nx_=uy*wz-uz*wy,ny_=uz*wx-ux*wz,nz_=ux*wy-uy*wx,nl=out*eps/Math.hypot(nx_,ny_,nz_);
+      av[v]=x+w*(Q[3*t]+nx_*nl-x);av[v+1]=y+w*(Q[3*t+1]+ny_*nl-y);av[v+2]=z+w*(Q[3*t+2]+nz_*nl-z);moved++;}
     m=left;
   }
   return moved;
+}
+
+// The same, without holding up the page: the vertices are split into slabs along the longest side of their box and
+// each slab is done by a worker of its own, all at once. av is changed when all of them have finished.
+// Returns {done, cancel}: done is a promise of true, or of false if the job was cancelled. Where there are no
+// workers, or one fails, the work is done here.
+function meshSnapJob(av,sv,sf,tol,eps){
+  const n=av.length/3,K=Math.min(4,Math.max(1,(navigator.hardwareConcurrency||4)-1));
+  const here=()=>{meshSnap(av,sv,sf,tol,eps);return true;};
+  if(typeof Worker==='undefined'||K<2||n<20000)return{done:Promise.resolve(here()),cancel(){}};
+  let workers=[],url=null,finish=null,over=false;
+  const stop=()=>{workers.forEach(w=>w.terminate());workers=[];if(url){URL.revokeObjectURL(url);url=null;}};
+  const done=new Promise(resolve=>{
+    finish=v=>{if(over)return;over=true;stop();resolve(v);};
+    try{
+      // slabs with the same number of vertices each, from a histogram of the coordinate along the longest side
+      const lo=[1e30,1e30,1e30],hi=[-1e30,-1e30,-1e30];
+      for(let v=0;v<av.length;v+=3)for(let k=0;k<3;k++){const c=av[v+k];if(c<lo[k])lo[k]=c;if(c>hi[k])hi[k]=c;}
+      const ax=hi[0]-lo[0]>=hi[1]-lo[1]?(hi[0]-lo[0]>=hi[2]-lo[2]?0:2):(hi[1]-lo[1]>=hi[2]-lo[2]?1:2);
+      const B=4096,sb=B/((hi[ax]-lo[ax])||1),hist=new Int32Array(B),bin=v=>{const b=Math.floor((av[v+ax]-lo[ax])*sb);return b<0?0:b>=B?B-1:b;};
+      for(let v=0;v<av.length;v+=3)hist[bin(v)]++;
+      const slab=new Uint8Array(B),size=new Int32Array(K);
+      for(let b=0,acc=0;b<B;b++){slab[b]=Math.min(K-1,Math.floor(acc*K/n));size[slab[b]]+=hist[b];acc+=hist[b];}
+      const pts=[],ids=[],at=new Int32Array(K);
+      for(let s=0;s<K;s++){pts.push(new Float32Array(3*size[s]));ids.push(new Int32Array(size[s]));}
+      for(let i=0,v=0;i<n;i++,v+=3){const s=slab[bin(v)],t=at[s]++;ids[s][t]=i;pts[s][3*t]=av[v];pts[s][3*t+1]=av[v+1];pts[s][3*t+2]=av[v+2];}
+      url=URL.createObjectURL(new Blob([triClosest.toString()+'\n'+meshSnap.toString()+
+        '\nonmessage=e=>{const d=e.data;meshSnap(d.pts,d.sv,d.sf,d.tol,d.eps);postMessage(d.pts,[d.pts.buffer]);};'],{type:'application/javascript'}));
+      let pending=0;const res=new Array(K);
+      for(let s=0;s<K;s++){
+        if(!size[s])continue;
+        const w=new Worker(url),a=sv.slice(),b=sf.slice();workers.push(w);pending++;
+        w.onerror=()=>{if(!over)finish(here());};
+        w.onmessage=e=>{
+          if(over)return;res[s]=e.data;
+          if(--pending)return;
+          for(let k=0;k<K;k++){const r=res[k],id=ids[k];if(!r)continue;
+            for(let t=0;t<id.length;t++){const v=id[t]*3;av[v]=r[3*t];av[v+1]=r[3*t+1];av[v+2]=r[3*t+2];}}
+          finish(true);};
+        w.postMessage({pts:pts[s],sv:a,sf:b,tol,eps},[pts[s].buffer,a.buffer,b.buffer]);
+      }
+      if(!pending)finish(true);
+    }catch(err){finish(here());}
+  });
+  return{done,cancel(){if(finish)finish(false);}};
 }
 
 // ===========================================================================
@@ -4370,7 +4440,7 @@ const MAP_STEPS=1000,MAP_STEPS_U=200,DOT_CTRL="#dc2626";
 
 const REF={lorenz:"Capeáns, Sabuco, Sanjuán & Yorke, Phil. Trans. R. Soc. A 375, 20160211 (2017)",mccann:"Capeáns, Sabuco & Sanjuán, Ecol. Complex. 19, 1–8 (2014)"};
 let scene,cam,R,vp,world,layers,grpBase,draco,ground=null,groundZ=0;
-let ready=false,active=false,raf=0,loadSeq=0;
+let ready=false,active=false,raf=0,loadSeq=0,snapJob=null;
 let currentMap='lorenz',cur=null,home=null,fitArgs=null,xoff=0,freeFrac=1;
 let tgt,camDist=110,camAz=MAP_CONFIG[currentMap].camAz,camEl=MAP_CONFIG[currentMap].camEl;   // the first view is the one Reset view returns to
 let cutPlanes,grpCut,cut=null,cutAxis=0;const cutVal=[100,100,100];   // one cut per axis, as a percentage of the size of the safe set
@@ -4789,6 +4859,7 @@ function applyLen(){
 // ------------------------------ load and build ------------------------------
 function loadAndBuild(onDone){
   const seq=++loadSeq,cfg=MAP_CONFIG[currentMap];
+  if(snapJob){snapJob.cancel();snapJob=null;}
   showLoading('Loading safe set','Downloading the surfaces');
   [layers.safe,layers.asym,layers.traj,layers.unctrl,grpBase,grpCut].forEach(clearGroup);
   ground=null;cur=null;cut=null;
@@ -4799,12 +4870,12 @@ function loadAndBuild(onDone){
   Promise.all([ld(urls.safe,0),ld(urls.asym,1)]).then(([safeGeom,asymGeom])=>{
     if(seq!==loadSeq)return;
     $('loadMsg').textContent='Building the scene';bar.style.width='100%';
-    build(safeGeom,asymGeom,cfg);
-    setTimeout(()=>{
+    // the scene is shown when the asymptotic set is in it too, and not before a moment for the first frames
+    return Promise.all([build(safeGeom,asymGeom,cfg),new Promise(r=>setTimeout(r,150))]).then(()=>{
       if(seq!==loadSeq)return;
       $('loading').classList.add('done');
       if(typeof onDone==='function')onDone();
-    },150);
+    });
   }).catch(err=>{
     if(seq!==loadSeq)return;
     console.error('Safe set load error:',err);
@@ -4878,16 +4949,11 @@ function build(safeGeom,asymGeom,cfg){
   const mSafe=mkMesh(sv,safeFaces,sn,safeColor,1.0);
   mSafe.position.z=zOff;layers.safe.add(mSafe);
 
-  // asymptotic safe set: laid on the wall of the safe set where it runs along it (see SNAP_TOL). The points as they
-  // came are kept for the trajectories, which start from them
-  const av0=av.slice();
-  meshSnap(av,sv,safeFaces,SNAP_TOL/sc,SNAP_EPS/sc);
-  const mAsym=mkMesh(av,af,an,0xcc2211,1.0);
-  mAsym.material.shininess=25;mAsym.material.specular.set(0x222222);
-  mAsym.position.z=zOff;layers.asym.add(mAsym);
-  [[mSafe,layers.safe],[mAsym,layers.asym]].forEach(([mesh,grp])=>{
+  // the copy of a set that only finds its nearest wall, for the glass (see applyVis)
+  const depthOnly=(mesh,grp)=>{
     const m=mesh.material.clone();m.clippingPlanes=cutPlanes;m.colorWrite=false;m.transparent=true;
-    const dm=new THREE.Mesh(mesh.geometry,m);dm.position.copy(mesh.position);dm.renderOrder=3;dm.visible=false;dm.userData.depthOnly=true;grp.add(dm);});
+    const dm=new THREE.Mesh(mesh.geometry,m);dm.position.copy(mesh.position);dm.renderOrder=3;dm.visible=false;dm.userData.depthOnly=true;grp.add(dm);};
+  depthOnly(mSafe,layers.safe);
 
   // fixed points C+ and C- (Lorenz)
   if(eq){
@@ -4901,9 +4967,23 @@ function build(safeGeom,asymGeom,cfg){
   for(let i=0;i<sv.length;i++){const k=i%3,v=sv[i];if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
   cut={lo,hi,zOff,sc,dir:[Math.cos(cfg.camAz)>=0?1:-1,Math.sin(cfg.camAz)>=0?1:-1,1],mid:new THREE.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2+zOff)};
   const capSize=2*Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]);
-  for(let ax=0;ax<3;ax++){mkCap(mSafe.geometry,CUT_SAFE,'safe',ax,capSize,zOff);mkCap(mAsym.geometry,CUT_ASYM,'asym',ax,capSize,zOff);}
-  cur={av:av0,nv,zOff,cfg,eq,sv,sf,idx:null};
+  for(let ax=0;ax<3;ax++)mkCap(mSafe.geometry,CUT_SAFE,'safe',ax,capSize,zOff);
+  // The points of the asymptotic set as they came are kept for the trajectories, which start from them
+  cur={av:av.slice(),nv,zOff,cfg,eq,sv,sf,idx:null};
   applyVis();
+  // Asymptotic safe set: its surface is first laid on the wall of the safe set where it runs along it (see SNAP_TOL).
+  // That is done aside while the rest of the scene gets ready, and the set comes in when it is finished
+  const seq=loadSeq,job=snapJob=meshSnapJob(av,sv,safeFaces,SNAP_TOL/sc,SNAP_EPS/sc);
+  return job.done.then(ok=>{
+    if(snapJob===job)snapJob=null;
+    if(!ok||seq!==loadSeq)return;
+    const mAsym=mkMesh(av,af,an,0xcc2211,1.0);
+    mAsym.material.shininess=25;mAsym.material.specular.set(0x222222);
+    mAsym.position.z=zOff;layers.asym.add(mAsym);
+    depthOnly(mAsym,layers.asym);
+    for(let ax=0;ax<3;ax++)mkCap(mAsym.geometry,CUT_ASYM,'asym',ax,capSize,zOff);
+    applyVis();
+  });
 }
 
 // ------------------------------ trajectories ------------------------------
