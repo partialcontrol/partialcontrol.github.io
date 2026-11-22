@@ -4044,6 +4044,37 @@ PC.register("2d",{
 // meshIndex(verts,faces) prepares two tables and returns
 //   inside(x,y,z)        is the point inside the surface? (parity of the crossings of a vertical ray)
 //   nearest(x,y,z,rmax)  the point of the surface nearest to the point, if there is one within rmax: {x,y,z,d}
+// Closest point of triangle f to p (Ericson, Real-Time Collision Detection). The point goes to q; returns the squared distance.
+function triClosest(verts,faces,f,px,py,pz,q){
+  const a=faces[f*3]*3,b=faces[f*3+1]*3,c=faces[f*3+2]*3;
+  const ax=verts[a],ay=verts[a+1],az=verts[a+2],abx=verts[b]-ax,aby=verts[b+1]-ay,abz=verts[b+2]-az,acx=verts[c]-ax,acy=verts[c+1]-ay,acz=verts[c+2]-az;
+  const apx=px-ax,apy=py-ay,apz=pz-az,d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;
+  let v=0,w=0;
+  if(d1<=0&&d2<=0){}
+  else{
+    const bpx=apx-abx,bpy=apy-aby,bpz=apz-abz,d3=abx*bpx+aby*bpy+abz*bpz,d4=acx*bpx+acy*bpy+acz*bpz;
+    if(d3>=0&&d4<=d3){v=1;}
+    else{
+      const vc=d1*d4-d3*d2;
+      if(vc<=0&&d1>=0&&d3<=0){v=d1/(d1-d3);}
+      else{
+        const cpx=apx-acx,cpy=apy-acy,cpz=apz-acz,d5=abx*cpx+aby*cpy+abz*cpz,d6=acx*cpx+acy*cpy+acz*cpz;
+        if(d6>=0&&d5<=d6){w=1;}
+        else{
+          const vb=d5*d2-d1*d6;
+          if(vb<=0&&d2>=0&&d6<=0){w=d2/(d2-d6);}
+          else{
+            const va=d3*d6-d5*d4;
+            if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){w=(d4-d3)/((d4-d3)+(d5-d6));v=1-w;}
+            else{const dn=1/(va+vb+vc);v=vb*dn;w=vc*dn;}
+          }
+        }
+      }
+    }
+  }
+  q[0]=ax+abx*v+acx*w;q[1]=ay+aby*v+acy*w;q[2]=az+abz*v+acz*w;
+  const dx=q[0]-px,dy=q[1]-py,dz=q[2]-pz;return dx*dx+dy*dy+dz*dz;
+}
 function meshIndex(verts,faces){
   const nv=verts.length/3,nf=faces.length/3,lo=[1e30,1e30,1e30],hi=[-1e30,-1e30,-1e30];
   for(let i=0;i<verts.length;i+=3)for(let k=0;k<3;k++){const v=verts[i+k];if(v<lo[k])lo[k]=v;if(v>hi[k])hi[k]=v;}
@@ -4088,38 +4119,7 @@ function meshIndex(verts,faces){
   for(let i=0;i<H*H*H;i++)tc[i+1]+=tc[i];
   const tl=new Int32Array(tc[H*H*H]),tf=tc.slice(0,H*H*H);
   for(let f=0;f<nf;f++)for(let k=tb[f*6+4];k<=tb[f*6+5];k++)for(let j=tb[f*6+2];j<=tb[f*6+3];j++)for(let i=tb[f*6];i<=tb[f*6+1];i++)tl[tf[(k*H+j)*H+i]++]=f;
-  // closest point of triangle f to p (Ericson, Real-Time Collision Detection); the result goes to q
-  const q=[0,0,0];
-  function closestTri(f,px,py,pz){
-    const a=faces[f*3]*3,b=faces[f*3+1]*3,c=faces[f*3+2]*3;
-    const ax=verts[a],ay=verts[a+1],az=verts[a+2],abx=verts[b]-ax,aby=verts[b+1]-ay,abz=verts[b+2]-az,acx=verts[c]-ax,acy=verts[c+1]-ay,acz=verts[c+2]-az;
-    const apx=px-ax,apy=py-ay,apz=pz-az,d1=abx*apx+aby*apy+abz*apz,d2=acx*apx+acy*apy+acz*apz;
-    let v=0,w=0;
-    if(d1<=0&&d2<=0){}
-    else{
-      const bpx=apx-abx,bpy=apy-aby,bpz=apz-abz,d3=abx*bpx+aby*bpy+abz*bpz,d4=acx*bpx+acy*bpy+acz*bpz;
-      if(d3>=0&&d4<=d3){v=1;}
-      else{
-        const vc=d1*d4-d3*d2;
-        if(vc<=0&&d1>=0&&d3<=0){v=d1/(d1-d3);}
-        else{
-          const cpx=apx-acx,cpy=apy-acy,cpz=apz-acz,d5=abx*cpx+aby*cpy+abz*cpz,d6=acx*cpx+acy*cpy+acz*cpz;
-          if(d6>=0&&d5<=d6){w=1;}
-          else{
-            const vb=d5*d2-d1*d6;
-            if(vb<=0&&d2>=0&&d6<=0){w=d2/(d2-d6);}
-            else{
-              const va=d3*d6-d5*d4;
-              if(va<=0&&(d4-d3)>=0&&(d5-d6)>=0){w=(d4-d3)/((d4-d3)+(d5-d6));v=1-w;}
-              else{const dn=1/(va+vb+vc);v=vb*dn;w=vc*dn;}
-            }
-          }
-        }
-      }
-    }
-    q[0]=ax+abx*v+acx*w;q[1]=ay+aby*v+acy*w;q[2]=az+abz*v+acz*w;
-    const dx=q[0]-px,dy=q[1]-py,dz=q[2]-pz;return dx*dx+dy*dy+dz*dz;
-  }
+  const q=[0,0,0],closestTri=(f,px,py,pz)=>triClosest(verts,faces,f,px,py,pz,q);
   // the point of the surface nearest to p, if there is one within rmax: {x,y,z,d}
   function nearest(x,y,z,rmax){
     const i0=hc((x-rmax-lo[0])*hs),i1=hc((x+rmax-lo[0])*hs),j0=hc((y-rmax-lo[1])*hs),j1=hc((y+rmax-lo[1])*hs),k0=hc((z-rmax-lo[2])*hs),k1=hc((z+rmax-lo[2])*hs);
@@ -4131,6 +4131,65 @@ function meshIndex(verts,faces){
     return found?{x:bx,y:by,z:bz,d:Math.sqrt(bd)}:null;
   }
   return{inside,nearest,lo,hi,span};
+}
+
+// Brings onto a closed surface S (sv, sf) the part of another surface that runs along it. Each vertex of av within
+// tol of S goes to its nearest point of S and then eps outwards; between tol/2 and tol the move fades out, so the
+// surface is not torn. Used to draw one set that lies inside another: where the inner one reaches the wall of the
+// outer one it is left just outside that wall, and everywhere else it stays inside, at its true depth.
+// The move of a vertex depends only on where it is, so the vertices that a file repeats at one point stay together
+// and the surface stays closed. Returns the number of vertices moved.
+function meshSnap(av,sv,sf,tol,eps){
+  const nf=sf.length/3,q=[0,0,0];
+  let vol=0;   // which way is out: the sign of the volume enclosed, with the triangles as they are wound
+  for(let f=0;f<nf;f++){const a=sf[f*3]*3,b=sf[f*3+1]*3,d=sf[f*3+2]*3;
+    vol+=sv[a]*(sv[b+1]*sv[d+2]-sv[b+2]*sv[d+1])+sv[a+1]*(sv[b+2]*sv[d]-sv[b]*sv[d+2])+sv[a+2]*(sv[b]*sv[d+1]-sv[b+1]*sv[d]);}
+  const out=vol>=0?1:-1;
+  let m=av.length/3,todo=new Int32Array(m),moved=0;
+  for(let i=0;i<m;i++)todo[i]=i;
+  // Most vertices lie on S, so the search goes in rounds of growing radius, each with the vertices the one before left.
+  // In a round the vertices are sorted into boxes and every triangle of S is offered to the vertices in the boxes
+  // it reaches; each vertex keeps the nearest point offered.
+  for(const r of [tol/4,tol/2,tol]){
+    if(!m)break;
+    let x0=1e30,y0=1e30,z0=1e30,x1=-1e30,y1=-1e30,z1=-1e30;
+    for(let t=0;t<m;t++){const v=todo[t]*3,x=av[v],y=av[v+1],z=av[v+2];
+      if(x<x0)x0=x;if(x>x1)x1=x;if(y<y0)y0=y;if(y>y1)y1=y;if(z<z0)z0=z;if(z>z1)z1=z;}
+    let c=Math.max(1.5*tol,4*r),nx,ny,nz;
+    for(;;c*=1.15){nx=Math.floor((x1-x0)/c)+1;ny=Math.floor((y1-y0)/c)+1;nz=Math.floor((z1-z0)/c)+1;if(nx*ny*nz<=2e6)break;}
+    const ic=1/c,mx=nx-1,my=ny-1,mz=nz-1,nc=nx*ny*nz,cnt=new Int32Array(nc+1),at=new Int32Array(m);
+    const ci=v=>{const g=Math.floor((v-x0)*ic);return g<0?0:g>mx?mx:g;},cj=v=>{const g=Math.floor((v-y0)*ic);return g<0?0:g>my?my:g;},ck=v=>{const g=Math.floor((v-z0)*ic);return g<0?0:g>mz?mz:g;};
+    for(let t=0;t<m;t++){const v=todo[t]*3,cc=(ck(av[v+2])*ny+cj(av[v+1]))*nx+ci(av[v]);at[t]=cc;cnt[cc+1]++;}
+    for(let i=0;i<nc;i++)cnt[i+1]+=cnt[i];
+    // the vertices in the order of their boxes: position, index, and the nearest point found so far (squared distance, triangle, point)
+    const X=new Float32Array(m),Y=new Float32Array(m),Z=new Float32Array(m),ID=new Int32Array(m),fill=cnt.slice(0,nc);
+    const D=new Float64Array(m).fill(r*r),F=new Int32Array(m).fill(-1),QX=new Float32Array(m),QY=new Float32Array(m),QZ=new Float32Array(m);
+    for(let t=0;t<m;t++){const s=fill[at[t]]++,v=todo[t]*3;X[s]=av[v];Y[s]=av[v+1];Z[s]=av[v+2];ID[s]=todo[t];}
+    for(let f=0;f<nf;f++){const a=sf[f*3]*3,b=sf[f*3+1]*3,d=sf[f*3+2]*3;
+      const ax=sv[a],ay=sv[a+1],az=sv[a+2],bx=sv[b],by=sv[b+1],bz=sv[b+2],dx=sv[d],dy=sv[d+1],dz=sv[d+2];
+      const lx=Math.min(ax,bx,dx),hx=Math.max(ax,bx,dx);if(hx+r<x0||lx-r>x1)continue;
+      const ly=Math.min(ay,by,dy),hy=Math.max(ay,by,dy);if(hy+r<y0||ly-r>y1)continue;
+      const lz=Math.min(az,bz,dz),hz=Math.max(az,bz,dz);if(hz+r<z0||lz-r>z1)continue;
+      const ux=bx-ax,uy=by-ay,uz=bz-az,wx=dx-ax,wy=dy-ay,wz=dz-az,px=uy*wz-uz*wy,py=uz*wx-ux*wz,pz=ux*wy-uy*wx,p2=px*px+py*py+pz*pz;
+      if(!(p2>0))continue;   // a triangle with no area
+      const i0=ci(lx-r),i1=ci(hx+r),j0=cj(ly-r),j1=cj(hy+r),k0=ck(lz-r),k1=ck(hz+r);
+      for(let k=k0;k<=k1;k++)for(let j=j0;j<=j1;j++){const row=(k*ny+j)*nx;
+        for(let t=cnt[row+i0],e=cnt[row+i1+1];t<e;t++){const x=X[t],y=Y[t],z=Z[t],bd=D[t];
+          const ex=x<lx?lx-x:x>hx?x-hx:0,ey=y<ly?ly-y:y>hy?y-hy:0,ez=z<lz?lz-z:z>hz?z-hz:0;
+          if(ex*ex+ey*ey+ez*ez>=bd)continue;                       // its box is no nearer than the best found
+          const g=(x-ax)*px+(y-ay)*py+(z-az)*pz;if(g*g>=bd*p2)continue;   // nor its plane
+          const dd=triClosest(sv,sf,f,x,y,z,q);if(dd<bd){D[t]=dd;F[t]=f;QX[t]=q[0];QY[t]=q[1];QZ[t]=q[2];}}}}
+    let left=0;
+    for(let t=0;t<m;t++){const f=F[t];
+      if(f<0){todo[left++]=ID[t];continue;}
+      const dist=Math.sqrt(D[t]),w=dist<=tol/2?1:2*(1-dist/tol),v=ID[t]*3,x=X[t],y=Y[t],z=Z[t];
+      const a=sf[f*3]*3,b=sf[f*3+1]*3,g=sf[f*3+2]*3;
+      const ux=sv[b]-sv[a],uy=sv[b+1]-sv[a+1],uz=sv[b+2]-sv[a+2],wx=sv[g]-sv[a],wy=sv[g+1]-sv[a+1],wz=sv[g+2]-sv[a+2];
+      const ox=uy*wz-uz*wy,oy=uz*wx-ux*wz,oz=ux*wy-uy*wx,ol=out*eps/Math.hypot(ox,oy,oz);
+      av[v]=x+w*(QX[t]+ox*ol-x);av[v+1]=y+w*(QY[t]+oy*ol-y);av[v+2]=z+w*(QZ[t]+oz*ol-z);moved++;}
+    m=left;
+  }
+  return moved;
 }
 
 // ===========================================================================
@@ -4444,6 +4503,9 @@ function updateCam(){
   cam.up.set(0,0,ce>=0?1:-1);
   cam.lookAt(tgt);
   cam.updateMatrix();
+  // the near plane follows the distance: with it fixed very close, the depth of far surfaces is too coarse to tell two that lie a hair apart
+  const near=Math.max(0.1,Math.min(2,camDist*0.01));
+  if(near!==cam.near){cam.near=near;cam.updateProjectionMatrix();}
 }
 function camAxes(){
   const right=new THREE.Vector3(),up=new THREE.Vector3();
@@ -4557,7 +4619,13 @@ function fitDistance(verts,faces,zOff,az,el,cx,cy,sc){
 }
 
 // ------------------------------ helpers ------------------------------
-const ASYM_FRONT=0.45; // scene units (the scene is about 80 units across)
+// Most of the surface of the asymptotic safe set runs along the wall of the safe set that contains it, and the two
+// files do not agree there to the last digit: drawn as they come, the two surfaces interleave. So on loading, the
+// part of the asymptotic surface that lies within SNAP_TOL/2 of that wall is laid on it, SNAP_EPS outside, and
+// between SNAP_TOL/2 and SNAP_TOL the move fades out. Scene units: the scene is about 80 across, the two files
+// differ by about 0.02 on the wall, and the thinnest sheets of the safe set are about 0.3 thick. SNAP_EPS has to
+// clear the corners that the triangles of one surface cut on the other: with 0.015 the wall shows through in specks.
+const SNAP_TOL=0.1,SNAP_EPS=0.04;
 function mkMesh(verts,faces,normals,color,opacity){
   const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.BufferAttribute(verts,3));
@@ -4595,11 +4663,8 @@ function mkCap(geom,color,key,ax,size,zOff){
     side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),   // listed with the transparent objects only to be drawn in order
     stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
   if(ax===0)cap.rotation.y=Math.PI/2;else if(ax===1)cap.rotation.x=Math.PI/2;
-  // The walls of the asymptotic set are drawn a fixed distance in front of where they are (see mAsym), so its section
-  // has to come forward a little more: otherwise the inner walls of a thin tube hide it and the tube looks hollow.
-  // This also keeps it in front of the section of the safe set, which lies on the same plane.
-  if(key==='asym')cap.material.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>',
-    '#include <project_vertex>\n\tvec4 pcFront=projectionMatrix*vec4(mvPosition.xyz+vec3(0.0,0.0,CAP_FRONT),1.0);\n\tgl_Position.z=pcFront.z/pcFront.w*gl_Position.w;'.replace('CAP_FRONT',(1.6*ASYM_FRONT).toFixed(3)));};
+  // the section of the asymptotic set lies on the same plane as that of the safe set: it is drawn after it and a hair in front
+  if(key==='asym'){cap.material.polygonOffset=true;cap.material.polygonOffsetFactor=0;cap.material.polygonOffsetUnits=-4;}
   cap.receiveShadow=true;cap.renderOrder=order+0.1;cap.onAfterRender=r=>r.clearStencil();cap.userData={key,ax,cap:true};grpCut.add(cap);
 }
 function applyCut(){
@@ -4813,16 +4878,15 @@ function build(safeGeom,asymGeom,cfg){
   const mSafe=mkMesh(sv,safeFaces,sn,safeColor,1.0);
   mSafe.position.z=zOff;layers.safe.add(mSafe);
 
-  // asymptotic safe set
+  // asymptotic safe set: laid on the wall of the safe set where it runs along it (see SNAP_TOL). The points as they
+  // came are kept for the trajectories, which start from them
+  const av0=av.slice();
+  meshSnap(av,sv,safeFaces,SNAP_TOL/sc,SNAP_EPS/sc);
   const mAsym=mkMesh(av,af,an,0xcc2211,1.0);
   mAsym.material.shininess=25;mAsym.material.specular.set(0x222222);
-  // where the asymptotic safe set lies on the surface of the safe set it is drawn in front of it,
-  // by a fixed distance along the line of sight, so the two surfaces do not interleave
-  mAsym.material.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <project_vertex>',
-    '#include <project_vertex>\n\tvec4 pcFront=projectionMatrix*vec4(mvPosition.xyz+vec3(0.0,0.0,ASYM_FRONT),1.0);\n\tgl_Position.z=pcFront.z/pcFront.w*gl_Position.w;'.replace('ASYM_FRONT',ASYM_FRONT.toFixed(3)));};
   mAsym.position.z=zOff;layers.asym.add(mAsym);
   [[mSafe,layers.safe],[mAsym,layers.asym]].forEach(([mesh,grp])=>{
-    const m=mesh.material.clone();m.clippingPlanes=cutPlanes;m.onBeforeCompile=mesh.material.onBeforeCompile;m.colorWrite=false;m.transparent=true;
+    const m=mesh.material.clone();m.clippingPlanes=cutPlanes;m.colorWrite=false;m.transparent=true;
     const dm=new THREE.Mesh(mesh.geometry,m);dm.position.copy(mesh.position);dm.renderOrder=3;dm.visible=false;dm.userData.depthOnly=true;grp.add(dm);});
 
   // fixed points C+ and C- (Lorenz)
@@ -4838,7 +4902,7 @@ function build(safeGeom,asymGeom,cfg){
   cut={lo,hi,zOff,sc,dir:[Math.cos(cfg.camAz)>=0?1:-1,Math.sin(cfg.camAz)>=0?1:-1,1],mid:new THREE.Vector3((lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2+zOff)};
   const capSize=2*Math.max(hi[0]-lo[0],hi[1]-lo[1],hi[2]-lo[2]);
   for(let ax=0;ax<3;ax++){mkCap(mSafe.geometry,CUT_SAFE,'safe',ax,capSize,zOff);mkCap(mAsym.geometry,CUT_ASYM,'asym',ax,capSize,zOff);}
-  cur={av,nv,zOff,cfg,eq,sv,sf,idx:null};
+  cur={av:av0,nv,zOff,cfg,eq,sv,sf,idx:null};
   applyVis();
 }
 
