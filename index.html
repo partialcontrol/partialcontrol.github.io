@@ -221,6 +221,15 @@ input[type=range]:disabled{opacity:.35}
 #t3-viewport{position:absolute;inset:0;touch-action:none}
 #t3-viewport canvas{display:block}
 #t3-noise{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.04}
+/* the disturbance and the control as two balls at the scale of the scene, in the upper right corner */
+#t3-balls{position:absolute;top:14px;right:16px;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:6px;font-size:18px}
+#t3-balls[hidden]{display:none}
+#t3-balls>div{display:flex;align-items:center;justify-content:flex-end;gap:10px}
+#t3-balls .xi{color:#c0392b}#t3-balls .u{color:#2471a3}
+#t3-balls b{display:flex;align-items:center;justify-content:center}
+#t3-balls i{display:block;border-radius:50%}
+#t3-ballXi{background:radial-gradient(circle at 35% 30%,#fbe1dd 0,#e0705f 35%,#b8382a 75%,#7d231a 100%)}
+#t3-ballU{background:radial-gradient(circle at 35% 30%,#e0eef9 0,#5c9fd0 35%,#2471a3 75%,#174a6d 100%)}
 #v1d .plot-ctl{right:auto;bottom:auto}   /* placed by drawSafety, right after U(x) */
 #v1d .plot-ctl .btn{padding:2px 9px;font-size:13px;box-shadow:none}
 #t3-panel{position:absolute;top:8px;left:8px;width:260px;z-index:10;padding:12px 11px 13px;border-radius:14px;
@@ -515,6 +524,7 @@ body.guide-push #guide{box-shadow:none}
   #v2d .surf .surf-bar{right:4px}
   #v2d .surf-msg{font-size:13.5px}
   .t3-note{display:none}
+  #t3-balls{top:10px;right:10px;font-size:15px}
   .p3-main .ph .btn{padding:2px 8px;font-size:12.5px}
   #guide{top:auto;left:0;width:auto;height:52%;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(28,36,48,.18)}
   #guide .g-head{padding:9px 12px 8px 16px}
@@ -811,7 +821,8 @@ body.guide-push #guide{box-shadow:none}
 <section id="v3d" class="view" aria-label="Three-dimensional systems">
 
   <div id="t3-viewer" class="sub3 on">
-    <div id="t3-viewport"><div id="t3-noise"></div></div>
+    <div id="t3-viewport"><div id="t3-noise"></div>
+      <div id="t3-balls" hidden><div><span class="xi" data-tex="\xi_0">ξ₀</span><b><i id="t3-ballXi"></i></b></div><div><span class="u" data-tex="u_0">u₀</span><b><i id="t3-ballU"></i></b></div></div></div>
     <div id="t3-panel">
       <select id="t3-selMap" class="sel-title" aria-label="System">
         <option value="lorenz" selected>Lorenz system</option>
@@ -907,16 +918,18 @@ const PC=(()=>{
     el.textContent=plain!=null?plain:tex;
   }
   // Math text on a canvas. parts: "i:x" italic, "r:=" upright, "s:n" italic subscript, "S:0" upright subscript, "p:+" superscript, "g:0.1" gap in em
+  // A halo is drawn under the whole text before any letter, so that the halo of one part never covers the part before
   function mtext(ctx,x,y,size,parts,halo){
-    for(const p of parts){const k=p[0],t=p.slice(2);let yy=y;
-      if(k==="g"){x+=size*parseFloat(t);continue;}
-      if(k==="s"||k==="S"){ctx.font=(k==="s"?"italic ":"")+Math.round(size*.7)+"px "+MF;yy=y+size*.24;}
-      else if(k==="p"){ctx.font=Math.round(size*.7)+"px "+MF;yy=y-size*.42;}
-      else ctx.font=(k==="i"?"italic ":"")+size+"px "+MF;
-      if(halo){ctx.save();ctx.strokeStyle=halo;ctx.lineWidth=Math.max(3,size*.28);ctx.lineJoin="round";ctx.strokeText(t,x,yy);ctx.restore();}
-      ctx.fillText(t,x,yy);
-      x+=ctx.measureText(t).width;}
-    return x;
+    const run=draw=>{let xx=x;
+      for(const p of parts){const k=p[0],t=p.slice(2);let yy=y;
+        if(k==="g"){xx+=size*parseFloat(t);continue;}
+        if(k==="s"||k==="S"){ctx.font=(k==="s"?"italic ":"")+Math.round(size*.7)+"px "+MF;yy=y+size*.24;}
+        else if(k==="p"){ctx.font=Math.round(size*.7)+"px "+MF;yy=y-size*.42;}
+        else ctx.font=(k==="i"?"italic ":"")+size+"px "+MF;
+        draw(t,xx,yy);xx+=ctx.measureText(t).width;}
+      return xx;};
+    if(halo){ctx.save();ctx.strokeStyle=halo;ctx.lineWidth=Math.max(3,size*.28);ctx.lineJoin="round";run((t,a,b)=>ctx.strokeText(t,a,b));ctx.restore();}
+    return run((t,a,b)=>ctx.fillText(t,a,b));
   }
   function loadScript(src){
     if(!scripts[src])scripts[src]=new Promise((res,rej)=>{
@@ -1190,6 +1203,12 @@ rv2=uFixedX;
 ctx.fillStyle="#2471a3";ctx.fillText("|u",rv2,ty0+(w>600?10:8));rv2+=ctx.measureText("|u").width;
 ctx.font="italic "+vfsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv2,ty0+(w>600?14:11));rv2+=ctx.measureText("n").width;
 ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| = "+sig(S._lastUn,3),rv2,ty0+(w>600?10:8));}
+{const sx=(b-a)>0?(w-P.l-P.r)/(b-a):0,big=w>500,lf=big?16:12,hx=v=>Math.min((w-P.l-P.r)*.2,Math.max(4,v*sx));
+const hd=hx(S.dist),hu=hx(S.ctrl),hm=Math.max(hd,hu),cx=w-P.r-hm-10,y1=P.t+(big?14:10),y2=y1+(big?18:14),cap=big?5:4;
+const seg=(y,hl,col)=>{ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(cx-hl,y);ctx.lineTo(cx+hl,y);ctx.stroke();
+  ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx-hl,y);ctx.lineTo(cx+hl,y);ctx.moveTo(cx-hl,y-cap);ctx.lineTo(cx-hl,y+cap);ctx.moveTo(cx+hl,y-cap);ctx.lineTo(cx+hl,y+cap);ctx.stroke();ctx.lineCap="butt";};
+seg(y1,hd,"#c0392b");ctx.fillStyle="#c0392b";PC.mtext(ctx,cx-hm-lf*1.4-4,y1+lf*.3,lf,["i:ξ","S:0"],"rgba(255,255,255,.92)");
+if(showU){seg(y2,hu,"#2471a3");ctx.fillStyle="#2471a3";PC.mtext(ctx,cx-hm-lf*1.4-4,y2+lf*.3,lf,["i:u","S:0"],"rgba(255,255,255,.92)");}}
 } // end if(!S.showTS)
 } // end title block
 // Ticks
@@ -4633,7 +4652,23 @@ function loop(){
   raf=requestAnimationFrame(loop);
   if(!active||!R)return;
   if(ground)ground.visible=(cam.position.z>groundZ);
+  balls();
   R.render(scene,cam);
+}
+// The balls of radius xi0 and u0 in the upper right corner, at the scale of the scene at the distance of the point
+// looked at. When they would be too small to see, both are enlarged by the same factor, so that the smaller one is
+// 5 px and their ratio is kept; neither is larger than 40 px
+let ballsKey='';
+function balls(){
+  const el=$('balls');
+  if(!cur){if(!el.hidden)el.hidden=true;return;}
+  const xu=$('selXU').value.split(',').map(Number),h=R.domElement.clientHeight,key=xu+'|'+camDist+'|'+h+'|'+currentMap;
+  if(key===ballsKey)return;ballsKey=key;
+  const f=(h/2)/Math.tan(cam.fov*Math.PI/360),sc=80/cur.cfg.groundSize;
+  let a=xu[0]*sc*f/camDist,b=xu[1]*sc*f/camDist;const up=Math.max(1,5/Math.min(a,b));a*=up;b*=up;
+  const down=Math.min(1,40/Math.max(a,b));a*=down;b*=down;const cell=2*Math.max(a,b)+'px';
+  [[$('ballXi'),a],[$('ballU'),b]].forEach(([e,v])=>{e.style.width=e.style.height=2*v+'px';e.parentElement.style.width=cell;});
+  el.hidden=false;
 }
 function resize(){
   if(!R)return;
