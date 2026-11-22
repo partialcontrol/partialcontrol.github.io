@@ -4218,48 +4218,63 @@ function meshSnap(av,sv,sf,tol,eps){
 }
 
 // The same, without holding up the page: the vertices are split into slabs along the longest side of their box and
-// each slab is done by a worker of its own, all at once. av is changed when all of them have finished.
-// Returns {done, cancel}: done is a promise of true, or of false if the job was cancelled. Where there are no
-// workers, or one fails, the work is done here.
+// each slab is done by a worker of its own, all at once. The workers are made once and kept, because a new one runs the
+// routine slowly the first time; for the same reason each one tries it on a small made-up surface as soon as it is made
+// (meshSnapPool is called when a download starts, so they are ready when the surfaces arrive).
+const snapPool={workers:[],jobs:new Map(),next:1,bad:false};
+function meshSnapPool(){
+  const P=snapPool;
+  if(P.bad||P.workers.length)return P;
+  try{
+    const K=Math.min(4,Math.max(1,(navigator.hardwareConcurrency||2)-1));
+    const warm=function(){   // a wavy sheet and points scattered near it
+      const n=110,sv=new Float32Array(n*n*3),sf=new Uint32Array((n-1)*(n-1)*6),av=new Float32Array(n*n*12);let s=7,e=0;
+      const rnd=()=>(s=(s*1103515245+12345)&0x7fffffff)/0x7fffffff-0.5;
+      for(let j=0;j<n;j++)for(let i=0;i<n;i++){const v=(j*n+i)*3;sv[v]=i*0.1;sv[v+1]=j*0.1;sv[v+2]=0.3*Math.sin(i*0.07)*Math.cos(j*0.05);
+        for(let k=0;k<4;k++){const u=(j*n+i)*12+k*3;av[u]=sv[v]+rnd()*0.1;av[u+1]=sv[v+1]+rnd()*0.1;av[u+2]=sv[v+2]+rnd()*(k<3?0.02:0.2);}}
+      for(let j=0;j<n-1;j++)for(let i=0;i<n-1;i++){const a=j*n+i;sf[e++]=a;sf[e++]=a+1;sf[e++]=a+n;sf[e++]=a+1;sf[e++]=a+n+1;sf[e++]=a+n;}
+      for(let k=0;k<3;k++)meshSnap(av.slice(),sv,sf,0.1,0.02);};
+    const url=URL.createObjectURL(new Blob([triClosest.toString()+'\n'+meshSnap.toString()+'\n('+warm.toString()+')();'+
+      '\nonmessage=e=>{const d=e.data;meshSnap(d.pts,d.sv,d.sf,d.tol,d.eps);postMessage({id:d.id,slab:d.slab,pts:d.pts},[d.pts.buffer]);};'],{type:'application/javascript'}));
+    const fail=()=>{   // without workers the jobs under way, and those to come, are done here
+      if(P.bad)return;P.bad=true;P.workers.forEach(w=>w.terminate());P.workers=[];
+      const jobs=[...P.jobs.values()];P.jobs.clear();jobs.forEach(j=>j.finish(j.here()));};
+    for(let k=0;k<K;k++){const w=new Worker(url);w.onerror=fail;
+      w.onmessage=e=>{const d=e.data,j=P.jobs.get(d.id);if(!j)return;   // a job that was cancelled
+        j.res[d.slab]=d.pts;if(--j.pending)return;
+        P.jobs.delete(d.id);j.write();j.finish(true);};
+      P.workers.push(w);}
+  }catch(err){P.bad=true;P.workers=[];}
+  return P;
+}
+// av is changed when all the slabs are back. Returns {done, cancel}: done is a promise of true, or of false if the job was cancelled
 function meshSnapJob(av,sv,sf,tol,eps){
-  const n=av.length/3,K=Math.min(4,Math.max(1,(navigator.hardwareConcurrency||4)-1));
+  const n=av.length/3,P=typeof Worker==='undefined'?snapPool:meshSnapPool(),K=P.workers.length;
   const here=()=>{meshSnap(av,sv,sf,tol,eps);return true;};
-  if(typeof Worker==='undefined'||K<2||n<20000)return{done:Promise.resolve(here()),cancel(){}};
-  let workers=[],url=null,finish=null,over=false;
-  const stop=()=>{workers.forEach(w=>w.terminate());workers=[];if(url){URL.revokeObjectURL(url);url=null;}};
-  const done=new Promise(resolve=>{
-    finish=v=>{if(over)return;over=true;stop();resolve(v);};
-    try{
-      // slabs with the same number of vertices each, from a histogram of the coordinate along the longest side
-      const lo=[1e30,1e30,1e30],hi=[-1e30,-1e30,-1e30];
-      for(let v=0;v<av.length;v+=3)for(let k=0;k<3;k++){const c=av[v+k];if(c<lo[k])lo[k]=c;if(c>hi[k])hi[k]=c;}
-      const ax=hi[0]-lo[0]>=hi[1]-lo[1]?(hi[0]-lo[0]>=hi[2]-lo[2]?0:2):(hi[1]-lo[1]>=hi[2]-lo[2]?1:2);
-      const B=4096,sb=B/((hi[ax]-lo[ax])||1),hist=new Int32Array(B),bin=v=>{const b=Math.floor((av[v+ax]-lo[ax])*sb);return b<0?0:b>=B?B-1:b;};
-      for(let v=0;v<av.length;v+=3)hist[bin(v)]++;
-      const slab=new Uint8Array(B),size=new Int32Array(K);
-      for(let b=0,acc=0;b<B;b++){slab[b]=Math.min(K-1,Math.floor(acc*K/n));size[slab[b]]+=hist[b];acc+=hist[b];}
-      const pts=[],ids=[],at=new Int32Array(K);
-      for(let s=0;s<K;s++){pts.push(new Float32Array(3*size[s]));ids.push(new Int32Array(size[s]));}
-      for(let i=0,v=0;i<n;i++,v+=3){const s=slab[bin(v)],t=at[s]++;ids[s][t]=i;pts[s][3*t]=av[v];pts[s][3*t+1]=av[v+1];pts[s][3*t+2]=av[v+2];}
-      url=URL.createObjectURL(new Blob([triClosest.toString()+'\n'+meshSnap.toString()+
-        '\nonmessage=e=>{const d=e.data;meshSnap(d.pts,d.sv,d.sf,d.tol,d.eps);postMessage(d.pts,[d.pts.buffer]);};'],{type:'application/javascript'}));
-      let pending=0;const res=new Array(K);
-      for(let s=0;s<K;s++){
-        if(!size[s])continue;
-        const w=new Worker(url),a=sv.slice(),b=sf.slice();workers.push(w);pending++;
-        w.onerror=()=>{if(!over)finish(here());};
-        w.onmessage=e=>{
-          if(over)return;res[s]=e.data;
-          if(--pending)return;
-          for(let k=0;k<K;k++){const r=res[k],id=ids[k];if(!r)continue;
-            for(let t=0;t<id.length;t++){const v=id[t]*3;av[v]=r[3*t];av[v+1]=r[3*t+1];av[v+2]=r[3*t+2];}}
-          finish(true);};
-        w.postMessage({pts:pts[s],sv:a,sf:b,tol,eps},[pts[s].buffer,a.buffer,b.buffer]);
-      }
-      if(!pending)finish(true);
-    }catch(err){finish(here());}
-  });
-  return{done,cancel(){if(finish)finish(false);}};
+  if(P.bad||!K||n<20000)return{done:Promise.resolve(here()),cancel(){}};
+  // slabs with the same number of vertices each, from a histogram of the coordinate along the longest side
+  const lo=[1e30,1e30,1e30],hi=[-1e30,-1e30,-1e30];
+  for(let v=0;v<av.length;v+=3)for(let k=0;k<3;k++){const c=av[v+k];if(c<lo[k])lo[k]=c;if(c>hi[k])hi[k]=c;}
+  const ax=hi[0]-lo[0]>=hi[1]-lo[1]?(hi[0]-lo[0]>=hi[2]-lo[2]?0:2):(hi[1]-lo[1]>=hi[2]-lo[2]?1:2);
+  const B=4096,sb=B/((hi[ax]-lo[ax])||1),hist=new Int32Array(B),bin=v=>{const b=Math.floor((av[v+ax]-lo[ax])*sb);return b<0?0:b>=B?B-1:b;};
+  for(let v=0;v<av.length;v+=3)hist[bin(v)]++;
+  const slab=new Uint8Array(B),size=new Int32Array(K);
+  for(let b=0,acc=0;b<B;b++){slab[b]=Math.min(K-1,Math.floor(acc*K/n));size[slab[b]]+=hist[b];acc+=hist[b];}
+  const pts=[],ids=[],at=new Int32Array(K);
+  for(let s=0;s<K;s++){pts.push(new Float32Array(3*size[s]));ids.push(new Int32Array(size[s]));}
+  for(let i=0,v=0;i<n;i++,v+=3){const s=slab[bin(v)],t=at[s]++;ids[s][t]=i;pts[s][3*t]=av[v];pts[s][3*t+1]=av[v+1];pts[s][3*t+2]=av[v+2];}
+  const id=P.next++,job={res:new Array(K),pending:0,here,finish:null,
+    write(){for(let s=0;s<K;s++){const r=job.res[s],d=ids[s];if(!r)continue;
+      for(let t=0;t<d.length;t++){const v=d[t]*3;av[v]=r[3*t];av[v+1]=r[3*t+1];av[v+2]=r[3*t+2];}}}};
+  const done=new Promise(resolve=>{job.finish=resolve;});
+  P.jobs.set(id,job);
+  try{
+    for(let s=0;s<K;s++){if(!size[s])continue;
+      const a=sv.slice(),b=sf.slice();job.pending++;
+      P.workers[s].postMessage({id,slab:s,pts:pts[s],sv:a,sf:b,tol,eps},[pts[s].buffer,a.buffer,b.buffer]);}
+    if(!job.pending){P.jobs.delete(id);job.finish(true);}
+  }catch(err){if(P.jobs.delete(id))job.finish(here());}
+  return{done,cancel(){if(P.jobs.delete(id))job.finish(false);}};
 }
 
 // ===========================================================================
@@ -4860,6 +4875,7 @@ function applyLen(){
 function loadAndBuild(onDone){
   const seq=++loadSeq,cfg=MAP_CONFIG[currentMap];
   if(snapJob){snapJob.cancel();snapJob=null;}
+  if(typeof Worker!=='undefined')meshSnapPool();   // the workers that will lay the asymptotic set on the safe one get ready meanwhile
   showLoading('Loading safe set','Downloading the surfaces');
   [layers.safe,layers.asym,layers.traj,layers.unctrl,grpBase,grpCut].forEach(clearGroup);
   ground=null;cur=null;cut=null;
