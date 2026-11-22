@@ -3014,7 +3014,7 @@ function computeChaoticSaddle(){
   // Generate SST trajectory
   let px=ip.px,py=ip.py,qx=ip.qx,qy=ip.qy;
   const saddle=new Float64Array(nSteps*2);
-  let count=0,skip=0,starts=0;const target=S.mapName==="ikeda"?6000:0;
+  let count=0,skip=0,starts=0;const target=S.mapName==="ikeda"?9000:0;
 
   for(let n=0;n<nSteps;n++){
     if(skip>0)skip--;else{saddle[count*2]=0.5*(px+qx);saddle[count*2+1]=0.5*(py+qy);count++;}
