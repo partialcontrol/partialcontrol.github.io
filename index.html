@@ -14,8 +14,7 @@
 :root{
   --bg:#eef1f5;--panel:#fff;--line:#dde2e9;--line2:#c6cdd8;
   --ink:#1c2430;--ink2:#566172;--ink3:#8792a2;
-  --safe:#2f62b0;--xi:#c0392b;--u:#2471a3;--ctrl:#f2a00a;--unctrl:#111;--slate:#3b4758;
-  --xi-soft:#fdf5f3;--xi-line:#f0cfc8;--u-soft:#f2f7fc;--u-line:#c6dbef;
+  --safe:#2f62b0;--xi:#1c2430;--u:#1c2430;--ctrl:#f2a00a;--unctrl:#111;--slate:#3b4758;
   --ui:'Source Sans 3',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --math:KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif;
   --code:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
@@ -84,10 +83,6 @@ input[type=range]::-moz-range-track{height:2px;background:var(--slate);border-ra
 input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;margin-top:-8px;border-radius:50%;background:#fff;
   border:1.5px solid #8f9aab;box-shadow:0 1px 3px rgba(28,36,48,.2)}
 input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:1.5px solid #8f9aab;box-shadow:0 1px 3px rgba(28,36,48,.2)}
-input[type=range].sl-xi::-webkit-slider-thumb{border-color:var(--xi)}
-input[type=range].sl-xi::-moz-range-thumb{border-color:var(--xi)}
-input[type=range].sl-u::-webkit-slider-thumb{border-color:var(--u)}
-input[type=range].sl-u::-moz-range-thumb{border-color:var(--u)}
 input[type=range]:disabled{opacity:.35}
 .btn{display:block;width:100%;padding:8px 12px;border:1px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink);
   font-size:15px;font-weight:600;text-align:center;transition:background .12s,border-color .12s,color .12s;user-select:none}
@@ -109,7 +104,7 @@ input[type=range]:disabled{opacity:.35}
 .seg button{flex:1;height:32px;padding:0 10px;border:0;border-radius:7px;background:transparent;font-size:15px;font-weight:600;color:var(--ink2);white-space:nowrap}
 .seg button.on{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line2),0 1px 2px rgba(28,36,48,.06)}
 .vlbl{flex:none;font-size:15px;font-weight:600;white-space:nowrap}
-.vlbl.xi{color:var(--xi)}.vlbl.u{color:var(--u)}
+
 .mob-header{display:none}
 .info-btn{display:inline-flex;align-items:center;justify-content:center;width:18px;height:18px;border-radius:50%;border:1.5px solid var(--ink3);color:var(--ink3);
   font:italic 700 12px Georgia,serif;margin-left:4px;flex:none;position:relative;cursor:default}
@@ -222,14 +217,12 @@ input[type=range]:disabled{opacity:.35}
 #t3-viewport canvas{display:block}
 #t3-noise{display:none;position:absolute;inset:0;pointer-events:none;z-index:1;opacity:.04}
 /* the disturbance and the control as two balls at the scale of the scene, in the upper right corner */
-#t3-balls{position:absolute;top:14px;right:16px;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:6px;font-size:18px}
+#t3-balls{position:absolute;top:14px;right:16px;z-index:2;pointer-events:none;display:flex;flex-direction:column;gap:6px;font-size:16px;color:#1c2430}
 #t3-balls[hidden]{display:none}
 #t3-balls>div{display:flex;align-items:center;justify-content:flex-end;gap:10px}
-#t3-balls .xi{color:#c0392b}#t3-balls .u{color:#2471a3}
 #t3-balls b{display:flex;align-items:center;justify-content:center}
 #t3-balls i{display:block;border-radius:50%}
-#t3-ballXi{background:radial-gradient(circle at 35% 30%,#fbe1dd 0,#e0705f 35%,#b8382a 75%,#7d231a 100%)}
-#t3-ballU{background:radial-gradient(circle at 35% 30%,#e0eef9 0,#5c9fd0 35%,#2471a3 75%,#174a6d 100%)}
+#t3-balls i{background:radial-gradient(circle at 35% 30%,#ffffff 0,#c9ced6 30%,#8a93a0 70%,#4f5763 100%)}
 #v1d .plot-ctl{right:auto;bottom:auto}   /* placed by drawSafety, right after U(x) */
 #v1d .plot-ctl .btn{padding:2px 9px;font-size:13px;box-shadow:none}
 #t3-panel{position:absolute;top:8px;left:8px;width:260px;z-index:10;padding:12px 11px 13px;border-radius:14px;
@@ -321,7 +314,7 @@ input[type=range]:disabled{opacity:.35}
 #about .x{position:absolute;top:18px;right:18px;width:36px;height:36px;border:0;border-radius:50%;background:var(--bg);font-size:18px;color:var(--ink2)}
 #about .x:hover{color:var(--ink);background:#e3e8ef}
 .nw{white-space:nowrap}
-.c-xi{color:var(--xi)}.c-u{color:var(--u)}.c-safe{color:var(--safe);font-weight:600}
+.c-safe{color:var(--safe);font-weight:600}
 
 /* ---------- small screens ---------- */
 @media(max-width:1100px){#brand span{display:none}}
@@ -524,7 +517,8 @@ body.guide-push #guide{box-shadow:none}
   #v2d .surf .surf-bar{right:4px}
   #v2d .surf-msg{font-size:13.5px}
   .t3-note{display:none}
-  #t3-balls{top:10px;right:10px;font-size:15px}
+  #t3-balls{top:8px;right:8px;font-size:12px;gap:4px}
+  #t3-balls>div{gap:6px}
   .p3-main .ph .btn{padding:2px 8px;font-size:12.5px}
   #guide{top:auto;left:0;width:auto;height:52%;border-left:0;border-top:1px solid var(--line);border-radius:16px 16px 0 0;box-shadow:0 -10px 30px rgba(28,36,48,.18)}
   #guide .g-head{padding:9px 12px 8px 16px}
@@ -868,8 +862,8 @@ body.guide-push #guide{box-shadow:none}
     <button class="x" id="aboutClose" aria-label="Close">✕</button>
     <h2 id="aboutTitle">Partial control: safe sets and safety functions</h2>
     <p>In transient chaos, orbits of a map eventually escape from a region <span class="nw"><span data-tex="Q">Q</span>.</span> When the system is affected by bounded noise, escapes happen even faster. The dynamics follow</p>
-    <p class="eq"><span data-tex="x_{n+1}=f(x_n)+\textcolor{#c0392b}{\xi_n}+\textcolor{#2471a3}{u_n}">x(n+1) = f(x(n)) + ξ(n) + u(n)</span></p>
-    <p>where <span class="c-xi" data-tex="\textcolor{#c0392b}{|\xi_n|\le\xi_0}">|ξn| ≤ ξ₀</span> is a bounded disturbance and <span class="c-u" data-tex="\textcolor{#2471a3}{|u_n|\le u_0}">|un| ≤ u₀</span> is a bounded control. Even when <span class="nw"><span data-tex="u_0<\xi_0">u₀ &lt; ξ₀</span>,</span> that is, when the control is weaker than the disturbance, escapes can be avoided by keeping the orbit inside a special subset of <span data-tex="Q">Q</span> called the <span class="c-safe">safe set</span>, drawn in blue in every plot. From any point of the safe set, and whatever the disturbance, a control within the bound takes the orbit back to the safe set.</p>
+    <p class="eq"><span data-tex="x_{n+1}=f(x_n)+\xi_n+u_n">x(n+1) = f(x(n)) + ξ(n) + u(n)</span></p>
+    <p>where <span data-tex="|\xi_n|\le\xi_0">|ξn| ≤ ξ₀</span> is a bounded disturbance and <span data-tex="|u_n|\le u_0">|un| ≤ u₀</span> is a bounded control. Even when <span class="nw"><span data-tex="u_0<\xi_0">u₀ &lt; ξ₀</span>,</span> that is, when the control is weaker than the disturbance, escapes can be avoided by keeping the orbit inside a special subset of <span data-tex="Q">Q</span> called the <span class="c-safe">safe set</span>, drawn in blue in every plot. From any point of the safe set, and whatever the disturbance, a control within the bound takes the orbit back to the safe set.</p>
     <h3>Safety function</h3>
     <p>The safety function <span data-tex="U(x)">U(x)</span> gives, for each point of <span class="nw"><span data-tex="Q">Q</span>,</span> the minimum control bound that keeps its orbit in <span data-tex="Q">Q</span> forever. The safe set for a control bound <span data-tex="u_0">u₀</span> is the set of points where <span class="nw"><span data-tex="U(x)\le u_0">U(x) ≤ u₀</span>,</span> so a safe set exists only if <span class="nw"><span data-tex="u_0\ge\min U">u₀ ≥ min U</span>.</span></p>
     <h3>1D maps</h3>
@@ -966,12 +960,12 @@ const PC=(()=>{
   function guideKey(k){if(k!==gKey){gKey=k;refreshGuide();}}
   // ----- pieces of text shared by the guides -----
   const gt=(tex,alt)=>'<span data-tex="'+tex+'">'+(alt||"")+'</span>';
-  const XI="\\textcolor{#c0392b}{\\xi_n}",UN="\\textcolor{#2471a3}{u_n}";
+  const XI="\\xi_n",UN="u_n";
   const guideText={
     // the controlled map: q is the name of the state and f the name of the map
     eq:(q,f)=>'<p class="eq">'+gt(q+"_{n+1}="+f+"("+q+"_n)+"+XI+"+"+UN,q+"(n+1) = "+f+"("+q+"(n)) + ξ(n) + u(n)")+'</p>',
-    bounds:(q,f)=>gt(XI,"ξ")+" is a disturbance that nobody chooses, with "+gt("\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}","|ξ| ≤ ξ₀")+", and "+gt(UN,"u")+" is the control, with "+
-      gt("\\textcolor{#2471a3}{|u_n|\\le u_0}","|u| ≤ u₀")+", applied knowing "+gt(f+"("+q+"_n)+\\xi_n",f+"("+q+") + ξ")+".",
+    bounds:(q,f)=>gt(XI,"ξ")+" is a disturbance that nobody chooses, with "+gt("|\\xi_n|\\le\\xi_0","|ξ| ≤ ξ₀")+", and "+gt(UN,"u")+" is the control, with "+
+      gt("|u_n|\\le u_0","|u| ≤ u₀")+", applied knowing "+gt(f+"("+q+"_n)+\\xi_n",f+"("+q+") + ξ")+".",
     aim:"Partial control looks for the smallest bound "+gt("u_0","u₀")+" that does the job, and it is often smaller than "+gt("\\xi_0","ξ₀")+".",
     sculpt:"start with all the grid points of "+gt("Q","Q")+" and remove, again and again, those whose image cannot be returned to the set with "+
       gt("|u_n|\\le u_0","|u| ≤ u₀")+" for some disturbance. What remains is the safe set",
@@ -1151,7 +1145,7 @@ const qx=(tx(rk)+tx(r1))/2;const qy=ty(cl)-8;
 ctx.fillStyle="#111";ctx.font="italic 16px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 ctx.fillText("Q",qx-ctx.measureText("Q").width/2,qy);
 }}ctx.lineCap="butt";}
-if(!S.safex.length&&S.mode==="safeset"){ctx.fillStyle="#c0392b";ctx.font="bold 18px 'Source Sans 3',sans-serif";ctx.fillText("No Safe Set exists",w*.35,h*.88);}
+if(!S.safex.length&&S.mode==="safeset"){ctx.fillStyle="#3c4450";ctx.font="bold 18px 'Source Sans 3',sans-serif";ctx.fillText("No Safe Set exists",w*.35,h*.88);}
 // Math title: x_{n+1} = f(x_n) + ξ_n + u_n
 // Math title: x_{n+1} = f(x_n) + ξ_n + u_n
 {
@@ -1165,16 +1159,16 @@ ctx.font="italic "+fsSub+"px "+PC.MF;ctx.fillText("n",tx0,ty0+subOff);tx0+=ctx.m
 tx0=PC.mtext(ctx,tx0,ty0,fs,["r: = ","i:f","g:0.1","r:(","i:x"]);
 ctx.font="italic "+fsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx0,ty0+subOff);tx0+=ctx.measureText("n").width;
 tx0=PC.mtext(ctx,tx0,ty0,fs,["r:) + "]);ctx.font="italic "+fs+"px "+PC.MF;
-ctx.fillStyle="#c0392b";ctx.fillText("ξ",tx0,ty0);tx0+=ctx.measureText("ξ").width;
+ctx.fillStyle="#3c4450";ctx.fillText("ξ",tx0,ty0);tx0+=ctx.measureText("ξ").width;
 ctx.font="italic "+fsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx0,ty0+subOff);tx0+=ctx.measureText("n").width;
 if(showU){ctx.font="italic "+fs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#333";ctx.fillText(" + ",tx0,ty0);tx0+=ctx.measureText(" + ").width;
-ctx.fillStyle="#2471a3";ctx.fillText("u",tx0,ty0);tx0+=ctx.measureText("u").width;
+ctx.fillStyle="#3c4450";ctx.fillText("u",tx0,ty0);tx0+=ctx.measureText("u").width;
 ctx.font="italic "+fsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx0,ty0+subOff);tx0+=ctx.measureText("n").width;}
 // |ξₙ| ≤ ξ₀ = val, |uₙ| ≤ u₀ = val — far right, row 1
 if(!S.showTS){
 const _ro=readoutLayout(w,P,tx0),vfs=_ro.vfs,vfsSub=_ro.sub,valX=_ro.x;
 const uFixedX=_ro.x2;
-ctx.font="italic "+vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#c0392b";
+ctx.font="italic "+vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#3c4450";
 let rv=valX;
 ctx.fillText("|ξ",rv,ty0-(w>600?9:6));rv+=ctx.measureText("|ξ").width;
 ctx.font="italic "+vfsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv,ty0-(w>600?5:2));rv+=ctx.measureText("n").width;
@@ -1185,7 +1179,7 @@ ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillTe
 let uColX=uFixedX;
 if(showU){
 rv=uFixedX;
-ctx.font="italic "+vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#2471a3";
+ctx.font="italic "+vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#3c4450";
 ctx.fillText("|u",rv,ty0-(w>600?9:6));rv+=ctx.measureText("|u").width;
 ctx.font="italic "+vfsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv,ty0-(w>600?5:2));rv+=ctx.measureText("n").width;
 ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| ≤ ",rv,ty0-(w>600?9:6));rv+=ctx.measureText("| ≤ ").width;
@@ -1196,19 +1190,19 @@ ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillTe
 if(S._lastXi!==undefined&&S.mode==="controlled_activate"){
 ctx.font="italic "+vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 let rv2=valX;
-ctx.fillStyle="#c0392b";ctx.fillText("|ξ",rv2,ty0+(w>600?10:8));rv2+=ctx.measureText("|ξ").width;
+ctx.fillStyle="#3c4450";ctx.fillText("|ξ",rv2,ty0+(w>600?10:8));rv2+=ctx.measureText("|ξ").width;
 ctx.font="italic "+vfsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv2,ty0+(w>600?14:11));rv2+=ctx.measureText("n").width;
 ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| = "+sig(S._lastXi,3),rv2,ty0+(w>600?10:8));
 rv2=uFixedX;
-ctx.fillStyle="#2471a3";ctx.fillText("|u",rv2,ty0+(w>600?10:8));rv2+=ctx.measureText("|u").width;
+ctx.fillStyle="#3c4450";ctx.fillText("|u",rv2,ty0+(w>600?10:8));rv2+=ctx.measureText("|u").width;
 ctx.font="italic "+vfsSub+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv2,ty0+(w>600?14:11));rv2+=ctx.measureText("n").width;
 ctx.font=vfs+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| = "+sig(S._lastUn,3),rv2,ty0+(w>600?10:8));}
 {const sx=(b-a)>0?(w-P.l-P.r)/(b-a):0,big=w>500,lf=big?16:12,hx=v=>Math.min((w-P.l-P.r)*.2,Math.max(4,v*sx));
 const hd=hx(S.dist),hu=hx(S.ctrl),hm=Math.max(hd,hu),cx=w-P.r-hm-10,y1=P.t+(big?14:10),y2=y1+(big?18:14),cap=big?5:4;
 const seg=(y,hl,col)=>{ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=6;ctx.lineCap="round";ctx.beginPath();ctx.moveTo(cx-hl,y);ctx.lineTo(cx+hl,y);ctx.stroke();
   ctx.strokeStyle=col;ctx.lineWidth=2.2;ctx.beginPath();ctx.moveTo(cx-hl,y);ctx.lineTo(cx+hl,y);ctx.moveTo(cx-hl,y-cap);ctx.lineTo(cx-hl,y+cap);ctx.moveTo(cx+hl,y-cap);ctx.lineTo(cx+hl,y+cap);ctx.stroke();ctx.lineCap="butt";};
-seg(y1,hd,"#c0392b");ctx.fillStyle="#c0392b";PC.mtext(ctx,cx-hm-lf*1.4-4,y1+lf*.3,lf,["i:ξ","S:0"],"rgba(255,255,255,.92)");
-if(showU){seg(y2,hu,"#2471a3");ctx.fillStyle="#2471a3";PC.mtext(ctx,cx-hm-lf*1.4-4,y2+lf*.3,lf,["i:u","S:0"],"rgba(255,255,255,.92)");}}
+seg(y1,hd,"#6b7380");ctx.fillStyle="#3c4450";PC.mtext(ctx,cx-hm-lf*1.4-4,y1+lf*.3,lf,["i:ξ","S:0"],"rgba(255,255,255,.92)");
+if(showU){seg(y2,hu,"#6b7380");ctx.fillStyle="#3c4450";PC.mtext(ctx,cx-hm-lf*1.4-4,y2+lf*.3,lf,["i:u","S:0"],"rgba(255,255,255,.92)");}}
 } // end if(!S.showTS)
 } // end title block
 // Ticks
@@ -1241,7 +1235,7 @@ for(let i=0;i<30;i++){const y=interp1(xm,ym,x0v),yd=y+(2*Math.random()-1)*S.dist
 ctx.fillStyle=PC.UNCTRL;ctx.beginPath();ctx.arc(tx(S.x0),ty(cv),5,0,2*Math.PI);ctx.fill();
 ctx.strokeStyle=PC.UNCTRL;ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
 for(let k=0;k<xB.length;k++){const sh=.1,e=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
-ctx.strokeStyle="#c0392b";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e),ty(yD[k]));ctx.stroke();
+ctx.strokeStyle="#3c4450";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e),ty(yD[k]));ctx.stroke();
 ctx.strokeStyle=PC.UNCTRL;ctx.lineWidth=0.9;ctx.beginPath();ctx.moveTo(tx(xB[k]+e),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
 if(k<xB.length-1){ctx.beginPath();ctx.moveTo(tx(yD[k]),ty(yD[k]));ctx.lineTo(tx(xB[k+1]),ty(yV[k+1]));ctx.stroke();}}}
 
@@ -1256,7 +1250,7 @@ const j=(yd-xms)/gridx,j1=Math.floor(j),j2=Math.ceil(j);
 if(j1>=0&&j2<ss.length){if(!ss[j1].s||!ss[j2].s)return true;return false;}return true;}
 
 function drawControlled(){const r=drawMain();if(!r)return;const{tx,ty}=r,ctx=mainCtx,{ss,safex,gridx,ax:{c:cv,d:dv}}=S;
-if(!safex.length){drawIterations();const mc=$("mainCanvas"),mw=mc.parentElement.clientWidth,mh=mc.parentElement.clientHeight;const noSafeFs=mw>500?20:14;mainCtx.fillStyle="#c0392b";mainCtx.font="bold italic "+noSafeFs+"px 'Source Sans 3',sans-serif";mainCtx.fillText("Uncontrolled orbit (no safe set)",mw*.15,mh*.8);return;}const ssX=ss.map(p=>p.x),ssY=ss.map(p=>p.y);
+if(!safex.length){drawIterations();const mc=$("mainCanvas"),mw=mc.parentElement.clientWidth,mh=mc.parentElement.clientHeight;const noSafeFs=mw>500?20:14;mainCtx.fillStyle="#3c4450";mainCtx.font="bold italic "+noSafeFs+"px 'Source Sans 3',sans-serif";mainCtx.fillText("Uncontrolled orbit (no safe set)",mw*.15,mh*.8);return;}const ssX=ss.map(p=>p.x),ssY=ss.map(p=>p.y);
 if(S._checkRand===undefined)S._checkRand=2*Math.random()-1;
 if(S._advanceCheck)S._checkRand=2*Math.random()-1;
 const xb=S.x0,yC=interp1(ssX,ssY,S.x0),dn=S.dist*S._checkRand,yd=yC+dn;
@@ -1269,20 +1263,20 @@ const alf=r.W>600?18:13,alsf=r.W>600?12:9;
 drawArrow(ctx,tx(xb),ty(h1),tx(yC),ty(h1),"#333",2.5);
 ctx.fillStyle="#333";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 ctx.fillText("f (x)",(tx(xb)+tx(yC))/2-15,ty(h1)-6);
-drawArrow(ctx,tx(yC),ty(h2),tx(yd),ty(h2),"#c0392b",2.5);
-ctx.fillStyle="#c0392b";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
+drawArrow(ctx,tx(yC),ty(h2),tx(yd),ty(h2),"#3c4450",2.5);
+ctx.fillStyle="#3c4450";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 const xiRight=yd>=yC;
 if(xiRight){ctx.fillText("ξ",tx(yd)+3,ty(h2)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(yd)+3+ctx.measureText("ξ").width+2,ty(h2)+4);}
 else{ctx.fillText("ξ",tx(yd)-18,ty(h2)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(yd)-18+ctx.measureText("ξ").width+2,ty(h2)+4);}
-if(Math.abs(xN-yd)>gridx*.5){drawArrow(ctx,tx(yd),ty(h3),tx(xN),ty(h3),"#2471a3",2.5);
-ctx.fillStyle="#2471a3";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
+if(Math.abs(xN-yd)>gridx*.5){drawArrow(ctx,tx(yd),ty(h3),tx(xN),ty(h3),"#3c4450",2.5);
+ctx.fillStyle="#3c4450";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 if(xN>=yd){ctx.fillText("u",tx(xN)+3,ty(h3)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(xN)+3+ctx.measureText("u").width+2,ty(h3)+4);}
 else{ctx.fillText("u",tx(xN)-18,ty(h3)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(xN)-18+ctx.measureText("u").width+2,ty(h3)+4);}}
-else{ctx.strokeStyle="#2471a3";ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx(yd),ty(h3),4,0,2*Math.PI);ctx.stroke();
-ctx.fillStyle="#2471a3";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
+else{ctx.strokeStyle="#3c4450";ctx.lineWidth=2;ctx.beginPath();ctx.arc(tx(yd),ty(h3),4,0,2*Math.PI);ctx.stroke();
+ctx.fillStyle="#3c4450";ctx.font="bold italic "+alf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 if(xiRight){ctx.fillText("u",tx(yd)+8,ty(h3)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(yd)+8+ctx.measureText("u").width+2,ty(h3)+4);}
 else{ctx.fillText("u",tx(yd)-20,ty(h3)+1);ctx.font="bold "+alsf+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx(yd)-20+ctx.measureText("u").width+2,ty(h3)+4);}}
-ctx.fillStyle="#2471a3";ctx.beginPath();ctx.arc(tx(xN),ty(cv),5,0,2*Math.PI);ctx.fill();
+ctx.fillStyle="#3c4450";ctx.beginPath();ctx.arc(tx(xN),ty(cv),5,0,2*Math.PI);ctx.fill();
 const xlFs=r.W>600?18:13,xlSub=r.W>600?12:9;
 ctx.fillStyle="#555";ctx.font="italic "+xlFs+"px "+PC.MF;
 ctx.fillText("x",tx(xb)-2,ty(cv)+20);
@@ -1304,16 +1298,16 @@ ctx.font="italic "+fsSub2+"px "+PC.MF;ctx.fillText("n",tx2,ty2+subOff2);tx2+=ctx
 tx2=PC.mtext(ctx,tx2,ty2,fs2,["r: = ","i:f","g:0.1","r:(","i:x"]);
 ctx.font="italic "+fsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx2,ty2+subOff2);tx2+=ctx.measureText("n").width;
 tx2=PC.mtext(ctx,tx2,ty2,fs2,["r:) + "]);ctx.font="italic "+fs2+"px "+PC.MF;
-ctx.fillStyle="#c0392b";ctx.fillText("ξ",tx2,ty2);tx2+=ctx.measureText("ξ").width;
+ctx.fillStyle="#3c4450";ctx.fillText("ξ",tx2,ty2);tx2+=ctx.measureText("ξ").width;
 ctx.font="italic "+fsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx2,ty2+subOff2);tx2+=ctx.measureText("n").width;
 ctx.font="italic "+fs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#333";ctx.fillText(" + ",tx2,ty2);tx2+=ctx.measureText(" + ").width;
-ctx.fillStyle="#2471a3";ctx.fillText("u",tx2,ty2);tx2+=ctx.measureText("u").width;
+ctx.fillStyle="#3c4450";ctx.fillText("u",tx2,ty2);tx2+=ctx.measureText("u").width;
 ctx.font="italic "+fsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",tx2,ty2+subOff2);
 // |ξₙ| ≤ ξ₀ = val far right row 1
 {
 const _ro2=readoutLayout(r.W,r.P,tx2+fsSub2*.6),vfs2=_ro2.vfs,vfsSub2=_ro2.sub,valX2=_ro2.x;
 const uFixedX2=_ro2.x2;
-ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#c0392b";
+ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#3c4450";
 let rv2=valX2;
 ctx.fillText("|ξ",rv2,ty2-(r.W>600?9:6));rv2+=ctx.measureText("|ξ").width;
 ctx.font="italic "+vfsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv2,ty2-(r.W>600?5:2));rv2+=ctx.measureText("n").width;
@@ -1322,7 +1316,7 @@ ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif"
 ctx.font=vfsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("0",rv2,ty2-(r.W>600?5:2));rv2+=ctx.measureText("0").width;
 ctx.font=vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText(" = "+sig(S.dist,3),rv2,ty2-(r.W>600?9:6));
 rv2=uFixedX2;
-ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#2471a3";
+ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillStyle="#3c4450";
 ctx.fillText("|u",rv2,ty2-(r.W>600?9:6));rv2+=ctx.measureText("|u").width;
 ctx.font="italic "+vfsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv2,ty2-(r.W>600?5:2));rv2+=ctx.measureText("n").width;
 ctx.font=vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| ≤ ",rv2,ty2-(r.W>600?9:6));rv2+=ctx.measureText("| ≤ ").width;
@@ -1333,11 +1327,11 @@ ctx.font=vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillT
 if(S._lastXi!==undefined){
 ctx.font="italic "+vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";
 let rv3=valX2;
-ctx.fillStyle="#c0392b";ctx.fillText("|ξ",rv3,ty2+(r.W>600?10:8));rv3+=ctx.measureText("|ξ").width;
+ctx.fillStyle="#3c4450";ctx.fillText("|ξ",rv3,ty2+(r.W>600?10:8));rv3+=ctx.measureText("|ξ").width;
 ctx.font="italic "+vfsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv3,ty2+(r.W>600?14:11));rv3+=ctx.measureText("n").width;
 ctx.font=vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| = "+sig(S._lastXi,3),rv3,ty2+(r.W>600?10:8));
 rv3=uFixedX2;
-ctx.fillStyle="#2471a3";ctx.fillText("|u",rv3,ty2+(r.W>600?10:8));rv3+=ctx.measureText("|u").width;
+ctx.fillStyle="#3c4450";ctx.fillText("|u",rv3,ty2+(r.W>600?10:8));rv3+=ctx.measureText("|u").width;
 ctx.font="italic "+vfsSub2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("n",rv3,ty2+(r.W>600?14:11));rv3+=ctx.measureText("n").width;
 ctx.font=vfs2+"px KaTeX_Main,KaTeX_Math,'Times New Roman',Times,serif";ctx.fillText("| = "+sig(S._lastUn,3),rv3,ty2+(r.W>600?10:8));}}
 } // end drawControlled
@@ -1350,7 +1344,7 @@ for(let i=0;i<nI;i++){const y=interp1(xm,ym,x0v),yd=y+(2*Math.random()-1)*S.dist
 if(!S.showTS){
 drawIterations();const mc=$("mainCanvas"),mw=mc.parentElement.clientWidth,mh=mc.parentElement.clientHeight;
 const noSafeFs=mw>500?20:14;
-mainCtx.fillStyle="#c0392b";mainCtx.font="bold italic "+noSafeFs+"px 'Source Sans 3',sans-serif";mainCtx.fillText("Uncontrolled orbit (no safe set)",mw*.15,mh*.8);
+mainCtx.fillStyle="#3c4450";mainCtx.font="bold italic "+noSafeFs+"px 'Source Sans 3',sans-serif";mainCtx.fillText("Uncontrolled orbit (no safe set)",mw*.15,mh*.8);
 } else {
 // Phase space panel
 const rp=drawMain($("tsPhaseCanvas"));S._tsAx=rp?{c:S.ax.c,d:S.ax.d,t:rp.P.t,b:rp.P.b,n:window.innerWidth<=820?3:5}:null;
@@ -1358,19 +1352,19 @@ if(rp){const{tx:txp,ty:typ}=rp,ctxp=mainCtx,cvp=S.ax.c;
 ctxp.fillStyle=PC.UNCTRL;ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.PI);ctxp.fill();
 ctxp.strokeStyle=PC.UNCTRL;ctxp.lineWidth=0.8;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
 for(let k=0;k<xB.length-1;k++){const sh=.1,e=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
-ctxp.strokeStyle="#c0392b";ctxp.lineWidth=.4;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e),typ(yD[k]));ctxp.stroke();
+ctxp.strokeStyle="#3c4450";ctxp.lineWidth=.4;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e),typ(yD[k]));ctxp.stroke();
 ctxp.strokeStyle=PC.UNCTRL;ctxp.lineWidth=0.8;ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
 ctxp.beginPath();ctxp.moveTo(txp(yD[k]),typ(yD[k]));ctxp.lineTo(txp(xB[k+1]),typ(yV[k+1]));ctxp.stroke();}
 const noSafeFs2=rp.W>300?14:10;
-ctxp.fillStyle="#c0392b";ctxp.font="bold italic "+noSafeFs2+"px 'Source Sans 3',sans-serif";ctxp.fillText("No safe set",rp.P.l+10,rp.H*.15);}
+ctxp.fillStyle="#3c4450";ctxp.font="bold italic "+noSafeFs2+"px 'Source Sans 3',sans-serif";ctxp.fillText("No safe set",rp.P.l+10,rp.H*.15);}
 // TS panels - orbit in orange, disturbance, empty control
 const distH=yV.map((y,i)=>Math.abs(yD[i]-y));
 const ctrlH=yV.map(()=>0);
 const sharedMax=Math.max(S.dist,S.ctrl)*1.2+0.001;
 const actualN=xB.length;
 drawTS($("tsCanvas1"),yD.slice(0,actualN),PC.UNCTRL,"Time series (uncontrolled)",undefined,undefined,undefined,undefined,actualN,undefined,S._tsAx);
-drawTS($("tsCanvas2"),[0,...distH.slice(0,actualN)],"#c0392b","Disturbance",S.dist,"rgba(192,57,43,.45)",0,sharedMax,actualN,"\u03be");
-drawTS($("tsCanvas3"),[0,...ctrlH.slice(0,actualN)],"#2471a3","Control",S.ctrl,"rgba(36,113,163,.45)",0,sharedMax,actualN,"u");
+drawTS($("tsCanvas2"),[0,...distH.slice(0,actualN)],"#3c4450","Disturbance",S.dist,"rgba(60,68,80,.45)",0,sharedMax,actualN,"\u03be");
+drawTS($("tsCanvas3"),[0,...ctrlH.slice(0,actualN)],"#3c4450","Control",S.ctrl,"rgba(60,68,80,.45)",0,sharedMax,actualN,"u");
 }return;}
 const ssX=ss.map(p=>p.x),ssY=ss.map(p=>p.y),nI=S.numIter;let xC=S.x0;
 const xB=[],yV=[],yD=[],xV=[];
@@ -1382,9 +1376,9 @@ ctx.fillStyle=PC.CTRL;ctx.beginPath();ctx.arc(tx(xB[0]),ty(cv),5,0,2*Math.PI);ct
 ctx.strokeStyle=PC.CTRL;ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[0]),ty(cv));ctx.lineTo(tx(xB[0]),ty(yV[0]));ctx.stroke();
 const sh=.1;for(let k=0;k<nI-1;k++){const e1=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 const e2=yD[k]>=yV[k+1]?-Math.abs(xV[k]-yD[k])*sh:Math.abs(xV[k]-yD[k])*sh;
-ctx.strokeStyle="#c0392b";ctx.lineWidth=lw2;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e1),ty(yD[k]));ctx.stroke();
+ctx.strokeStyle="#3c4450";ctx.lineWidth=lw2;ctx.beginPath();ctx.moveTo(tx(xB[k]),ty(yV[k]));ctx.lineTo(tx(xB[k]+e1),ty(yD[k]));ctx.stroke();
 ctx.strokeStyle=PC.CTRL;ctx.lineWidth=lw1;ctx.beginPath();ctx.moveTo(tx(xB[k]+e1),ty(yD[k]));ctx.lineTo(tx(yD[k]),ty(yD[k]));ctx.stroke();
-ctx.strokeStyle="#2471a3";ctx.beginPath();ctx.moveTo(tx(yD[k]),ty(yD[k]));ctx.lineTo(tx(xV[k]),ty(yD[k]+e2));ctx.stroke();
+ctx.strokeStyle="#3c4450";ctx.beginPath();ctx.moveTo(tx(yD[k]),ty(yD[k]));ctx.lineTo(tx(xV[k]),ty(yD[k]+e2));ctx.stroke();
 ctx.strokeStyle=PC.CTRL;ctx.beginPath();ctx.moveTo(tx(xV[k]),ty(yD[k]+e2));ctx.lineTo(tx(xV[k]),ty(yV[k+1]));ctx.stroke();}}
 else{
 // Compute data
@@ -1403,9 +1397,9 @@ ctxp.fillStyle=PC.CTRL;ctxp.beginPath();ctxp.arc(txp(xB[0]),typ(cvp),4,0,2*Math.
 ctxp.strokeStyle=PC.CTRL;ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[0]),typ(cvp));ctxp.lineTo(txp(xB[0]),typ(yV[0]));ctxp.stroke();
 const sh=.1;for(let k=0;k<nI-1;k++){const e1=xB[k]<=yD[k]?Math.abs(yD[k]-yV[k])*sh:-Math.abs(yD[k]-yV[k])*sh;
 const e2=yD[k]>=yV[k+1]?-Math.abs(xV[k]-yD[k])*sh:Math.abs(xV[k]-yD[k])*sh;
-ctxp.strokeStyle="#c0392b";ctxp.lineWidth=lw2p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e1),typ(yD[k]));ctxp.stroke();
+ctxp.strokeStyle="#3c4450";ctxp.lineWidth=lw2p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]),typ(yV[k]));ctxp.lineTo(txp(xB[k]+e1),typ(yD[k]));ctxp.stroke();
 ctxp.strokeStyle=PC.CTRL;ctxp.lineWidth=lw1p;ctxp.beginPath();ctxp.moveTo(txp(xB[k]+e1),typ(yD[k]));ctxp.lineTo(txp(yD[k]),typ(yD[k]));ctxp.stroke();
-ctxp.strokeStyle="#2471a3";ctxp.beginPath();ctxp.moveTo(txp(yD[k]),typ(yD[k]));ctxp.lineTo(txp(xV[k]),typ(yD[k]+e2));ctxp.stroke();
+ctxp.strokeStyle="#3c4450";ctxp.beginPath();ctxp.moveTo(txp(yD[k]),typ(yD[k]));ctxp.lineTo(txp(xV[k]),typ(yD[k]+e2));ctxp.stroke();
 ctxp.strokeStyle=PC.CTRL;ctxp.beginPath();ctxp.moveTo(txp(xV[k]),typ(yD[k]+e2));ctxp.lineTo(txp(xV[k]),typ(yV[k+1]));ctxp.stroke();}}
 // Build orbit array: nI+1 points from x₀ to xₙᵢ
 const orbitTS=[xB[0]];for(let i=0;i<nI;i++)orbitTS.push(xV[i]);
@@ -1439,10 +1433,10 @@ const xStart=i===0?txf1(0):txf1(i)+tilt;
 ctx1.strokeStyle=PC.CTRL;ctx1.lineWidth=lw;ctx1.beginPath();
 ctx1.moveTo(xStart,tyf1(orbitTS[i]));ctx1.lineTo(xc-tilt,tyf1(yV[i]));ctx1.stroke();
 // Red tilted: f(xₙ) → f(xₙ)+ξₙ
-ctx1.strokeStyle="#c0392b";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
+ctx1.strokeStyle="#3c4450";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
 ctx1.moveTo(xc-tilt,tyf1(yV[i]));ctx1.lineTo(xc,tyf1(yD[i]));ctx1.stroke();
 // Blue tilted: f(xₙ)+ξₙ → xₙ₊₁
-ctx1.strokeStyle="#2471a3";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
+ctx1.strokeStyle="#3c4450";ctx1.lineWidth=lw*1.8;ctx1.beginPath();
 ctx1.moveTo(xc,tyf1(yD[i]));ctx1.lineTo(xc+tilt,tyf1(xV[i]));ctx1.stroke();
 }
 // Green dots at all orbit points (adjusted for tilt)
@@ -1454,8 +1448,8 @@ ctx1.fillStyle="#1c2430";ctx1.font="600 "+(w1>500?15:12)+"px 'Source Sans 3',sys
 } else {
 drawTS($("tsCanvas1"),orbitTS,PC.CTRL,"Time series",undefined,undefined,ts1min-ts1mg,ts1max+ts1mg,nI,undefined,S._tsAx);
 }
-drawTS($("tsCanvas2"),[0,...distH],"#c0392b","Disturbance",S.dist,"rgba(192,57,43,.45)",0,sharedMax,nI,"\u03be");
-drawTS($("tsCanvas3"),[0,...ctrlH],"#2471a3","Control",S.ctrl,"rgba(36,113,163,.45)",0,sharedMax,nI,"u");
+drawTS($("tsCanvas2"),[0,...distH],"#3c4450","Disturbance",S.dist,"rgba(60,68,80,.45)",0,sharedMax,nI,"\u03be");
+drawTS($("tsCanvas3"),[0,...ctrlH],"#3c4450","Control",S.ctrl,"rgba(60,68,80,.45)",0,sharedMax,nI,"u");
 // Vertical grid lines on TS2 and TS3 for ≤20 iterations
 if(nI<=20){
 [$("tsCanvas2"),$("tsCanvas3")].forEach(cv=>{
@@ -2151,8 +2145,8 @@ function drawSafety(){
     const fs=big?18:13,lx=left?P.l+8:w-P.r-fs*1.25;
     ctx.fillStyle="rgba(255,255,255,.88)";ctx.fillRect(lx-3,y-fs-5,fs*1.25,fs+2);
     ctx.fillStyle=col;mt(ctx,lx,y-6,fs,["i:"+sym,"S:0"]);};
-  bound(S.dist,"#c0392b","\u03BE",true);
-  bound(S.ctrl,"#2471a3","u",false);
+  bound(S.dist,"#3c4450","\u03BE",true);
+  bound(S.ctrl,"#3c4450","u",false);
 
   // region Q
   if(S.showQ){ctx.strokeStyle="#111";ctx.lineWidth=4;ctx.lineCap="round";const yq=P.t+ph*(1-1e-4);
@@ -2174,8 +2168,8 @@ function drawSafety(){
   if(w>900){ctx.fillStyle="#566172";ctx.font="16px 'Source Sans 3',system-ui,sans-serif";
     const t="minimum control bound that keeps x in Q forever";ctx.fillText(t,xe+16,yt-1);xe+=16+ctx.measureText(t).width;}
   const ro=readoutLayout(w,P,xe),r1y=yt-(big?9:6);
-  ctx.fillStyle="#c0392b";mt(ctx,ro.x,r1y,ro.vfs,["r:|","i:\u03BE","s:n","r:| \u2264 ","i:\u03BE","S:0","r: = "+sig(S.dist,3)]);
-  ctx.fillStyle="#2471a3";mt(ctx,ro.x2,r1y,ro.vfs,["r:|","i:u","s:n","r:| \u2264 ","i:u","S:0","r: = "+sig(S.ctrl,3)]);
+  ctx.fillStyle="#3c4450";mt(ctx,ro.x,r1y,ro.vfs,["r:|","i:\u03BE","s:n","r:| \u2264 ","i:\u03BE","S:0","r: = "+sig(S.dist,3)]);
+  ctx.fillStyle="#3c4450";mt(ctx,ro.x2,r1y,ro.vfs,["r:|","i:u","s:n","r:| \u2264 ","i:u","S:0","r: = "+sig(S.ctrl,3)]);
   if(r&&isFinite(r.umin)){
     // min U under the name of the axis
     const none=thr<r.cmin;ctx.fillStyle=none?"#c0392b":"#333";mt(ctx,x0,yt+(big?24:15),ro.vfs,["r:min ","i:U","r: = "+sig(r.umin,3)].concat(none?["r: > ","i:u","S:0"]:[]));
@@ -2765,12 +2759,12 @@ function drawSafeSet(){
   const lx=w-P.r-Math.max(crx,ccrx)-8, ly1=P.t+Math.max(cry,8)+6;
   const ly2=ly1+cry+ccry+8;
   const lf=big?16:13;
-  ctx.fillStyle="rgba(192,57,43,.25)";ctx.beginPath();ctx.ellipse(lx,ly1,crx,cry,0,0,2*Math.PI);ctx.fill();
-  ctx.strokeStyle="#c0392b";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(lx,ly1,crx,cry,0,0,2*Math.PI);ctx.stroke();
-  ctx.fillStyle="rgba(36,113,163,.25)";ctx.beginPath();ctx.ellipse(lx,ly2,ccrx,ccry,0,0,2*Math.PI);ctx.fill();
-  ctx.strokeStyle="#2471a3";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(lx,ly2,ccrx,ccry,0,0,2*Math.PI);ctx.stroke();
-  ctx.fillStyle="#c0392b";mt(ctx,lx-crx-lf*1.3-3,ly1+lf*.3,lf,["i:\u03BE","S:0"],"rgba(255,255,255,.92)");
-  ctx.fillStyle="#2471a3";mt(ctx,lx-ccrx-lf*1.3-3,ly2+lf*.3,lf,["i:u","S:0"],"rgba(255,255,255,.92)");
+  ctx.fillStyle="rgba(120,128,140,.22)";ctx.beginPath();ctx.ellipse(lx,ly1,crx,cry,0,0,2*Math.PI);ctx.fill();
+  ctx.strokeStyle="#6b7380";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(lx,ly1,crx,cry,0,0,2*Math.PI);ctx.stroke();
+  ctx.fillStyle="rgba(120,128,140,.22)";ctx.beginPath();ctx.ellipse(lx,ly2,ccrx,ccry,0,0,2*Math.PI);ctx.fill();
+  ctx.strokeStyle="#6b7380";ctx.lineWidth=1.5;ctx.beginPath();ctx.ellipse(lx,ly2,ccrx,ccry,0,0,2*Math.PI);ctx.stroke();
+  ctx.fillStyle="#3c4450";mt(ctx,lx-crx-lf*1.3-3,ly1+lf*.3,lf,["i:\u03BE","S:0"],"rgba(255,255,255,.92)");
+  ctx.fillStyle="#3c4450";mt(ctx,lx-ccrx-lf*1.3-3,ly2+lf*.3,lf,["i:u","S:0"],"rgba(255,255,255,.92)");
   }
 
   // Zoom factor for orbit point scaling
@@ -3725,8 +3719,8 @@ function sfBuild(U){
   SF.grid.add(new THREE.LineSegments(vg,new THREE.LineBasicMaterial({color:0xd9dfe8})));
   // plane u = u0
   sfClear(SF.plane);SF.plane=new THREE.Group();SF.root.add(SF.plane);
-  SF.plane.add(new THREE.Mesh(new THREE.PlaneGeometry(2*hx,2*hy),new THREE.MeshBasicMaterial({color:0x2471a3,transparent:true,opacity:0.22,side:THREE.DoubleSide,depthWrite:false})));
-  SF.plane.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-hx,-hy],[hx,-hy],[hx,hy],[-hx,hy]].map(p=>new THREE.Vector3(p[0],p[1],0))),new THREE.LineBasicMaterial({color:0x2471a3})));
+  SF.plane.add(new THREE.Mesh(new THREE.PlaneGeometry(2*hx,2*hy),new THREE.MeshBasicMaterial({color:0x6b7380,transparent:true,opacity:0.22,side:THREE.DoubleSide,depthWrite:false})));
+  SF.plane.add(new THREE.LineLoop(new THREE.BufferGeometry().setFromPoints([[-hx,-hy],[hx,-hy],[hx,hy],[-hx,hy]].map(p=>new THREE.Vector3(p[0],p[1],0))),new THREE.LineBasicMaterial({color:0x4f5763})));
   sfLabelsBuild();
   SF.shape="";sfShape();
   if(!SF.fitted&&$("surfGl").clientWidth>8){sfHome();SF.fitted=true;}     // later results keep the view chosen by the user
@@ -3801,7 +3795,7 @@ function sfBar(){
   SF.ticks.forEach(v=>{const y=yOf(v);c.strokeStyle="#566172";c.lineWidth=1;c.beginPath();c.moveTo(bx-3,y);c.lineTo(bx,y);c.stroke();
     c.strokeStyle=halo;c.lineWidth=3;c.strokeText(sfFmt(v),bx-5,y);c.fillText(sfFmt(v),bx-5,y);});
   // marks of xi0 and u0; when they are close the two names are moved apart, each joined to its mark
-  const ms=[[SF.src.xi0(),"#c0392b","ξ"],[SF.src.u0(),"#2471a3","u"]].filter(m=>m[0]>0).map(m=>({y:yOf(m[0]),c:m[1],s:m[2]})).filter(m=>m.y>=by-1&&m.y<=by+bh+1).sort((p,q)=>p.y-q.y);
+  const ms=[[SF.src.xi0(),"#3c4450","ξ"],[SF.src.u0(),"#3c4450","u"]].filter(m=>m[0]>0).map(m=>({y:yOf(m[0]),c:m[1],s:m[2]})).filter(m=>m.y>=by-1&&m.y<=by+bh+1).sort((p,q)=>p.y-q.y);
   const gap=fs+3;ms.forEach(m=>{m.ty=m.y;});
   if(ms.length===2&&ms[1].ty-ms[0].ty<gap){const mid=(ms[0].y+ms[1].y)/2;ms[0].ty=mid-gap/2;ms[1].ty=mid+gap/2;}
   ms.forEach(m=>{c.strokeStyle=m.c;c.lineWidth=2;c.beginPath();c.moveTo(bx-2,m.y);c.lineTo(bx+bw+2,m.y);c.lineTo(bx+bw+7,m.ty);c.stroke();
@@ -4656,8 +4650,8 @@ function loop(){
   R.render(scene,cam);
 }
 // The balls of radius xi0 and u0 in the upper right corner, at the scale of the scene at the distance of the point
-// looked at. When they would be too small to see, both are enlarged by the same factor, so that the smaller one is
-// 5 px and their ratio is kept; neither is larger than 40 px
+// looked at: they grow and shrink with the zoom. A ball smaller than that is drawn 1.5 px in radius, so that it is
+// still seen, and none is larger than 80 px
 let ballsKey='';
 function balls(){
   const el=$('balls');
@@ -4665,8 +4659,7 @@ function balls(){
   const xu=$('selXU').value.split(',').map(Number),h=R.domElement.clientHeight,key=xu+'|'+camDist+'|'+h+'|'+currentMap;
   if(key===ballsKey)return;ballsKey=key;
   const f=(h/2)/Math.tan(cam.fov*Math.PI/360),sc=80/cur.cfg.groundSize;
-  let a=xu[0]*sc*f/camDist,b=xu[1]*sc*f/camDist;const up=Math.max(1,5/Math.min(a,b));a*=up;b*=up;
-  const down=Math.min(1,40/Math.max(a,b));a*=down;b*=down;const cell=2*Math.max(a,b)+'px';
+  const r=v=>Math.max(1.5,Math.min(80,v*sc*f/camDist)),a=r(xu[0]),b=r(xu[1]),cell=2*Math.max(a,b)+'px';
   [[$('ballXi'),a],[$('ballU'),b]].forEach(([e,v])=>{e.style.width=e.style.height=2*v+'px';e.parentElement.style.width=cell;});
   el.hidden=false;
 }
@@ -5209,7 +5202,7 @@ ${SYS.what}
 <h3>The control problem</h3>
 ${problem}
 ${G.eq("q","f")}
-<p>with ${g("\\textcolor{#c0392b}{|\\xi_n|\\le\\xi_0}","|ξ| ≤ ξ₀")} and ${g("\\textcolor{#2471a3}{|u_n|\\le u_0}","|u| ≤ u₀")}, both vectors of the three variables. Here ${vals}: the control is smaller than the disturbance. Between two corrections the system evolves on its own.</p>
+<p>with ${g("|\\xi_n|\\le\\xi_0","|ξ| ≤ ξ₀")} and ${g("|u_n|\\le u_0","|u| ≤ u₀")}, both vectors of the three variables. Here ${vals}: the control is smaller than the disturbance. Between two corrections the system evolves on its own.</p>
 <h3>What is drawn and how it was obtained</h3>
 <p><b>Blue surface: the safe set</b> for these bounds, ${SYS.keep}, whatever the disturbance does. It was computed in advance with the Sculpting Algorithm on ${SYS.grid}: ${G.sculpt}. The surface is the boundary of that set, smoothed for drawing.</p>
 <p><b>Red surface: the asymptotic safe set</b>, the part of the safe set that controlled trajectories visit once the first corrections have been made.</p>
@@ -5458,12 +5451,12 @@ cx.save();cx.translate(11,H/2);cx.rotate(-Math.PI/2);cx.fillText('y',0,0);cx.res
 // Legend
 var sc=pW/6,lx=m+.12*pW,ly=m+.88*pH;
 cx.beginPath();cx.arc(lx,ly-10,XI0*sc,0,2*Math.PI);
-cx.fillStyle='rgba(192,57,43,.2)';cx.fill();cx.strokeStyle='#c0392b';cx.lineWidth=1.5;cx.stroke();
-cx.fillStyle='#c0392b';cx.textAlign='left';
+cx.fillStyle='rgba(120,128,140,.22)';cx.fill();cx.strokeStyle='#6b7380';cx.lineWidth=1.5;cx.stroke();
+cx.fillStyle='#6b7380';cx.textAlign='left';
 PC.mtext(cx,lx+XI0*sc+7,ly-5,16,['i:\u03BE','S:0','r: = '+XI0]);
 cx.beginPath();cx.arc(lx,ly+14,U0*sc,0,2*Math.PI);
-cx.fillStyle='rgba(36,113,163,.2)';cx.fill();cx.strokeStyle='#2471a3';cx.lineWidth=1.5;cx.stroke();
-cx.fillStyle='#2471a3';PC.mtext(cx,lx+U0*sc+7,ly+19,16,['i:u','S:0','r: = '+U0]);
+cx.fillStyle='rgba(120,128,140,.22)';cx.fill();cx.strokeStyle='#6b7380';cx.lineWidth=1.5;cx.stroke();
+cx.fillStyle='#3c4450';PC.mtext(cx,lx+U0*sc+7,ly+19,16,['i:u','S:0','r: = '+U0]);
 // Controlled trajectory points on safe set (red dots)
 if(cPts){
 var nCtrl=cPts.length/6;
