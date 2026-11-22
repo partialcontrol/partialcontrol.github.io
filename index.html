@@ -2139,14 +2139,15 @@ function drawSafety(){
       else if(i0>=0){ctx.fillRect(X(i0),bt,Math.max(1,X(i-1)-X(i0)),bb-bt);i0=-1;}}
     S.safex=sx;
   }
-  // bounds xi0 (left label) and u0 (right label)
-  const bound=(v,col,sym,left)=>{if(!(v>0)||v>ymax*1.02)return;const y=ty(v);
-    ctx.strokeStyle=col;ctx.lineWidth=1.3;ctx.setLineDash([7,4]);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();ctx.setLineDash([]);
-    const fs=big?18:13,lx=left?P.l+8:w-P.r-fs*1.25;
-    ctx.fillStyle="rgba(255,255,255,.88)";ctx.fillRect(lx-3,y-fs-5,fs*1.25,fs+2);
-    ctx.fillStyle=col;mt(ctx,lx,y-6,fs,["i:"+sym,"S:0"]);};
-  bound(S.dist,"#3c4450","\u03BE",true);
-  bound(S.ctrl,"#3c4450","u",false);
+  // bounds xi0 and u0, both labelled on the left; when the two lines are close the label of u0 goes beside that of xi0
+  const fsB=big?18:13;
+  const bound=(v,sym,dx)=>{if(!(v>0)||v>ymax*1.02)return;const y=ty(v);
+    ctx.strokeStyle="#3c4450";ctx.lineWidth=1.3;ctx.setLineDash([7,4]);ctx.beginPath();ctx.moveTo(P.l,y);ctx.lineTo(w-P.r,y);ctx.stroke();ctx.setLineDash([]);
+    const lx=P.l+8+dx;
+    ctx.fillStyle="rgba(255,255,255,.88)";ctx.fillRect(lx-3,y-fsB-5,fsB*1.25,fsB+2);
+    ctx.fillStyle="#3c4450";mt(ctx,lx,y-6,fsB,["i:"+sym,"S:0"]);};
+  bound(S.dist,"\u03BE",0);
+  bound(S.ctrl,"u",Math.abs(ty(S.dist)-ty(S.ctrl))<fsB+6?fsB*1.6:0);
 
   // region Q
   if(S.showQ){ctx.strokeStyle="#111";ctx.lineWidth=4;ctx.lineCap="round";const yq=P.t+ph*(1-1e-4);
