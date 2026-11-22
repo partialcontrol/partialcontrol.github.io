@@ -592,12 +592,12 @@ body.guide-push #guide{box-shadow:none}
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl xi"><span data-tex="\xi_0">ξ₀</span> =</span><input id="d1-distInput" class="xi" type="text" aria-label="Disturbance bound"></div>
               <span id="d1-distVal" hidden>0</span>
-              <input id="d1-distSlider" type="range" min="0" max="0.1" step="0.0001" value="0.02" aria-label="Disturbance bound">
+              <input id="d1-distSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Disturbance bound">
             </div>
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl u"><span data-tex="u_0">u₀</span> =</span><input id="d1-ctrlInput" class="u" type="text" aria-label="Control bound"></div>
               <span id="d1-ctrlVal" hidden>0</span>
-              <input id="d1-ctrlSlider" type="range" min="0" max="0.1" step="0.0001" value="0.015" aria-label="Control bound">
+              <input id="d1-ctrlSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Control bound">
             </div>
           </div>
           <div class="ratio-row">
@@ -745,11 +745,11 @@ body.guide-push #guide{box-shadow:none}
             <div class="dc-rows">
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl xi"><span data-tex="\xi_0">ξ₀</span> =</span><input id="d2-distInput" class="xi" type="text" value="0.11" aria-label="Disturbance bound"></div>
-              <input id="d2-distSlider" type="range" min="0" max="1" step="0.001" value="0.11" aria-label="Disturbance bound">
+              <input id="d2-distSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Disturbance bound">
             </div>
             <div class="param-row">
               <div class="mob-param-label"><span class="vlbl u"><span data-tex="u_0">u₀</span> =</span><input id="d2-ctrlInput" class="u" type="text" value="0.1" aria-label="Control bound"></div>
-              <input id="d2-ctrlSlider" type="range" min="0" max="1" step="0.001" value="0.1" aria-label="Control bound">
+              <input id="d2-ctrlSlider" type="range" min="0" max="1000" step="1" value="0" aria-label="Control bound">
             </div>
             </div>
             <div class="ratio-row">
@@ -1024,7 +1024,12 @@ const PC=(()=>{
   }
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else setTimeout(boot,0);
 
-  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,loadScript,redraw,refreshGuide,guideKey,gt,guideText,MF,THREE_URL,CTRL,UNCTRL,isMobile:()=>mq.matches,active:()=>cur};
+  // Sliders of the disturbance and the control on a fixed logarithmic scale: positions 1 to 1000 cover dec decades, up
+  // to max, so small bounds get as much of the slider as large ones; position 0 is 0. The two sliders of a tab share
+  // the same scale, so each moves only with its own bound. Values keep 3 figures
+  const logVal=(p,max,dec)=>p<=0?0:+(max*Math.pow(10,-dec*(1-p/1000))).toPrecision(3);
+  const logPos=(v,max,dec)=>v<=0?0:Math.max(1,Math.min(1000,Math.round(1000*(1+Math.log10(v/max)/dec))));
+  return{register:(n,m)=>{mods[n]=m;},go,typeset,setTex,mtext,logVal,logPos,loadScript,redraw,refreshGuide,guideKey,gt,guideText,MF,THREE_URL,CTRL,UNCTRL,isMobile:()=>mq.matches,active:()=>cur};
 })();
 </script>
 <script>
@@ -1511,9 +1516,9 @@ function syncUI(){const rng=S.xmax-S.xmin||1,dm=rng/5,cm=rng/5;
 if(S.rateLocked){S.rate=S._lockedRate||S.rate;}
 else{if(S.dist>0)S.rate=S.ctrl/S.dist;else if(S.ctrl>0)S.rate=Infinity;else S.rate=1;}
 if(!isFinite(S.rate)||isNaN(S.rate))S.rate=1;
-$("distSlider").min=0;$("distSlider").max=dm;$("distSlider").step=dm/500;$("distSlider").value=S.dist;
+S._dm=dm;$("distSlider").value=PC.logPos(S.dist,dm,2);
 $("distInput").value=sig(S.dist,4);$("distVal").textContent=sig(S.dist,3);
-$("ctrlSlider").min=0;$("ctrlSlider").max=cm;$("ctrlSlider").step=cm/500;$("ctrlSlider").value=S.ctrl;
+S._cm=cm;$("ctrlSlider").value=PC.logPos(S.ctrl,cm,2);
 $("ctrlInput").value=sig(S.ctrl,4);$("ctrlVal").textContent=sig(S.ctrl,3);
 $("rateInput").value=S.rate.toFixed(2);$("rateInput").style.borderColor=S.rateLocked?"#c0392b":"#23824a";$("lockBtn").textContent=S.rateLocked?"Free ratio":"Lock ratio";$("lockBtn").className="lock-btn"+(S.rateLocked?" locked":"");
 for(let i=0;i<6;i++){const v=isNaN(S.regionQ[i])?"":sig(S.regionQ[i],4);$("q"+i).value=v;}
@@ -1567,9 +1572,9 @@ $("btnSafe").addEventListener("click",()=>{S.mode="safeset";S.showTS=false;S._la
 $("btnIter").addEventListener("click",()=>{S.mode="iterations";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
 $("btnCheck").addEventListener("click",()=>{if(!S.safex.length)return;S.mode="controlled_activate";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;S._advanceCheck=false;S._checkRand=undefined;syncUI();redraw();});
 $("btnCtrlIter").addEventListener("click",()=>{S.mode="controlled_iterates";S.showTS=false;S._lastXi=undefined;S._lastUn=undefined;syncUI();redraw();});
-$("distSlider").addEventListener("input",e=>{S.dist=+e.target.value;if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();sched();});
+$("distSlider").addEventListener("input",e=>{S.dist=PC.logVal(+e.target.value,S._dm,2);if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();sched();});
 $("distInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v>=0){S.dist=v;if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();redraw();}});
-$("ctrlSlider").addEventListener("input",e=>{S.ctrl=+e.target.value;if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();sched();});
+$("ctrlSlider").addEventListener("input",e=>{S.ctrl=PC.logVal(+e.target.value,S._cm,2);if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();sched();});
 $("ctrlInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v>=0){S.ctrl=v;if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();redraw();}});
 $("lockBtn").addEventListener("click",()=>{S.rateLocked=!S.rateLocked;if(S.rateLocked)S._lockedRate=S.rate;syncUI();});
 $("rateInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v){S.rate=v;if(S.rateLocked)S._lockedRate=v;S.ctrl=S.dist*v;syncUI();redraw();}});
@@ -3058,9 +3063,9 @@ function syncUI(){
   $("paramA").value=S.a;
   $("paramB").value=S.b;
   $("distInput").value=sig(S.dist,3);
-  $("distSlider").value=S.dist;
+  $("distSlider").value=PC.logPos(S.dist,1,3);
   $("ctrlInput").value=sig(S.ctrl,3);
-  $("ctrlSlider").value=S.ctrl;
+  $("ctrlSlider").value=PC.logPos(S.ctrl,1,3);
   if(S.rateLocked){S.rate=S._lockedRate||S.rate;}
   else{S.rate=S.dist>0?S.ctrl/S.dist:1;}
   if(!isFinite(S.rate)||isNaN(S.rate))S.rate=1;
@@ -3121,10 +3126,10 @@ $("paramA").addEventListener("input",e=>{S.a=+e.target.value;$("paramAval").text
 $("paramA").addEventListener("change",()=>{flushFull();});
 $("paramB").addEventListener("input",e=>{S.b=+e.target.value;$("paramBval").textContent=sig(S.b,3);S.saddle=null;S._showSaddle=false;scheduleDrag();});
 $("paramB").addEventListener("change",()=>{flushFull();});
-$("distSlider").addEventListener("input",e=>{S.dist=+e.target.value;if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();scheduleDrag();});
+$("distSlider").addEventListener("input",e=>{S.dist=PC.logVal(+e.target.value,1,3);if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();scheduleDrag();});
 $("distSlider").addEventListener("change",()=>{flushFull();});
 $("distInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v>=0){S.dist=v;if(S.rateLocked)S.ctrl=S.dist*S.rate;syncUI();doCompute();}});
-$("ctrlSlider").addEventListener("input",e=>{S.ctrl=+e.target.value;if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();scheduleDrag();});
+$("ctrlSlider").addEventListener("input",e=>{S.ctrl=PC.logVal(+e.target.value,1,3);if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();scheduleDrag();});
 $("ctrlSlider").addEventListener("change",()=>{flushFull();});
 $("ctrlInput").addEventListener("change",e=>{const v=+e.target.value;if(!isNaN(v)&&v>=0){S.ctrl=v;if(S.rateLocked)S.dist=S.ctrl/S.rate;syncUI();doCompute();}});
 $("lockBtn").addEventListener("click",()=>{S.rateLocked=!S.rateLocked;if(S.rateLocked)S._lockedRate=S.rate;syncUI();});
