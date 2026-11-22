@@ -84,6 +84,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:18px;heigh
   border:1.5px solid #8f9aab;box-shadow:0 1px 3px rgba(28,36,48,.2)}
 input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:#fff;border:1.5px solid #8f9aab;box-shadow:0 1px 3px rgba(28,36,48,.2)}
 input[type=range]:disabled{opacity:.35}
+@media (pointer:coarse){input[type=range]{pointer-events:none}}
 .btn{display:block;width:100%;padding:8px 12px;border:1px solid var(--line2);border-radius:8px;background:#fff;color:var(--ink);
   font-size:15px;font-weight:600;text-align:center;transition:background .12s,border-color .12s,color .12s;user-select:none}
 .btn:hover{background:#f5f7fa;border-color:#aab4c2}
@@ -1022,6 +1023,47 @@ const PC=(()=>{
     let first=false;try{first=!localStorage.getItem("pc-guide");}catch(e){}
     if(first&&!mq.matches&&window.innerWidth>=1200)guideSet(true);
   }
+  // Sliders on touch screens: a vertical swipe over the panel of controls always scrolls it, and only a sideways drag
+  // moves a slider, by as much as the finger moves from where it started (a touch alone changes nothing). The native
+  // slider does not take touches (pointer-events:none for coarse pointers in the styles); the finding is by position
+  function touchSliders(){
+    if(!window.matchMedia("(pointer:coarse)").matches)return;
+    let t=null;   // {el,x0,y0,v0,w,on}
+    const hit=(x,y)=>{
+      for(const el of document.querySelectorAll('input[type=range]')){
+        if(el.disabled||!el.offsetParent)continue;
+        const r=el.getBoundingClientRect();
+        if(x>=r.left-10&&x<=r.right+10&&y>=r.top-12&&y<=r.bottom+12)return el;
+      }
+      return null;
+    };
+    document.addEventListener("touchstart",e=>{
+      t=null;if(e.touches.length!==1)return;
+      const p=e.touches[0],el=hit(p.clientX,p.clientY);if(!el)return;
+      const r=el.getBoundingClientRect();
+      t={el,x0:p.clientX,y0:p.clientY,v0:+el.value,w:Math.max(1,r.width-22),on:null};
+    },{passive:true});
+    document.addEventListener("touchmove",e=>{
+      if(!t)return;
+      if(e.touches.length!==1){t=null;return;}
+      const p=e.touches[0],dx=p.clientX-t.x0,dy=p.clientY-t.y0;
+      if(t.on===null){
+        if(Math.abs(dx)<6&&Math.abs(dy)<6)return;
+        t.on=Math.abs(dx)>Math.abs(dy)&&e.cancelable;
+        if(!t.on){t=null;return;}   // a scroll: the slider stays as it was
+      }
+      e.preventDefault();
+      const el=t.el,mn=+el.min||0,mx=el.max===""?100:+el.max,st=el.step==="any"?0:(+el.step||1);
+      let v=t.v0+dx/t.w*(mx-mn);
+      if(st)v=mn+Math.round((v-mn)/st)*st;
+      v=Math.max(mn,Math.min(mx,v));
+      if(+el.value!==v){el.value=v;el.dispatchEvent(new Event("input",{bubbles:true}));}
+    },{passive:false});
+    const end=()=>{if(t&&t.on)t.el.dispatchEvent(new Event("change",{bubbles:true}));t=null;};
+    document.addEventListener("touchend",end);
+    document.addEventListener("touchcancel",end);
+  }
+  touchSliders();
   if(document.readyState==="loading")document.addEventListener("DOMContentLoaded",boot);else setTimeout(boot,0);
 
   // Sliders of the disturbance and the control on a fixed logarithmic scale: positions 1 to 1000 cover dec decades, up
