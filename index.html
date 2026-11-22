@@ -191,12 +191,12 @@ input[type=range]:disabled{opacity:.35}
 #v2d .mob-grid,#v2d .mob-col-left,#v2d .mob-col-right{display:contents}
 #v2d .orbit-sec{order:1}
 #v2d .grid-sec{order:2}
-#v2d .param-2{display:flex;gap:14px}
-#v2d .param-2 .param-row{flex:1;min-width:0;margin:0}
+#v2d .param-2,#v1d .param-2{display:flex;gap:14px}
+#v2d .param-2 .param-row,#v1d .param-2 .param-row{flex:1;min-width:0;margin:0}
 #v2d .param-row,#v1d .dc .param-row{margin-bottom:5px}
 #v2d .param-row:last-child,#v1d .dc .param-row:last-child{margin-bottom:0}
 #v2d .mob-param-label,#v1d .mob-param-label{display:flex;align-items:center;gap:6px;font-size:15px;min-height:26px}
-#v2d .mob-param-label .val{font-variant-numeric:tabular-nums}
+#v2d .mob-param-label .val,#v1d .mob-param-label .val{font-variant-numeric:tabular-nums}
 #v2d .mob-param-label input[type=text],#v1d .mob-param-label input[type=text]{width:84px;flex:none;padding:3px 7px}
 #v1d .dc .ratio-row{margin-top:6px}
 #v2d .ratio-row{display:flex;align-items:center;gap:8px;margin-top:6px}
@@ -253,6 +253,9 @@ input[type=range]:disabled{opacity:.35}
 .cut-ax button.on{background:#fff;color:var(--ink);box-shadow:0 0 0 1px var(--line)}
 .cut-ax button.on.act{color:#3366bb}
 .lay-len input{flex:1;min-width:0}
+/* on a wide screen the slider of the cut has a line of its own, the whole width of the panel */
+.lay-len.cut{flex-wrap:wrap;height:auto;row-gap:4px;padding:3px 4px 2px 12px}
+.lay-len.cut input{flex:0 0 calc(100% + 8px);margin:0 0 0 -8px}
 .lay-row .lay{flex:1;min-width:0}
 .ico{flex:none;width:36px;height:36px;border:1px solid var(--line);border-radius:8px;background:#fff;font-size:18px;line-height:1;color:var(--ink2)}
 .ico:hover{border-color:#aab4c2;color:var(--ink)}
@@ -399,7 +402,8 @@ input[type=range]:disabled{opacity:.35}
   .t3-sel{margin-top:6px}
   .t3-layers{display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-top:7px}
   .lay-len{order:9;grid-column:1/-1;font-size:14px;padding:0 2px 0 9px;gap:10px}
-  .lay-len.cut{order:0}
+  .lay-len.cut{order:0;flex-wrap:nowrap;height:30px;padding:0 2px 0 9px}
+  .lay-len.cut input{flex:1;margin:0}
   .lay-len>span{gap:8px}
   .cut-ax button{width:34px;height:26px;font-size:19px;line-height:26px}
   .cut-ax button.act::after{left:10px;right:10px}
@@ -560,12 +564,17 @@ body.guide-push #guide{box-shadow:none}
           <option>Sin map</option><option>Parabola map</option><option>Custom equation</option>
         </select>
         <div class="seg mb" id="d1-viewSeg" role="tablist" aria-label="View"><button data-view="S" class="on">Safe set</button><button data-view="U">Safety function</button></div>
-        <div id="d1-parSection">
-          <div class="mob-2col">
-            <div class="mb"><span class="lbl">Parameter A = <b id="d1-paramAval">0</b></span>
-              <div class="prow"><input id="d1-paramAmin" type="text" value="-5" aria-label="A minimum"><input id="d1-paramAslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter A"><input id="d1-paramAmax" type="text" value="5" aria-label="A maximum"></div></div>
-            <div class="mb"><span class="lbl">Parameter B = <b id="d1-paramBval">0</b></span>
-              <div class="prow"><input id="d1-paramBmin" type="text" value="-5" aria-label="B minimum"><input id="d1-paramBslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter B"><input id="d1-paramBmax" type="text" value="5" aria-label="B maximum"></div></div>
+        <div id="d1-parSection" class="section mb">
+          <span class="sec-title">Map parameters</span>
+          <div class="param-2">
+            <div class="param-row" id="d1-parA">
+              <div class="mob-param-label"><span class="m">A</span><span>=</span><span id="d1-paramAval" class="val">0</span></div>
+              <input id="d1-paramAslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter A">
+            </div>
+            <div class="param-row" id="d1-parB">
+              <div class="mob-param-label"><span class="m">B</span><span>=</span><span id="d1-paramBval" class="val">0</span></div>
+              <input id="d1-paramBslider" type="range" min="-5" max="5" step="0.01" value="0" aria-label="Parameter B">
+            </div>
           </div>
         </div>
         <div id="d1-dcSection" class="section mb dc">
@@ -1027,23 +1036,23 @@ pts.sort((a,b)=>a[0]-b[0]);const u=[];for(let i=0;i<pts.length;i++){if(i===0||pt
 // eq1: A*x on [0,B], peak=A*B. eq2: A*B*(1-x)/(1-B) on [B,1]
 const MAP_CONFIGS={
 "Tent map":{eq:true,eq1:"A*x",l1:"0",l2:"B",eq2:"A*B*(1-x)/(1-B)",l3:"B",l4:"1",
-  Amin:1,Amax:5,Aval:3,Bmin:0.01,Bmax:0.99,Bval:0.5,usesB:true,Blbl:"asymmetry"},
+  Amin:0.5,Amax:6,Aval:3,Bmin:0.01,Bmax:0.99,Bval:0.5,usesB:true,Blbl:"asymmetry"},
 "Logistic map":{eq:true,eq1:"A*x*(1-x)",l1:"0",l2:"1",eq2:"",l3:"",l4:"",
-  Amin:3,Amax:7,Aval:4.1,Bmin:-5,Bmax:5,Bval:0,usesB:false,Blbl:"B"},
+  Amin:1,Amax:8,Aval:4.1,Bmin:-5,Bmax:5,Bval:0,usesB:false,Blbl:"B"},
 "Cubic map":{eq:true,eq1:"A*x-x*x*x+B",l1:"-2",l2:"2",eq2:"",l3:"",l4:"",
-  Amin:1.5,Amax:4,Aval:3.5,Bmin:-2,Bmax:2,Bval:0,usesB:true,Blbl:"offset"},
+  Amin:0.5,Amax:5,Aval:3.5,Bmin:-3,Bmax:3,Bval:0,usesB:true,Blbl:"offset"},
 "Gauss map":{eq:true,eq1:"Math.exp(-A*x*x)+B",l1:"-1",l2:"1",eq2:"",l3:"",l4:"",
-  Amin:3,Amax:10,Aval:7,Bmin:-1,Bmax:0,Bval:-0.5,usesB:true,Blbl:"shift",defQ:[-0.3,0.5]},
+  Amin:1,Amax:20,Aval:7,Bmin:-1,Bmax:1,Bval:-0.5,usesB:true,Blbl:"shift",defQ:[-0.3,0.5]},
 "Double-hump map":{eq:true,eq1:"A*x*x*(1-x*x)+B",l1:"-1.2",l2:"1.2",eq2:"",l3:"",l4:"",
-  Amin:3,Amax:12,Aval:6.5,Bmin:-2,Bmax:2,Bval:0,usesB:true,Blbl:"offset"},
+  Amin:1,Amax:16,Aval:6.5,Bmin:-2,Bmax:2,Bval:0,usesB:true,Blbl:"offset"},
 "Asymmetric Shift map":{eq:true,eq1:"x*A/B",l1:"0",l2:"B",eq2:"-x*A/(B-1)+A/(B-1)+A",l3:"B",l4:"1",
-  Amin:1,Amax:5,Aval:1.12,Bmin:0.01,Bmax:0.99,Bval:0.787,usesB:true,Blbl:"asymmetry"},
+  Amin:0.5,Amax:6,Aval:1.12,Bmin:0.01,Bmax:0.99,Bval:0.787,usesB:true,Blbl:"asymmetry"},
 "Sin map":{eq:true,eq1:"A*Math.sin(B*x)",l1:"0",l2:"1",eq2:"",l3:"",l4:"",
-  Amin:0.5,Amax:3,Aval:1.2,Bmin:Math.PI,Bmax:20,Bval:3*Math.PI,usesB:true,Blbl:"frequency"},
+  Amin:0.1,Amax:5,Aval:1.2,Bmin:1,Bmax:30,Bval:3*Math.PI,usesB:true,Blbl:"frequency"},
 "Parabola map":{eq:true,eq1:"A*x*x+B",l1:"-0.6",l2:"0.6",eq2:"",l3:"",l4:"",
-  Amin:1,Amax:11,Aval:3.39,Bmin:-1,Bmax:0,Bval:-0.657,usesB:true,Blbl:"offset"},
+  Amin:0.5,Amax:15,Aval:3.39,Bmin:-2,Bmax:1,Bval:-0.657,usesB:true,Blbl:"offset"},
 "Custom equation":{eq:true,eq1:"",l1:"",l2:"",eq2:"",l3:"",l4:"",
-  Amin:-5,Amax:5,Aval:0,Bmin:-5,Bmax:5,Bval:0,usesB:true,Blbl:"B"}};
+  Amin:-10,Amax:10,Aval:0,Bmin:-10,Bmax:10,Bval:0,usesB:true,Blbl:"B"}};
 
 function computeGridx(xn,xx,c){return Math.max((xx-xn)/20000,Math.min((xx-xn)/3000,c/40));}
 function sculpt(ctrl,dist,rQ,xn,xx,xm,ym,gx){
@@ -1568,18 +1577,16 @@ $("tsView").style.display=tsOn?"grid":"none";
 $("centerArea").classList.toggle("ts-active",tsOn);
 $("tsToggle").textContent=S.showTS?"Phase space":"Time series";
 const ed=!S.eqEnabled;["eq1","eq2","l1","l2","l3","l4"].forEach(id=>$(id).disabled=ed);
-const ad=ed||!S.usesA;["paramAslider","paramAmin","paramAmax"].forEach(id=>$(id).disabled=ad);
-const bd=ed||!S.usesB;["paramBslider","paramBmin","paramBmax"].forEach(id=>$(id).disabled=bd);
+$("paramAslider").disabled=ed||!S.usesA;$("parA").style.display=S.usesA?"":"none";
+$("paramBslider").disabled=ed||!S.usesB;$("parB").style.display=S.usesB?"":"none";
 $("eqSection").style.opacity=S.eqEnabled?1:.3;$("showFsafe").checked=S.showFsafe;$("showQ").checked=S.showQ;}
 
 function loadMap(nm){S.mapName=nm;const cf=MAP_CONFIGS[nm];if(!cf)return;
 if(cf.eq){S.eqEnabled=true;$("eq1").value=cf.eq1;$("eq2").value=cf.eq2;
 $("l1").value=cf.l1;$("l2").value=cf.l2;$("l3").value=cf.l3;$("l4").value=cf.l4;
 S.paramA=cf.Aval;S.paramB=cf.Bval;S.usesA=true;S.usesB=cf.usesB!==false;
-$("paramAslider").min=cf.Amin;$("paramAslider").max=cf.Amax;$("paramAslider").value=cf.Aval;$("paramAslider").step=(cf.Amax-cf.Amin)/500;
-$("paramAmin").value=cf.Amin;$("paramAmax").value=cf.Amax;
-$("paramBslider").min=cf.Bmin;$("paramBslider").max=cf.Bmax;$("paramBslider").value=cf.Bval;$("paramBslider").step=(cf.Bmax-cf.Bmin)/500;
-$("paramBmin").value=cf.Bmin;$("paramBmax").value=cf.Bmax;
+$("paramAslider").min=cf.Amin;$("paramAslider").max=cf.Amax;$("paramAslider").value=cf.Aval;$("paramAslider").step=(cf.Amax-cf.Amin)/1000;
+$("paramBslider").min=cf.Bmin;$("paramBslider").max=cf.Bmax;$("paramBslider").value=cf.Bval;$("paramBslider").step=(cf.Bmax-cf.Bmin)/1000;
 rebuildEq();S.dist=0.02;S.ctrl=0.015;
 S._origL1=cf.l1;S._origL2=cf.l2;S._origL3=cf.l3;S._origL4=cf.l4;}
 else{S.eqEnabled=false;processMap(cf.data);S.dist=0.02;S.ctrl=0.015;S.usesB=true;}
@@ -1993,8 +2000,6 @@ S.usesA=/\bA\b/.test(eqs);
 rebuildEq();syncUI();redraw();}));
 $("paramAslider").addEventListener("input",e=>{S.paramA=+e.target.value;$("paramAval").textContent=sig(S.paramA,3);rebuildEq();syncUI();sched();});
 $("paramBslider").addEventListener("input",e=>{S.paramB=+e.target.value;$("paramBval").textContent=sig(S.paramB,3);rebuildEq();syncUI();sched();});
-["paramAmin","paramAmax"].forEach(id=>$(id).addEventListener("change",()=>{const mn=+$("paramAmin").value||-5,mx=+$("paramAmax").value||5;$("paramAslider").min=mn;$("paramAslider").max=mx;$("paramAslider").step=(mx-mn)/500;}));
-["paramBmin","paramBmax"].forEach(id=>$(id).addEventListener("change",()=>{const mn=+$("paramBmin").value||-5,mx=+$("paramBmax").value||5;$("paramBslider").min=mn;$("paramBslider").max=mx;$("paramBslider").step=(mx-mn)/500;}));
 // Sync inline mobile Q inputs with real Q inputs
 function syncMobQ(){document.querySelectorAll(".mob-q-sync").forEach(el=>{el.value=$("q"+(+el.dataset.qi)).value;});}
 document.querySelectorAll(".mob-q-sync").forEach(el=>{
@@ -4447,7 +4452,9 @@ const MAP_CONFIG = {
 // The Hénon 3D map has no stored trajectories. Its orbits are computed here, the controlled one with the
 // safe surface (parts/mesh3d.js). n is the number of iterations of the map between two controls.
 MAP_CONFIG.mccann.axes=['R','C','P'];MAP_CONFIG.mccann.startSmall=true;   // opens with its smallest disturbance, the finest set
-for(const k in MAP_CONFIG)MAP_CONFIG[k].camAz+=Math.PI/3;   // the first view, turned 60 degrees: the sets show their open side
+// the first view of each system (azimuth and elevation in degrees), as chosen by the author: the sets show their open side
+const VIEW0={lorenz:[24,21],mccann:[24,23],henon3d:[35,14]};
+for(const k in VIEW0){MAP_CONFIG[k].camAz=VIEW0[k][0]*Math.PI/180;MAP_CONFIG[k].camEl=VIEW0[k][1]*Math.PI/180;}
 Object.assign(MAP_CONFIG.henon3d,{hasTraj:true,isMap:true,
   step:(x,y,z)=>[0.3*z,x+0.3*z,1+y-1.1*z*z],                                  // a = 1.1, b = 0.3, c = 1
   inBox:(x,y,z)=>Math.abs(x)<=2&&Math.abs(y)<=2&&Math.abs(z)<=2});
