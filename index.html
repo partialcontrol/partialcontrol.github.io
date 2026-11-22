@@ -2703,7 +2703,7 @@ function drawSafeSet(){
   const pw=w-P.l-P.r,ph=h-P.t-P.b;
   S._plot={P,pw,ph,w,h};
   PC.guideKey("2d|"+[S.mapName,S.view,S.xi,S.xf,S.yi,S.yf,S.N].join());                                   // the surface seen from above uses the same rectangle
-  if(S.view==="U"){surfSync();ensureU();uStatus();return;}     // the surface replaces this plot
+  if(S.view==="U"){surfSync();ensureU();uStatus();updateHiresBtn();return;}     // the surface replaces this plot
   const vxi=S.vxi,vxf=S.vxf,vyi=S.vyi,vyf=S.vyf;
   const{xi,xf,yi,yf}=S;
   const N=S._drawN||S.N;
@@ -3144,7 +3144,7 @@ function loadMap(name){
   PC.setTex($("paramAlbl"),cf.ptex[0],cf.paramLabels[0]);PC.setTex($("paramBlbl"),cf.ptex[1],cf.paramLabels[1]);
   $("mapParamTitle").textContent=cf.holes?"Hole size":"Map parameters";
   $("numIter").value=cf.iter||2000;
-  syncUI();computeSafeSet();
+  syncUI();doCompute();
 }
 $("mapSelect").addEventListener("change",e=>{if(e.target.value==="lorenz_p"){e.target.value=S.mapName;PC.go("poincare");}else loadMap(e.target.value);});
 function doCompute(){if(S.N>=1001)computeHires(S.N,null);else computeSafeSet();}
@@ -3184,8 +3184,9 @@ $("gridN").addEventListener("change",e=>{S.N=+e.target.value;
 });
 let _hiresRunning=false;
 async function computeHires(N,btn){
-  if(_hiresRunning)return;
-  _hiresRunning=true;S._stop=false;
+  if(_hiresRunning){S._stop=true;S._pend=true;return;}
+  if(S.view==="U"){S._safeStale=true;drawSafeSet();return;}
+  _hiresRunning=true;S._stop=false;S._safeStale=false;
   const origText=btn?btn.textContent:"";
   if(btn){
     $("hires1Btn").style.background="#fff";$("hires1Btn").style.color="#1c2430";
@@ -3262,7 +3263,7 @@ async function computeHires(N,btn){
   if(S._stop){
     // Restore previous safe set
     S.grid=savedGrid;S._drawN=savedDrawN;S.safePoints=savedSafePoints;
-    $("statusBar").textContent="Stopped. Reverted to previous safe set.";
+    if(!S._pend){$("statusBar").textContent="Stopped. Reverted to previous safe set.";if(savedDrawN){S.N=savedDrawN;$("gridN").value=savedDrawN;}}
   } else {
     S.grid=g;S._drawN=N;
     S.safePoints=[];
@@ -3274,21 +3275,18 @@ async function computeHires(N,btn){
   if(btn){btn.textContent=origText;}
   _hiresRunning=false;S._stop=false;
   drawSafeSet();
+  if(S._pend){S._pend=false;doCompute();}
 }
 
-function updateHiresBtn(){
-  const dn=S._drawN;
-  const gn=+$("gridN").value;
-  const isDropdown=(dn===gn&&dn!==1601&&dn!==2001);
-  [[601,"grid601Btn"],[1201,"grid1201Btn"]].forEach(([n,id])=>{const on=isDropdown&&dn===n;$(id).style.background=on?"#2f62b0":"#fff";$(id).style.color=on?"#fff":"#333";});
-  if(dn===1601){$("hires1Btn").style.background="#2f62b0";$("hires1Btn").style.color="#fff";}
-  else{$("hires1Btn").style.background="#fff";$("hires1Btn").style.color="#1c2430";}
-  if(dn===2001){$("hires2Btn").style.background="#2f62b0";$("hires2Btn").style.color="#fff";}
-  else{$("hires2Btn").style.background="#fff";$("hires2Btn").style.color="#1c2430";}
+const GRID_BTNS=[[601,"grid601Btn"],[1201,"grid1201Btn"],[1601,"hires1Btn"],[2001,"hires2Btn"]];
+function updateHiresBtn(){GRID_BTNS.forEach(([n,id])=>{const on=S.N===n;$(id).style.background=on?"#2f62b0":"#fff";$(id).style.color=on?"#fff":"#333";});}
+function setGrid(n){
+  if(n===S.N)return;
+  S.N=n;$("gridN").value=n;updateHiresBtn();
+  if(_hiresRunning){S._stop=true;S._pend=true;return;}
+  doCompute();
 }
-[[601,"grid601Btn"],[1201,"grid1201Btn"]].forEach(([n,id])=>$(id).addEventListener("click",()=>{$("gridN").value=n;$("gridN").dispatchEvent(new Event("change"));}));
-$("hires1Btn").addEventListener("click",()=>computeHires(1601,$("hires1Btn")));
-$("hires2Btn").addEventListener("click",()=>computeHires(2001,$("hires2Btn")));
+GRID_BTNS.forEach(([n,id])=>$(id).addEventListener("click",()=>setGrid(n)));
 $("numIter").addEventListener("change",()=>{
   if(S.orbits.unctrl)simUncontrolled();
 });
@@ -3939,9 +3937,9 @@ MAP_CONFIGS.zaslavsky.tex=["y'=e^{-r}y+K\\sin x","x'=(x+y')\\bmod 2\\pi"];MAP_CO
 //  as the safe set, with its discs and its four-node rule. It depends on the map, Q and xi0, not on u0.
 // ---------------------------------------------------------------------------
 S.view="S";S.U=null;
-let _uWorker=null,_uRun=0,_uTimer=null,_uBusyKey="",_uFrac=0;
+let _uWorker=null,_uRun=0,_uTimer=null,_uBusyKey="",_uFrac=0,_uHold="";
 function uParams(){
-  const N=Math.max(201,Math.min(S.N,PC.isMobile()?401:601));
+  const N=Math.max(201,S.N);
   return{N,dx:(S.xf-S.xi)/(N-1),dy:(S.yf-S.yi)/(N-1)};
 }
 function uKey(){return[S.mapName,S.a,S.b,S.xi,S.xf,S.yi,S.yf,S.dist,uParams().N].join("|");}
@@ -3992,7 +3990,7 @@ function startU(key){
 function ensureU(){
   if(S.view!=="U")return;
   const key=uKey();
-  if((S.U&&S.U.key===key)||_uBusyKey===key)return;
+  if((S.U&&S.U.key===key)||_uBusyKey===key||_uHold===key)return;
   if(_dragging||_hiresRunning)return;          // wait for the final computation; drawSafeSet calls again
   clearTimeout(_uTimer);_uTimer=setTimeout(()=>startU(key),150);
 }
@@ -4002,7 +4000,16 @@ function setView(v){
   ROOT.classList.toggle("u-view",v==="U");
   if(v==="U")surfShow();
   drawSafeSet();zoomUI();PC.refreshGuide();
+  if(v==="S"&&S._safeStale){S._safeStale=false;doCompute();}   // the fine safe set left for later in the other view
 }
+// Stop, in the view of the safety function: the computation in progress ends and the last surface stays, with its grid
+$("stopBtn").addEventListener("click",()=>{
+  if(S.view!=="U"||!_uBusyKey)return;
+  _uRun++;clearTimeout(_uTimer);if(_uWorker){_uWorker.terminate();_uWorker=null;}_uBusyKey="";
+  if(S.U&&S.U.N!==S.N){S.N=S.U.N;$("gridN").value=S.N;S._safeStale=true;}
+  _uHold=uKey();updateHiresBtn();surfSync();
+  if(S.U&&S.U.key===_uHold)uStatus();else $("statusBar").textContent="Stopped: the safety function was not computed";
+});
 $("viewSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(b&&b.dataset.view!==S.view)setView(b.dataset.view);});
 
 // ---------------------------------------------------------------------------
