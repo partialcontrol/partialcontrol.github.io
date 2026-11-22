@@ -356,11 +356,11 @@ input[type=range]:disabled{opacity:.35}
   #v1d .p-head .seg button{font-size:13.5px;padding:0 4px;height:30px}
   #v1d .mob-grid{display:flex;gap:7px;align-items:stretch;margin-bottom:7px}
   #v1d .mob-grid>.section{flex:1;min-width:0;margin:0}
-  /* left column: one box with the map parameters and, in the room under them, the orbit controls */
-  #v1d .mob-grid>.mob-col{flex:1;min-width:0;display:flex;flex-direction:column;padding:7px 8px 8px;background:#fff;border:1px solid var(--line);border-radius:10px}
-  #v1d .mob-col>.section{flex:none;margin:0;padding:0;border:0;border-radius:0;background:none}
-  #v1d .mob-col>#d1-iterSection{margin-top:8px}
-  #v1d .mob-col>#d1-fsafeWrap{margin:6px 0 0}
+  /* left column: the box of the map parameters and, under it, a box of the orbit controls */
+  #v1d .mob-grid>.mob-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  #v1d .mob-col>.section{margin:0}
+  #v1d .mob-col>#d1-parSection{flex:1 1 auto}
+  #v1d .mob-col #d1-fsafeWrap{margin:6px 0 0}
   #v1d .mob-col .x0row{flex-wrap:wrap;gap:2px 6px;margin-bottom:4px}
   #v1d .mob-col .x0row input[type=text]{flex:1;width:auto;min-width:0;padding:3px 7px}
   #v1d .mob-col .x0row input[type=range]{flex:1 0 100%}
@@ -2273,9 +2273,9 @@ function layout1d(){
   L1.k=k;ROOT.classList.toggle("split",k==="wide");
   [$("leftPanel"),$("rightPanel")].forEach((p,i)=>{const body=p.querySelector(".mob-body");L1_ORDER[k][i].forEach(id=>body.appendChild($(id)));});
   // on a phone the panel starts as in the 2D maps: the map and the view in one row, then the map parameters and the
-  // disturbance and control side by side, with the orbit controls under the map parameters (elsewhere these boxes
+  // disturbance and control side by side, with a box of the orbit controls under the map parameters (elsewhere these boxes
   // are empty and take no room)
-  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"),$("fsafeWrap"));$("pgrid").append($("pcolL"),$("dcSection"));}
+  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"));$("iterSection").append($("fsafeWrap"));$("pgrid").append($("pcolL"),$("dcSection"));}
 }
 // Safe set or safety function, as in the 2D maps. A mode of the right panel returns to the safe set.
 let _mode1d="controlled_iterates",_ts1d=false;
