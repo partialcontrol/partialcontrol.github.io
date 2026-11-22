@@ -377,6 +377,7 @@ input[type=range]:disabled{opacity:.35}
   #v1d .mob-grid .dc .ratio-row{gap:5px;margin-top:2px;flex-wrap:wrap}
   #v1d .mob-grid .dc .ratio-row input{flex:1;width:auto;min-width:0}
   #v1d .mob-grid .lock-btn{flex:1 0 100%;padding:5px 6px;font-size:13px}
+  #v1d .mob-grid #d1-resetBtn{margin:6px 0 0;padding:5px 6px;font-size:13px}
   #v1d .mob-scroll{display:flex;flex-direction:column;flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;min-height:0}
   #v1d .side-l,#v1d .side-r{width:100%;min-width:0;border:none;border-bottom:1px solid var(--line);padding:6px 8px 8px;order:0;overflow:visible}
   #v1d .tsv{grid-template-columns:38% 1fr!important;grid-template-rows:5fr 4fr;gap:3px}
@@ -2275,7 +2276,8 @@ function layout1d(){
   // on a phone the panel starts as in the 2D maps: the map and the view in one row, then the map parameters and the
   // disturbance and control side by side, with a box of the orbit controls under the map parameters (elsewhere these boxes
   // are empty and take no room)
-  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"));$("iterSection").append($("fsafeWrap"));$("pgrid").append($("pcolL"),$("dcSection"));}
+  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"));$("iterSection").append($("fsafeWrap"));$("pgrid").append($("pcolL"),$("dcSection"));$("dcSection").append($("resetBtn"));}
+  else $("acts").prepend($("resetBtn"));   // Reset goes under Lock ratio on a phone, and back to the foot of the panel elsewhere
 }
 // Safe set or safety function, as in the 2D maps. A mode of the right panel returns to the safe set.
 let _mode1d="controlled_iterates",_ts1d=false;
