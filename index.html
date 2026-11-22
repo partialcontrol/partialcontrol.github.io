@@ -2072,7 +2072,7 @@ function drawSafety(){
   const xn=S.xmin,xx=S.xmax;if(!(xx>xn)||w<4)return;
   const big=w>600,MF=PC.MF,mt=PC.mtext;
   const a=xn-Math.abs(xx-xn)/10,b=xx+Math.abs(xx-xn)/10;           // same x axis as the other views
-  const P={l:big?56:48,r:12,t:big?46:28,b:24},pw=w-P.l-P.r,ph=h-P.t-P.b;
+  const P={l:big?56:48,r:12,t:big?60:38,b:24},pw=w-P.l-P.r,ph=h-P.t-P.b;   // room above for U(x) and, under it, min U
   const tx=x=>P.l+((x-a)/(b-a))*pw;
   const bt=P.t+.85*ph,bb=P.t+.997*ph;                              // safe set band: same pixels as the other views
   const y0=bt-(big?16:9),y1=P.t+(big?18:10);                       // U axis: 0 at y0, ymax at y1
@@ -2147,19 +2147,19 @@ function drawSafety(){
   for(let i=0;i<=5;i++)ctx.fillText(mns(sig(a+(b-a)*i/5,3)),tx(a+(b-a)*i/5)-12,h-P.b+14);
 
   // title and readouts
-  const fs=big?22:12,yt=big?28:16;let xe=big?P.l+4:P.l-6;
+  const fs=big?22:12,yt=big?28:16,x0=big?P.l+4:P.l-6;let xe=x0;
   ctx.fillStyle="#333";xe=mt(ctx,xe,yt,fs,["i:U","g:0.12","r:(","i:x","r:)"]);
   // Log view / Linear view, right after the name of the axis
   const lb=$("uCtl"),bw=lb.offsetWidth||(big?84:66),bh=lb.offsetHeight||(big?22:18);
   lb.style.left=Math.round(xe+(big?14:9))+"px";lb.style.top=Math.round(yt-fs*0.36-bh/2)+"px";xe+=(big?14:9)+bw;
   if(w>900){ctx.fillStyle="#566172";ctx.font="16px 'Source Sans 3',system-ui,sans-serif";
     const t="minimum control bound that keeps x in Q forever";ctx.fillText(t,xe+16,yt-1);xe+=16+ctx.measureText(t).width;}
-  const ro=readoutLayout(w,P,xe),r1y=yt-(big?9:6),r2y=yt+(big?10:8);
+  const ro=readoutLayout(w,P,xe),r1y=yt-(big?9:6);
   ctx.fillStyle="#c0392b";mt(ctx,ro.x,r1y,ro.vfs,["r:|","i:\u03BE","s:n","r:| \u2264 ","i:\u03BE","S:0","r: = "+sig(S.dist,3)]);
   ctx.fillStyle="#2471a3";mt(ctx,ro.x2,r1y,ro.vfs,["r:|","i:u","s:n","r:| \u2264 ","i:u","S:0","r: = "+sig(S.ctrl,3)]);
   if(r&&isFinite(r.umin)){
-    // the place to its right, under the readout of u0, is for the Log view button
-    const none=thr<r.cmin;ctx.fillStyle=none?"#c0392b":"#333";mt(ctx,ro.x,r2y,ro.vfs,["r:min ","i:U","r: = "+sig(r.umin,3)].concat(none?["r: > ","i:u","S:0"]:[]));
+    // min U under the name of the axis
+    const none=thr<r.cmin;ctx.fillStyle=none?"#c0392b":"#333";mt(ctx,x0,yt+(big?24:15),ro.vfs,["r:min ","i:U","r: = "+sig(r.umin,3)].concat(none?["r: > ","i:u","S:0"]:[]));
   }else{ctx.fillStyle="#c0392b";ctx.font="bold "+(big?18:14)+"px 'Source Sans 3',sans-serif";ctx.fillText("Region Q is empty",w*.35,h*.5);}
 }
 
