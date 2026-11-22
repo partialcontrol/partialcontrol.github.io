@@ -4736,15 +4736,16 @@ function mkLabel(text,pos,size){
 // Cuts. The sets are drawn only on one side of a plane perpendicular to each axis, and the hole left in each
 // surface is closed with a flat face, its section there. The face is found with the stencil buffer: seen through
 // the cut surface, a pixel lies inside the set when the back and front faces behind it do not cancel.
-// The cut faces are lit like the surfaces and take their shadows, in a deeper tone of the same colours
-const CUT_SAFE=0x3366bb,CUT_ASYM=0xcc2211,CAP_K=Number((location.search.match(/capk=([\d.]+)/)||[])[1])||1;
+// The cut faces are lit like the surfaces and take their shadows. That of the safe set has a deeper tone of its blue;
+// that of the asymptotic set has the very colour of its surface (a deeper red stood out too much)
+const ASYM_COLOR=0xcc2211,CUT_SAFE=0x3366bb,CAP_K=Number((location.search.match(/capk=([\d.]+)/)||[])[1])||1;
 function mkCap(geom,color,key,ax,size,zOff){
   const order=1+ax*0.6+(key==='asym'?0.2:0),plane=cutPlanes[ax];
   [[THREE.BackSide,THREE.IncrementWrapStencilOp],[THREE.FrontSide,THREE.DecrementWrapStencilOp]].forEach(([side,op])=>{
     const m=new THREE.Mesh(geom,new THREE.MeshBasicMaterial({side,clippingPlanes:[plane],depthWrite:false,depthTest:false,colorWrite:false,
       transparent:true,stencilWrite:true,stencilFunc:THREE.AlwaysStencilFunc,stencilFail:op,stencilZFail:op,stencilZPass:op}));
     m.position.z=zOff;m.renderOrder=order;m.userData={key,ax};grpCut.add(m);});
-  const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshPhongMaterial({color:new THREE.Color(color).convertSRGBToLinear().multiplyScalar(CAP_K),shininess:22,specular:0x1a1a1a,
+  const cap=new THREE.Mesh(new THREE.PlaneGeometry(size,size),new THREE.MeshPhongMaterial({color:(key==='asym'?new THREE.Color(color):new THREE.Color(color).convertSRGBToLinear()).multiplyScalar(CAP_K),shininess:22,specular:0x1a1a1a,
     side:THREE.DoubleSide,transparent:true,clippingPlanes:cutPlanes.filter(p=>p!==plane),   // listed with the transparent objects only to be drawn in order
     stencilWrite:true,stencilRef:0,stencilFunc:THREE.NotEqualStencilFunc,stencilFail:THREE.ReplaceStencilOp,stencilZFail:THREE.ReplaceStencilOp,stencilZPass:THREE.ReplaceStencilOp}));
   if(ax===0)cap.rotation.y=Math.PI/2;else if(ax===1)cap.rotation.x=Math.PI/2;
@@ -4993,11 +4994,11 @@ function build(safeGeom,asymGeom,cfg){
   return job.done.then(ok=>{
     if(snapJob===job)snapJob=null;
     if(!ok||seq!==loadSeq)return;
-    const mAsym=mkMesh(av,af,an,0xcc2211,1.0);
+    const mAsym=mkMesh(av,af,an,ASYM_COLOR,1.0);
     mAsym.material.shininess=25;mAsym.material.specular.set(0x222222);
     mAsym.position.z=zOff;layers.asym.add(mAsym);
     depthOnly(mAsym,layers.asym);
-    for(let ax=0;ax<3;ax++)mkCap(mAsym.geometry,CUT_ASYM,'asym',ax,capSize,zOff);
+    for(let ax=0;ax<3;ax++)mkCap(mAsym.geometry,ASYM_COLOR,'asym',ax,capSize,zOff);
     applyVis();
   });
 }
