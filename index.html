@@ -355,9 +355,10 @@ input[type=range]:disabled{opacity:.35}
   #v1d .p-head .seg{flex:1.25;margin:0}
   #v1d .p-head .seg button{font-size:13.5px;padding:0 4px;height:30px}
   #v1d .mob-grid{display:flex;gap:7px;align-items:stretch;margin-bottom:7px}
-  #v1d .mob-grid>.section{flex:1;min-width:0;margin:0}
+  #v1d .mob-grid>.section{min-width:0;margin:0}
+  #v1d .mob-grid>*{flex:0 0 calc(50% - 3.5px);box-sizing:border-box}   /* two equal halves, as in 2D */
   /* left column: the box of the map parameters and, under it, a box of the orbit controls */
-  #v1d .mob-grid>.mob-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+  #v1d .mob-grid>.mob-col{min-width:0;display:flex;flex-direction:column;gap:7px}
   #v1d .mob-col>.section{margin:0}
   #v1d .mob-col>#d1-parSection{flex:1 1 auto}
   #v1d .mob-grid #d1-fsafeWrap{margin:8px 0 0}
