@@ -5443,7 +5443,7 @@ const $=id=>document.getElementById("p3-"+id);
 function setP(p,t){$('pf').style.width=p+'%';$('st').textContent=t;}
 function slp(ms){return new Promise(r=>setTimeout(r,ms));}
 function setupC(){dpr=window.devicePixelRatio||1;['c1','c2'].forEach(id=>{const c=$(id),w=c.parentElement;
-const s=PC.isMobile()?Math.max(220,Math.min(w.clientWidth-8,560)):Math.max(220,Math.min(w.clientWidth-12,w.clientHeight-12,900));
+const s=Math.max(120,Math.min(w.clientWidth-(PC.isMobile()?8:12),w.clientHeight-(PC.isMobile()?8:12),900));
 c.style.width=s+'px';c.style.height=s+'px';
 c.width=Math.round(s*dpr);c.height=Math.round(s*dpr);
 c.getContext('2d').setTransform(dpr,0,0,dpr,0,0);});}
