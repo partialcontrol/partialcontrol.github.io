@@ -360,7 +360,14 @@ input[type=range]:disabled{opacity:.35}
   #v1d .mob-grid>.mob-col{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
   #v1d .mob-col>.section{margin:0}
   #v1d .mob-col>#d1-parSection{flex:1 1 auto}
-  #v1d .mob-col #d1-fsafeWrap{margin:6px 0 0}
+  #v1d .mob-grid #d1-fsafeWrap{margin:8px 0 0}
+  /* the buttons of the modes never move: the two columns keep the height they have with the most controls, the box of
+     the orbit takes any room left and keeps its button at its foot */
+  #v1d .mob-col>#d1-parSection{flex:none}
+  #v1d .mob-col>#d1-iterSection{flex:1 1 auto}
+  #v1d .mob-col:has(>#d1-iterSection[style*="none"])>#d1-parSection{flex:1 1 auto}
+  #v1d .mob-col>#d1-iterSection:not([style*="none"]){display:flex!important;flex-direction:column}
+  #v1d .mob-col #d1-againQRow{margin-top:auto}
   #v1d .mob-col .x0row{flex-wrap:wrap;gap:2px 6px;margin-bottom:4px}
   #v1d .mob-col .x0row input[type=text]{flex:1;width:auto;min-width:0;padding:3px 7px}
   #v1d .mob-col .x0row input[type=range]{flex:1 0 100%}
@@ -2276,9 +2283,13 @@ function layout1d(){
   // on a phone the panel starts as in the 2D maps: the map and the view in one row, then the map parameters and the
   // disturbance and control side by side, with a box of the orbit controls under the map parameters (elsewhere these boxes
   // are empty and take no room)
-  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"));$("iterSection").append($("fsafeWrap"));$("pgrid").append($("pcolL"),$("dcSection"));$("dcSection").append($("resetBtn"));}
-  else $("acts").prepend($("resetBtn"));   // Reset goes under Lock ratio on a phone, and back to the foot of the panel elsewhere
+  if(k==="phone"){$("phead").append($("mapSelect"),$("viewSeg"));$("pcolL").append($("parSection"),$("iterSection"));$("pgrid").append($("pcolL"),$("dcSection"));$("dcSection").append($("resetBtn"),$("fsafeWrap"));}
+  else $("acts").prepend($("resetBtn"));   // Reset (and Show f(safe set)) go under Lock ratio on a phone; Reset goes back to the foot of the panel elsewhere
 }
+// On a phone the buttons of the modes under the two columns never move: the columns keep the largest height they have
+// had (that of Controlled orbits, the mode at the start, which shows the most controls)
+if(window.ResizeObserver)new ResizeObserver(()=>{const g=$("pgrid");if(L1.k!=="phone"){g.style.minHeight="";g.dataset.mh="";return;}
+  const h=g.getBoundingClientRect().height;if(h>(+g.dataset.mh||0)){g.dataset.mh=h;g.style.minHeight=h+"px";}}).observe($("pgrid"));
 // Safe set or safety function, as in the 2D maps. A mode of the right panel returns to the safe set.
 let _mode1d="controlled_iterates",_ts1d=false;
 $("viewSeg").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;const U=b.dataset.view==="U";
