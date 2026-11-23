@@ -509,7 +509,11 @@ input[type=range]:disabled{opacity:.35}
   .p3-prog{flex:none;min-width:0;gap:6px}
   .p3-prog .pb{min-width:30px}
   #p3-st{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-  #p3-orb{order:3;flex:1 0 100%;padding:7px 10px;font-size:14px}
+  /* the plot has no title on a phone: in its place, the button that shows the controlled orbit (and back) */
+  .p3-main{position:relative}
+  .p3-main .ph{min-height:44px;justify-content:flex-end}
+  .p3-main .ph .pt,.p3-main .ph .pi{display:none}
+  #p3-orb{position:absolute;top:12px;left:14px;z-index:4;width:auto;padding:5px 13px;font-size:14px}
   #p3-orb.on{background:#f9dfae;color:#6b4600;border-color:#f9dfae;font-weight:600}
 
   #about{padding:12px 8px}
@@ -875,9 +879,9 @@ body.guide-push #guide{box-shadow:none}
         <label class="vlbl xi"><span data-tex="\xi_0=">ξ₀ =</span><input type="number" id="p3-xi" value="0.09" step="0.01" min="0.01" max="2" aria-label="Disturbance bound"></label>
         <label class="vlbl u"><span data-tex="u_0=">u₀ =</span><input type="number" id="p3-u0" value="0.07" step="0.01" min="0.01" max="2" aria-label="Control bound"></label>
       </div>
-      <button id="p3-orb" class="btn p3-orb" aria-pressed="false">Controlled orbit</button>
+      <button id="p3-orb" class="btn p3-orb" aria-pressed="false">Controlled orbit in phase space</button>
     </div>
-    <div class="p3-main">
+    <div class="p3-main" id="p3-main">
       <div class="pn">
         <div class="ph"><span class="pt"><span id="p3-ttl">Safe set</span> on the Poincaré section <span class="nw" data-tex="z=19">z = 19</span></span><span class="pi" id="p3-si"></span><span class="pi" id="p3-ui" hidden></span></div>
         <div class="cw"><canvas id="p3-c1"></canvas><div class="ov" id="p3-o1">Press Compute</div></div>
@@ -5598,7 +5602,7 @@ cx.beginPath();cx.arc(lx,ly+14,U0*sc,0,2*Math.PI);
 cx.fillStyle='rgba(120,128,140,.22)';cx.fill();cx.strokeStyle='#6b7380';cx.lineWidth=1.5;cx.stroke();
 cx.fillStyle='#3c4450';PC.mtext(cx,lx+U0*sc+7,ly+19,16,['i:u','S:0','r: = '+U0]);
 // Controlled trajectory points on safe set (red dots)
-if(cPts){
+if(cPts&&!PC.isMobile()){
 var nCtrl=cPts.length/6;
 function toSX(v){return m+(v+3)/6*pW;}
 function toSY(v){return m+(3-v)/6*pH;}
@@ -5845,8 +5849,9 @@ function setPView(v){
 $('viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setOrb(false);if(b.dataset.view!==pView)setPView(b.dataset.view);});
 // On a phone the plot above the panel shows the section (safe set or safety function) or, with Controlled orbit, the
 // controlled trajectory in phase space; on a large screen both are shown side by side and the button is hidden
-function setOrb(on){$('root').classList.toggle('orb',on);$('orb').classList.toggle('on',on);$('orb').setAttribute('aria-pressed',on);_refresh();}
+function setOrb(on){$('root').classList.toggle('orb',on);$('orb').classList.toggle('on',on);$('orb').setAttribute('aria-pressed',on);$('orb').textContent=on?'Back to the section':'Controlled orbit in phase space';_refresh();}
 $('orb').addEventListener('click',()=>setOrb(!$('root').classList.contains('orb')));
+$('main').appendChild($('orb'));   // on a phone it sits at the top of the plot, where it is seen at once
 function guideP(){
   const mob=PC.isMobile(),L=mob?'Top':'Left',R=mob?'Bottom':'Right';   // on a phone the two pictures are one above the other
   const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
