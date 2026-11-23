@@ -297,6 +297,27 @@ input[type=range]:disabled{opacity:.35}
 .p3-prog .pf{height:100%;width:0%;background:var(--safe);border-radius:2px;transition:width .15s}
 #p3-st{font-size:14px;color:var(--ink2);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:250px}
 .p3-main{flex:1;min-height:0;display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:10px}
+/* large screens: the controls in a side panel on the left, as in the 2D maps (same width and boxes), and the two
+   plots in all the rest. On a phone the boxes dissolve and the controls stay in the bar above the plots */
+@media(min-width:821px){
+  #p3-root.on{flex-direction:row}
+  #p3-root .p3-bar{width:268px;min-width:268px;flex-direction:column;flex-wrap:nowrap;align-items:stretch;gap:9px;padding:12px 14px;
+    background:var(--panel);border-bottom:0;border-right:1px solid var(--line);overflow-y:auto;min-height:0}
+  #p3-root .p3-bar #p3-map{width:100%;margin:0}
+  #p3-root .p3-bar .p3-view{display:flex}
+  #p3-root .p3-bar .p3-view button{flex:1}
+  #p3-root .p3-sec{padding:9px 11px 10px;background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px}
+  #p3-root .p3-sec .sec-title{flex:1 0 100%;margin:0}
+  #p3-root .p3-sdc{order:1}
+  #p3-root .p3-sgrid{order:2}
+  #p3-root .p3-sdc input[type=number]{width:72px}
+  #p3-root .p3-sgrid label{flex:1 0 100%;font-weight:700;color:var(--ink)}
+  #p3-root .p3-sgrid select{flex:1;width:auto}
+  #p3-root .p3-sgrid .btn{flex:1 0 100%;padding:7px 10px}
+  #p3-root .p3-prog{flex:1 0 100%;min-width:0}
+  #p3-root .p3-main{flex:1;min-width:0}
+  #p3-orb{display:none}
+}
 .p3-main .pn{background:#fff;border:1px solid var(--line);border-radius:10px;display:flex;flex-direction:column;overflow:hidden;min-height:0}
 .p3-main .ph{flex:none;padding:8px 14px;border-bottom:1px solid var(--line);display:flex;align-items:baseline;justify-content:space-between;gap:10px}
 .p3-main .pt{font-size:15px;font-weight:700}
@@ -461,21 +482,35 @@ input[type=range]:disabled{opacity:.35}
   .ico{width:34px;height:34px}
   #t3-loading{inset:0 0 var(--t3p) 0}
 
-  .p3-bar{padding:8px 10px;gap:7px 9px;min-height:0}
-  .p3-bar #p3-map{width:100%;margin:0;font-size:15.5px;padding:5px 6px}
-  .p3-bar select{width:70px}
-  .p3-bar input[type=number]{width:64px}
-  .p3-bar .btn{padding:6px 14px}
-  .p3-prog{flex:1;min-width:0;gap:8px}
-  .p3-prog .pb{min-width:30px}
-  #p3-st{min-width:0;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+  /* as the other 2D maps on a phone: the plot above (as tall as theirs) and the panel of controls under it */
+  #p3-root.on{flex-direction:column}
+  .p3-main{order:0;flex:none;height:55%;display:block;padding:5px 5px 2px;overflow:hidden}
+  .p3-main .pn{height:100%;margin:0}
+  #p3-root.orb .p3-main .pn:first-child,#p3-root:not(.orb) .p3-main .pn:last-child{display:none}
   .p3-main .ph{padding:6px 10px}
   .p3-main .pt{font-size:14px}
   .p3-main .pi{font-size:12.5px}
-  #p3-root .p3-scroll{overflow-y:auto}
-  .p3-main{display:block;padding:6px;overflow-y:auto}
-  .p3-main .pn{margin-bottom:8px;height:auto}
   .p3-main .cw{min-height:0;padding:4px}
+  .p3-bar{order:1;flex:1;min-height:0;overflow-y:auto;display:flex;flex-wrap:wrap;align-content:flex-start;align-items:stretch;gap:7px;
+    padding:6px 8px 10px;border-bottom:0;background:var(--panel)}
+  .p3-bar #p3-map{flex:0 0 calc((100% - 7px)*0.4576);box-sizing:border-box;width:auto;min-width:0;margin:0;font-size:15px;padding:5px 6px}
+  .p3-bar .p3-view{flex:0 0 calc((100% - 7px)*0.5424);box-sizing:border-box;margin:0;display:flex}
+  .p3-bar .p3-view button{flex:1;font-size:13.5px;padding:0 4px;height:30px}
+  .p3-sec{flex:0 0 calc(50% - 3.5px);box-sizing:border-box;padding:7px 8px 8px;background:#fff;border:1px solid var(--line);border-radius:10px;
+    display:flex;flex-direction:column;align-items:stretch;gap:7px}
+  .p3-sec .sec-title{font-size:14px;margin:0}
+  .p3-sdc{order:1}
+  .p3-sgrid{order:2}
+  .p3-sec label{gap:6px}
+  .p3-sdc input[type=number]{width:72px}
+  .p3-sgrid label{font-size:14px;font-weight:700;color:var(--ink)}
+  .p3-sgrid select{flex:1;width:auto;min-width:0}
+  .p3-sgrid .btn{width:100%;padding:6px 8px;font-size:14px}
+  .p3-prog{flex:none;min-width:0;gap:6px}
+  .p3-prog .pb{min-width:30px}
+  #p3-st{min-width:0;font-size:12.5px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  #p3-orb{order:3;flex:1 0 100%;padding:7px 10px;font-size:14px}
+  #p3-orb.on{background:#f9dfae;color:#6b4600;border-color:#f9dfae;font-weight:600}
 
   #about{padding:12px 8px}
   #about .sheet{padding:20px 18px 18px;border-radius:14px}
@@ -828,16 +863,19 @@ body.guide-push #guide{box-shadow:none}
         <option value="zaslavsky">Zaslavsky map</option>
       </select>
       <div class="seg p3-view" id="p3-viewSeg" role="tablist" aria-label="View"><button data-view="S" class="on">Safe set</button><button data-view="U">Safety function</button></div>
-      <label>Grid
-        <select id="p3-gs" aria-label="Grid size">
-          <option value="201">201</option><option value="301">301</option><option value="401">401</option>
-          <option value="501" selected>501</option><option value="601">601</option><option value="801">801</option>
-          <option value="1001">1001</option><option value="1201">1201</option><option value="2001">2001</option>
-        </select></label>
-      <label class="vlbl xi"><span data-tex="\xi_0=">ξ₀ =</span><input type="number" id="p3-xi" value="0.09" step="0.01" min="0.01" max="2" aria-label="Disturbance bound"></label>
-      <label class="vlbl u"><span data-tex="u_0=">u₀ =</span><input type="number" id="p3-u0" value="0.07" step="0.01" min="0.01" max="2" aria-label="Control bound"></label>
-      <button id="p3-go" class="btn btn-primary">Compute</button>
-      <div class="p3-prog"><div class="pb"><div class="pf" id="p3-pf"></div></div><span id="p3-st">Ready</span></div>
+      <div class="p3-sec p3-sgrid">
+        <label>Grid
+          <select id="p3-gs" aria-label="Grid size">
+            <option value="501" selected>501</option><option value="1001">1001</option><option value="2001">2001</option>
+          </select></label>
+        <button id="p3-go" class="btn btn-primary">Compute</button>
+        <div class="p3-prog"><div class="pb"><div class="pf" id="p3-pf"></div></div><span id="p3-st">Ready</span></div>
+      </div>
+      <div class="p3-sec p3-sdc"><span class="sec-title">Disturbance and control</span>
+        <label class="vlbl xi"><span data-tex="\xi_0=">ξ₀ =</span><input type="number" id="p3-xi" value="0.09" step="0.01" min="0.01" max="2" aria-label="Disturbance bound"></label>
+        <label class="vlbl u"><span data-tex="u_0=">u₀ =</span><input type="number" id="p3-u0" value="0.07" step="0.01" min="0.01" max="2" aria-label="Control bound"></label>
+      </div>
+      <button id="p3-orb" class="btn p3-orb" aria-pressed="false">Controlled orbit</button>
     </div>
     <div class="p3-main">
       <div class="pn">
@@ -2268,12 +2306,12 @@ function drawSafety(){
 //  Layout on a large screen
 // ---------------------------------------------------------------------------
 const L1={k:""};
-// Where each block of controls goes. Large screen: the map and what defines it on the left; on the right the
-// disturbance and control, the modes right under them and the orbit controls. With the guide open on a narrow window
+// Where each block of controls goes. Large screen: as in the 2D maps, the map, its parameters and the disturbance and
+// control on the left; on the right the modes and the orbit controls. With the guide open on a narrow window
 // only the left panel is shown, so these blocks move into it and the rarely used ones stay in the hidden panel.
 // On a phone the panel is laid out as in the 2D maps, with the modes under the disturbance and control.
 const L1_ORDER={
-  wide:[["mapSelect","viewSeg","parSection","eqSection","qSection"],["dcSection","modes","iterSection","fsafeWrap","acts"]],
+  wide:[["mapSelect","viewSeg","parSection","dcSection","eqSection","qSection"],["modes","iterSection","fsafeWrap","acts"]],
   narrow:[["mapSelect","viewSeg","dcSection","modes","iterSection","fsafeWrap","parSection"],["eqSection","qSection","acts"]],
   phone:[["phead","pgrid","modes"],["eqSection","qSection","acts"]]};
 function layout1d(){
@@ -5804,7 +5842,11 @@ function setPView(v){
   $('si').hidden=v==='U';$('ui').hidden=v!=='U';
   puShow();PC.refreshGuide();
 }
-$('viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(b&&b.dataset.view!==pView)setPView(b.dataset.view);});
+$('viewSeg').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;setOrb(false);if(b.dataset.view!==pView)setPView(b.dataset.view);});
+// On a phone the plot above the panel shows the section (safe set or safety function) or, with Controlled orbit, the
+// controlled trajectory in phase space; on a large screen both are shown side by side and the button is hidden
+function setOrb(on){$('root').classList.toggle('orb',on);$('orb').classList.toggle('on',on);$('orb').setAttribute('aria-pressed',on);_refresh();}
+$('orb').addEventListener('click',()=>setOrb(!$('root').classList.contains('orb')));
 function guideP(){
   const mob=PC.isMobile(),L=mob?'Top':'Left',R=mob?'Bottom':'Right';   // on a phone the two pictures are one above the other
   const g=PC.gt,G=PC.guideText,n=$('gs').value,Cp=g("C^{+}","C+"),Cm=g("C^{-}","C−");
@@ -5820,7 +5862,7 @@ ${G.eq("q","P")}
 ${pView==='U'?'<p><b>Safe set view.</b> ':'<p><b>'+L+'.</b> '}The region ${g("Q","Q")}, the square ${g("[-3,3]\\times[-3,3]")} of the section. Everything is computed here, when you press <b>Recompute</b>. First the map ${g("P","P")}: from each of the ${n} × ${n} grid points the Lorenz equations are integrated until the next crossing. Then the safe set, in <b>blue</b>, with the Sculpting Algorithm: ${G.sculpt}. It contains the crossing points from which the trajectory can be kept away from ${Cp} and ${Cm} forever. The discs show the size of ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}.</p>
 ${pView==='U'?puGuide():''}<p><b>${R}.</b> A controlled trajectory in phase space, 100 crossings long, as a thin black line. It flies freely between crossings. At each crossing it receives the disturbance and the control, which takes it to the nearest point of the safe set: the short red segments on the plane are those corrections, and zooming in shows them as small jumps. The <b>red points</b>, in both pictures, are where the trajectory leaves the section after each correction, always inside the blue set.</p>
 <h3>What you can change</h3>
-<p>The view, <b>Safe set</b> or <b>Safety function</b>. The grid, ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. A finer grid takes longer. In the ${R.toLowerCase()} picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
+<p>The view, <b>Safe set</b> or <b>Safety function</b>. The grid (501, 1001 or 2001 points per axis): choosing one computes it at once, and a finer grid takes longer. ${g("\\xi_0","ξ₀")} and ${g("u_0","u₀")}, and then press <b>Recompute</b>. In the ${R.toLowerCase()} picture, drag to rotate and turn the wheel to zoom; <b>Reset view</b> returns to the start.</p>`};
 }
 function puGuide(){
   const g=PC.gt,G=PC.guideText,s=puStride(),NU=(N-1)/s+1,U=PSRC.data();
@@ -5832,7 +5874,10 @@ ${G.recur("q").replace(/f\(/g,"P(")}
 function _refresh(){setupC();if(sBmp)drawSS();if(fTraj)draw3D();if(pView==='U'){puShow();PC.surf.resize();}}
 PC.register("poincare",{
   guide:guideP,
-  init(){if(PC.isMobile())$('gs').value='301';setupC();setupOrbit();$('go').onclick=run;run();
+  init(){setupC();setupOrbit();$('go').onclick=run;run();
+    // a new grid is computed at once; chosen during a computation, it is computed when that one ends
+    let pend=false;const runQ=async()=>{if($('go').disabled){pend=true;return;}await run();if(pend){pend=false;runQ();}};
+    $('gs').addEventListener('change',runQ);
     // choosing another map returns to the view of the 2D maps
     $('map').addEventListener('change',e=>{const v=e.target.value;e.target.value='lorenz_p';if(v==='lorenz_p')return;
       PC.go('2d');const sel=document.getElementById('d2-mapSelect');sel.value=v;sel.dispatchEvent(new Event('change'));});},
