@@ -1175,9 +1175,9 @@ if(e2&&e2.trim()&&isFinite(v3)&&isFinite(v4))for(let x=v3;x<=v4+gx/2;x+=gx){cons
 pts.sort((a,b)=>a[0]-b[0]);const u=[];for(let i=0;i<pts.length;i++){if(i===0||pts[i][0]!==pts[i-1][0])u.push(pts[i]);}return u;}
 
 // A=slope, B=asymmetry(peak position). Symmetric tent: B=0.5
-// eq1: A*x on [0,B], peak=A*B. eq2: A*B*(1-x)/(1-B) on [B,1]
+// eq1: A*x/(2B) on [0,B], eq2: A*(1-x)/(2(1-B)) on [B,1]: peak A/2 at x=B, whatever B
 const MAP_CONFIGS={
-"Tent map":{eq:true,eq1:"A*x",l1:"0",l2:"B",eq2:"A*B*(1-x)/(1-B)",l3:"B",l4:"1",
+"Tent map":{eq:true,eq1:"A*x/(2*B)",l1:"0",l2:"B",eq2:"A*(1-x)/(2*(1-B))",l3:"B",l4:"1",
   Amin:0.5,Amax:6,Aval:3,Bmin:0.01,Bmax:0.99,Bval:0.5,usesB:true,Blbl:"asymmetry"},
 "Logistic map":{eq:true,eq1:"A*x*(1-x)",l1:"0",l2:"1",eq2:"",l3:"",l4:"",
   Amin:1,Amax:8,Aval:4.1,Bmin:-5,Bmax:5,Bval:0,usesB:false,Blbl:"B"},
@@ -2188,6 +2188,7 @@ function safetyFn1D(xm,ym,xn,xx,rQ,dist,NU){
 //  Safety function view (1D)
 // ---------------------------------------------------------------------------
 let _U=null,_Ukey="";
+S.uLog=true;   // the safety function opens in the log view
 function uGridN(){
   const rng=S.xmax-S.xmin,mob=PC.isMobile();
   const lo=rng/(mob?12000:24000),hi=rng/(mob?3000:6000);
@@ -2208,6 +2209,52 @@ function readoutLayout(w,P,tEnd){
   const vfs=Math.max(8.5,Math.min(w>600?16:11,Math.floor(avail/15.8*2)/2));
   return{vfs,sub:Math.round(vfs*.7),x:w-P.r-15.8*vfs,x2:w-P.r-7.4*vfs};
 }
+// A small picture of the map with a controlled orbit at the top left of the safety function, only as a visual aid
+// to see how the map and its orbits change while the parameters move. It is drawn on the plot, under the grid of U,
+// the curve U(x) and the bounds, in light tones, so it never hides any of them.
+function drawUInset(ctx,x0,y0,iw,ih,r){
+  tickRef();const{a,b,c:yc,d}=S.ax;if(!(b>a)||!(d>yc)||iw<30)return;
+  const m=4,ml=9,tx=x=>x0+ml+(x-a)/(b-a)*(iw-ml-m),ty=y=>y0+ih-m-(y-yc)/(d-yc)*(ih-2*m);
+  ctx.save();ctx.fillStyle="#fbfcfd";ctx.strokeStyle="#e3e7ee";ctx.lineWidth=1;
+  ctx.beginPath();ctx.rect(x0+.5,y0+.5,iw,ih);ctx.fill();ctx.stroke();ctx.clip();
+  // vertical axis with a few ticks (no numbers): from the lowest value of the map up to the highest, every S._tkStep
+  // (fixed per map, see tickRef). Their number depends only on the height of the map: it grows when the map grows and
+  // stays the same when a parameter moves the map up or down or changes its asymmetry
+  ctx.strokeStyle="#b4bbc6";ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x0+ml,y0+m);ctx.lineTo(x0+ml,y0+ih-m);
+  const stp=S._tkStep;
+  if(stp>0){let yn=Infinity,yx=-Infinity;for(const v of S.ymap)if(isFinite(v)){if(v<yn)yn=v;if(v>yx)yx=v;}
+    for(let k=0;yn+k*stp<=yx+1e-6*stp&&k<40;k++){const Y=Math.round(ty(yn+k*stp))+.5;ctx.moveTo(x0+ml-4,Y);ctx.lineTo(x0+ml,Y);}}
+  ctx.stroke();
+  // safe set of the current safety function {U <= u0}, and the safe points for the control
+  const sx=[];
+  if(r){const n=r.n,Uc=r.Uc,gx=r.gx,thr=Math.round(S.ctrl/gx),bt=ty(.15*(d-yc)+yc),bb=ty(.003*(d-yc)+yc);
+    ctx.fillStyle="rgba(70,130,200,.3)";let i0=-1;
+    for(let i=0;i<=n;i++){const on=i<n&&Uc[i]<=thr;
+      if(on){if(i0<0)i0=i;sx.push(S.xmin+i*gx);}
+      else if(i0>=0){const X0=tx(S.xmin+i0*gx);ctx.fillRect(X0,bt,Math.max(1,tx(S.xmin+(i-1)*gx)-X0),bb-bt);i0=-1;}}}
+  ctx.strokeStyle="rgba(200,70,70,.55)";ctx.lineWidth=.7;ctx.setLineDash([3,2]);ctx.beginPath();ctx.moveTo(tx(a),ty(a));ctx.lineTo(tx(b),ty(b));ctx.stroke();ctx.setLineDash([]);
+  ctx.strokeStyle="#8a909a";ctx.lineWidth=1;ctx.beginPath();const st=Math.max(1,Math.floor(S.xmap.length/400));
+  for(let i=0;i<S.xmap.length;i+=st){const X=tx(S.xmap[i]),Y=ty(S.ymap[i]);if(i)ctx.lineTo(X,Y);else ctx.moveTo(X,Y);}ctx.stroke();
+  // a controlled orbit from x0: disturbance at random within xi0, control to a random safe point within u0
+  if(r&&sx.length){
+    const gx=r.gx,thr=Math.round(S.ctrl/gx),safe=v=>{const k=Math.round((v-S.xmin)/gx);return k>=0&&k<r.n&&r.Uc[k]<=thr;};
+    const nI=Math.min(S.numIter||200,300);let x=safe(S.x0)?S.x0:sx[Math.floor(sx.length/2)];
+    ctx.globalAlpha=.6;ctx.strokeStyle=PC.CTRL;ctx.lineWidth=.6;ctx.beginPath();ctx.moveTo(tx(x),ty(yc));
+    for(let k=0;k<nI;k++){const y=interp1(S.xmap,S.ymap,x),yd=y+S.dist*(2*Math.random()-1),xn=safe(yd)?yd:applyStrat(sx,yd);
+      if(!isFinite(y)||!isFinite(xn))break;
+      ctx.lineTo(tx(x),ty(y));ctx.lineTo(tx(x),ty(yd));ctx.lineTo(tx(xn),ty(yd));x=xn;}
+    ctx.stroke();ctx.globalAlpha=1;}
+  ctx.restore();
+}
+// Step of the ticks of the small map: a third of the height of the map when it is chosen or its equation is typed,
+// so with its parameters at their initial values (4 ticks for every map then); then it stays while the parameters move.
+function tickRef(){
+  const key=[S.mapName,$("eq1").value,$("eq2").value,$("l1").value,$("l2").value,$("l3").value,$("l4").value].join("|");
+  const cf=MAP_CONFIGS[S.mapName],atDef=!!cf&&cf.Aval!=null&&Math.abs(S.paramA-cf.Aval)<1e-9&&(!cf.usesB||Math.abs(S.paramB-cf.Bval)<1e-9);
+  if((key===S._tkKey&&!atDef)||!S.ymap.length)return;   // at the initial values it is refreshed, so it never keeps a stale map
+  let yn=Infinity,yx=-Infinity;for(const v of S.ymap)if(isFinite(v)){if(v<yn)yn=v;if(v>yx)yx=v;}
+  S._tkKey=key;S._tkStep=yx>yn?(yx-yn)/3:0;
+}
 function drawSafety(){
   const{w,h,ctx}=resizeCanvas($("mainCanvas"));mainCtx=ctx;
   ctx.fillStyle="#fff";ctx.fillRect(0,0,w,h);
@@ -2219,13 +2266,14 @@ function drawSafety(){
   const bt=P.t+.85*ph,bb=P.t+.997*ph;                              // safe set band: same pixels as the other views
   const y0=bt-(big?16:9),y1=P.t+(big?18:10);                       // U axis: 0 at y0, ymax at y1
   const r=getU(),LOG=!!S.uLog;
+  // (log view: its bottom just under the lowest valley, so that U(x) sits right above the safe set)
   // Linear view: from 0 to a few times the bounds, where the safe sets live. Log view: the whole function, from
   // below its smallest value to its largest, so the deep narrow valleys and the high parts are seen together.
   let ymax=Math.max(3*S.dist,1.6*S.ctrl,(xx-xn)/200),lo=ymax/1000;
   if(LOG){let mn=Infinity,mx=0;
     if(r)for(let i=0;i<r.n;i++){const v=r.Uc[i];if(v>=r.INF)continue;if(v>mx)mx=v;if(v>0&&v<mn)mn=v;}
     const g=r?r.gx:ymax/1000;
-    lo=Math.max(g/2,Math.min(mn===Infinity?ymax:mn*g,S.ctrl>0?S.ctrl:ymax,S.dist>0?S.dist:ymax)/2);ymax=Math.max(ymax,mx*g*1.25,lo*10);}
+    lo=Math.max(g/2,Math.min(mn===Infinity?ymax:mn*g,S.ctrl>0?S.ctrl:ymax,S.dist>0?S.dist:ymax)*0.8);ymax=Math.max(ymax,mx*g*1.25,lo*10);}
   const ty=LOG?v=>y0-Math.log((v>lo?v:lo)/lo)/Math.log(ymax/lo)*(y0-y1):v=>y0-(v/ymax)*(y0-y1);
 
   // horizontal grid and U ticks
@@ -2237,6 +2285,7 @@ function drawSafety(){
     for(let d=Math.floor(Math.log10(lo));d<=Math.ceil(Math.log10(ymax));d++)for(const k of ms){const v=k*Math.pow(10,d);if(v>=lo*0.999&&v<=ymax*1.001)tick(v,false);}}
   else{const step=niceStep(ymax/4.2);for(let k=0;k*step<=ymax*1.0001;k++)tick(k*step,k===0);}
   ctx.textAlign="left";ctx.textBaseline="alphabetic";
+  {const iw=Math.round(Math.min(pw*(big?0.17:0.24),big?190:96));drawUInset(ctx,P.l+6,y1-(big?12:7),iw,Math.round(iw*0.78),r);}
 
   let thr=-1,flooded=false;
   if(r){
@@ -2351,7 +2400,7 @@ function guide1d(){
   // the equation of the map on screen, with the current values of its parameters
   const A=sig(S.paramA,4),B=sig(S.paramB,4),pw=(a,ia,b,ib)=>"f(x)=\\begin{cases}"+a+"&"+ia+"\\\\[3pt]"+b+"&"+ib+"\\end{cases}";
   const EQ={
-    "Tent map":[pw("Ax","0\\le x\\le B","\\dfrac{AB\\,(1-x)}{1-B}","B<x\\le 1"),1,1],
+    "Tent map":[pw("\\dfrac{A}{2B}\\,x","0\\le x\\le B","\\dfrac{A\\,(1-x)}{2(1-B)}","B<x\\le 1"),1,1],
     "Logistic map":["f(x)=Ax(1-x)",1,0],
     "Cubic map":["f(x)=Ax-x^3+B",1,1],
     "Gauss map":["f(x)=e^{-Ax^2}+B",1,1],
